@@ -1,4 +1,4 @@
-## Documentation
+## Lemegeton in a nutshell
 
 Lemegeton is a Dalamud plugin which is geared to being your ultimate Final Fantasy XIV raiding and ingame companion. With a wide variety of helpful features for all kinds of content, you'll never want to queue into an instance or leave home without it! Lemegeton does not have triggers or callouts, but it's meant to complement the feature set of Triggernometry, Cactbot, et al with a variety of exciting features and functionality.
 
@@ -15,11 +15,23 @@ Current features include but are not limited to:
 - TOP / The Omega Protocol: Draw tether, boss monitor, etc..
 - and so much more, not just automarkers - join the Discord!
 
+## Contribute
+
 Lemegeton also has a Wiki, containing useful information and documentation if you would like to read more about the project, or contribute to it:
 
 https://github.com/paissaheavyindustries/Lemegeton/wiki
 
 Contributions are certainly welcome, and you can read more about how you can participate on the Discord!
+
+## Installing
+
+The only thing Lemegeton needs is Dalamud, and that comes with the Quicklauncher you should already be using. If you're not, be sure to install it first and then never look back at the original launcher:
+
+https://github.com/goatcorp/FFXIVQuickLauncher
+
+Head on over to my Dalamud repository and follow the instructions on how to add my repository to Dalamud:
+
+https://github.com/paissaheavyindustries/Dalamud-Repo
 
 ## Discord
 
