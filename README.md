@@ -29,7 +29,7 @@ The only thing Lemegeton needs is Dalamud, and that comes with the Quicklauncher
 
 https://github.com/goatcorp/FFXIVQuickLauncher
 
-Head on over to my Dalamud repository and follow the instructions on how to add my repository to Dalamud:
+If you're all set up with Quicklauncher, head on over to my Dalamud repository and follow the instructions on how to add it to Dalamud:
 
 https://github.com/paissaheavyindustries/Dalamud-Repo
 
