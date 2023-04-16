@@ -10,6 +10,8 @@ using Vector3 = System.Numerics.Vector3;
 namespace Lemegeton.Content
 {
 
+    #if !SANS_GOETIA
+
     public class Hack : Core.Content
     {
 
@@ -172,5 +174,7 @@ namespace Lemegeton.Content
         }
 
     }
+
+    #endif
 
 }

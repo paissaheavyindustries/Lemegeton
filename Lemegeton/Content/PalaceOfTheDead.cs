@@ -33,11 +33,11 @@ namespace Lemegeton.Content
             );
             if (newZoneOk == true && ZoneOk == false)
             {
-                _state.Log(State.LogLevelEnum.Info, null, "Content {0} available", GetType().Name);
+                Log(State.LogLevelEnum.Info, null, "Content available");
             }
             else if (newZoneOk == false && ZoneOk == true)
             {
-                _state.Log(State.LogLevelEnum.Info, null, "Content {0} unavailable", GetType().Name);
+                Log(State.LogLevelEnum.Info, null, "Content unavailable");
             }
             ZoneOk = newZoneOk;
         }

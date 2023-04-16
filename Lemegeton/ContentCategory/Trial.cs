@@ -25,6 +25,7 @@ namespace Lemegeton.ContentCategory
 
         public Trial(State st) : base(st)
         {
+            Enabled = false;
         }
 
     }

@@ -60,7 +60,9 @@ namespace Lemegeton.Core
         internal int NumFeaturesAutomarker { get; set; } = 0;
         internal int NumFeaturesDrawing { get; set; } = 0;
         internal int NumFeaturesSound { get; set; } = 0;
+        #if !SANS_GOETIA
         internal int NumFeaturesHack { get; set; } = 0;
+        #endif
         internal string GameVersion { get; set; } = "(unknown)";
 
         internal Plugin plug;
@@ -118,6 +120,9 @@ namespace Lemegeton.Core
         internal delegate void CombatantRemovedDelegate(uint actorId, nint addr);
         internal event CombatantRemovedDelegate OnCombatantRemoved;
 
+        internal delegate void EventPlayDelegate(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4);
+        internal event EventPlayDelegate OnEventPlay;
+
         internal void InvokeZoneChange(ushort newZone)
         {
             OnZoneChange?.Invoke(newZone);
@@ -171,6 +176,11 @@ namespace Lemegeton.Core
         internal void InvokeCombatantRemoved(uint actorId, nint addr)
         {
             OnCombatantRemoved?.Invoke(actorId, addr);
+        }
+
+        internal void InvokeEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
+        {
+            OnEventPlay?.Invoke(actorId, eventId, scene, flags, param1, param2, param3, param4);
         }
 
         public State()
@@ -235,6 +245,12 @@ namespace Lemegeton.Core
             if (flag == ConditionFlag.InCombat)
             {
                 _inCombat = value;
+                if (value == false && cfg.RemoveMarkersAfterCombatEnd == true)
+                {
+                    Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
+                    AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
+                    ExecuteAutomarkers(ap, cfg.DefaultAutomarkerTiming);
+                }
                 InvokeCombatChange(value);
             }
         }
@@ -401,35 +417,41 @@ namespace Lemegeton.Core
             return null;
         }        
 
-        internal void ExecuteAutomarkers(AutomarkerPayload ap)
+        internal void AttachTaskToTaskChain(Task parent, Task task)
+        {
+            if (parent != null)
+            {
+                parent.ContinueWith(new Action<Task>((tx) =>
+                {
+                    if (parent.IsCompleted == true && parent.IsFaulted == false && parent.IsCanceled == false)
+                    {
+                        task.Start();
+                    }
+                    else
+                    {
+                        Log(LogLevelEnum.Error, parent.Exception, "Exception occurred: {0}", parent.Exception.Message);
+                    }
+                }));
+            }
+        }
+
+        internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
             if (ap.Clear == true)
             {
+                Log(LogLevelEnum.Debug, null, "Clearing automarkers");
                 Party pty = GetPartyMembers();
                 foreach (Party.PartyMember pm in pty.Members)
                 {
                     PerformMarking(pm.GameObject, AutomarkerSigns.SignEnum.None);
                 }
+                return;
             }
             Task first = null, prev = null, tx = null;
-            Random r = new Random();
-            double rng;
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles", ap.assignments.Count);
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, GameObject> kp in ap.assignments)
             {
-                float min, max;
-                if (first == null)
-                {
-                    min = cfg.AutomarkerIniDelayMin;
-                    max = cfg.AutomarkerIniDelayMax;
-                }
-                else
-                {
-                    min = cfg.AutomarkerSubDelayMin;
-                    max = cfg.AutomarkerSubDelayMax;
-                }
-                rng = r.NextDouble();
-                int delay = (int)Math.Ceiling((min + ((max - min) * rng)) * 1000.0);
+                int delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
                 Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1} with {2}", delay, kp.Value, kp.Key);
                 tx = new Task(() =>
                 {
@@ -443,13 +465,7 @@ namespace Lemegeton.Core
                 {
                     first = tx;
                 }
-                if (prev != null)
-                {
-                    prev.ContinueWith(t =>
-                    {
-                        tx.Start();
-                    });
-                }
+                AttachTaskToTaskChain(prev, tx);
                 prev = tx;
             }
             if (first != null)
@@ -590,7 +606,7 @@ namespace Lemegeton.Core
         {
             AutomarkerPayload ap = new AutomarkerPayload();
             ap.Clear = true;
-            ExecuteAutomarkers(ap);
+            ExecuteAutomarkers(ap, cfg.DefaultAutomarkerTiming);
         }
 
         internal void AssignRandomSelections(Party pty, int numSelections)
@@ -741,6 +757,7 @@ namespace Lemegeton.Core
                             case 61334: return AutomarkerSigns.SignEnum.Triangle;
                         }
                     }
+                    return AutomarkerSigns.SignEnum.None;
                 }
             }
             Log(LogLevelEnum.Warning, null, "Couldn't find nameplate for actor {0}", actorId);

@@ -35,6 +35,14 @@ using Dalamud.Interface;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Xml.Serialization;
+using System.Buffers;
+using Dalamud.Configuration;
+using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using Dalamud.Hooking;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using System.Runtime.InteropServices;
 
 namespace Lemegeton
 {
@@ -43,7 +51,12 @@ namespace Lemegeton
     {
 
         public string VersionInfo => "v0.9";
+
+#if !SANS_GOETIA
         public string Name => "Lemegeton";
+#else
+        public string Name => "Lemegeton Lite";
+#endif
 
         private State _state = new State();
         private Thread _mainThread = null;
@@ -64,11 +77,17 @@ namespace Lemegeton
         private float _lemmyShortcutOpacity = 0.5f;
         private bool _lemmyShortcutJustPopped = true;
         private bool _drawingCallback = false;
+        private string _configSnapshot = "";
         private DateTime _lemmyShortcutPopped;
         private Rectangle _lastSeen = new Rectangle();
+        private List<string> _contribs = new List<string>();
 
         private string[] _aboutScroller = new string[] {
+#if !SANS_GOETIA
             "LEMEGETON",
+#else
+            "LEMEGETON LITE",
+#endif
             "a Dalamud plogon",
             "and a FFXIV trainer / cracktro",
             "by Paissa Heavy Industries",
@@ -76,7 +95,7 @@ namespace Lemegeton
             "don't be a statistic",
             "and pet all cats",
             "all of them",
-            "automarkers served to date: $auto",
+            "automarkers served to date: $auto",            
         };
 
         public Plugin(
@@ -110,10 +129,11 @@ namespace Lemegeton
                 pl = partylist,
                 plug = this
             };
+            LoadConfig();
             InitializeContent();
             _state.Initialize();
             InitializeLanguage();
-            LoadConfig();
+            ApplyConfigToContent();
             ChangeLanguage(_state.cfg.Language);
             LoadTextures();            
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
@@ -318,6 +338,16 @@ namespace Lemegeton
                     AutomarkerPrio v = (AutomarkerPrio)pi.GetValue(o);
                     val = v.Serialize();
                 }
+                else if (pi.PropertyType == typeof(AutomarkerTiming))
+                {
+                    AutomarkerTiming v = (AutomarkerTiming)pi.GetValue(o);
+                    val = v.Serialize();
+                }
+                else if (pi.PropertyType == typeof(Percentage))
+                {
+                    Percentage v = (Percentage)pi.GetValue(o);
+                    val = v.Serialize();
+                }
                 else if (pi.PropertyType == typeof(Action))
                 {
                     continue;
@@ -340,7 +370,7 @@ namespace Lemegeton
         {
             XmlNode n = doc.CreateElement(cc.GetType().Name);
             {
-                List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(cc, false);
+                List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(cc, false, out bool foo);
                 AddPropertiesToNode((XmlElement)n, cc, props);
             }
             if (cc.Subcategories.Count > 0)
@@ -357,7 +387,7 @@ namespace Lemegeton
                 XmlNode nc = doc.CreateElement(content.Key);
                 n.AppendChild(nc);
                 {
-                    List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(content.Value, false);
+                    List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(content.Value, false, out bool foo);
                     AddPropertiesToNode((XmlElement)nc, content.Value, props);
                 }
                 foreach (KeyValuePair<string, Core.ContentItem> contentItem in content.Value.Items)
@@ -365,7 +395,7 @@ namespace Lemegeton
                     XmlNode nci = doc.CreateElement(contentItem.Key);
                     nc.AppendChild(nci);
                     {
-                        List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(contentItem.Value, false);
+                        List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(contentItem.Value, false, out bool foo);
                         AddPropertiesToNode((XmlElement)nci, contentItem.Value, props);
                     }
                 }
@@ -373,9 +403,9 @@ namespace Lemegeton
             return n;
         }
 
-        private void DeserializeAttributesToObject(XmlNode n, object o)
+        private void DeserializeAttributesToObject(XmlNode n, ContentModule cm)
         {
-            List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(o, false);
+            List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(cm, false, out bool foo);
             foreach (XmlAttribute attr in n.Attributes)
             {
                 var ix = (from cx in props where String.Compare(cx.Item1.Name, attr.Name) == 0 select cx).FirstOrDefault();
@@ -403,7 +433,7 @@ namespace Lemegeton
                                 v.Y = temp;
                             }
                         }
-                        pi.SetValue(o, v);
+                        pi.SetValue(cm, v);
                     }
                     else if (pi.PropertyType == typeof(Vector3))
                     {
@@ -427,7 +457,7 @@ namespace Lemegeton
                                 v.Z = temp;
                             }
                         }
-                        pi.SetValue(o, v);
+                        pi.SetValue(cm, v);
                     }
                     else if (pi.PropertyType == typeof(Vector4))
                     {
@@ -457,16 +487,26 @@ namespace Lemegeton
                                 v.W = temp;
                             }
                         }
-                        pi.SetValue(o, v);
+                        pi.SetValue(cm, v);
                     }
                     else if (pi.PropertyType == typeof(AutomarkerSigns))
                     {
-                        AutomarkerSigns v = (AutomarkerSigns)pi.GetValue(o);
+                        AutomarkerSigns v = (AutomarkerSigns)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
                     else if (pi.PropertyType == typeof(AutomarkerPrio))
                     {
-                        AutomarkerPrio v = (AutomarkerPrio)pi.GetValue(o);
+                        AutomarkerPrio v = (AutomarkerPrio)pi.GetValue(cm);
+                        v.Deserialize(attr.Value);
+                    }
+                    else if (pi.PropertyType == typeof(AutomarkerTiming))
+                    {
+                        AutomarkerTiming v = (AutomarkerTiming)pi.GetValue(cm);
+                        v.Deserialize(attr.Value);
+                    }
+                    else if (pi.PropertyType == typeof(Percentage))
+                    {
+                        Percentage v = (Percentage)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
                     else if (pi.PropertyType == typeof(Action))
@@ -474,13 +514,13 @@ namespace Lemegeton
                     }
                     else if (pi.PropertyType.IsSubclassOf(typeof(CustomPropertyInterface)))
                     {
-                        CustomPropertyInterface v = (CustomPropertyInterface)pi.GetValue(o);
+                        CustomPropertyInterface v = (CustomPropertyInterface)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
                     else
                     {
                         object val = Convert.ChangeType(attr.Value, pi.PropertyType);
-                        pi.SetValue(o, val);
+                        pi.SetValue(cm, val);
                     }
                 }
             }
@@ -586,8 +626,12 @@ namespace Lemegeton
         {
             _state.Log(State.LogLevelEnum.Info, null, "Loading configuration");
             _state.cfg = _state.pi.GetPluginConfig() as Config ?? new Config();
-            DeserializeProperties(_state.cfg.PropertyBlob);
             _state.Log(State.LogLevelEnum.Info, null, "Configuration loaded");
+        }
+
+        public void ApplyConfigToContent()
+        {
+            DeserializeProperties(_state.cfg.PropertyBlob);
         }
 
         public void SaveConfig()
@@ -596,6 +640,93 @@ namespace Lemegeton
             _state.cfg.PropertyBlob = SerializeProperties();
             _state.pi.SavePluginConfig(_state.cfg);
             _state.Log(State.LogLevelEnum.Info, null, "Configuration saved");
+        }
+
+        public string GenerateMD5Hash(string data)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(data);
+                byte[] hash = md5.ComputeHash(bytes);
+                return Convert.ToHexString(hash);
+            }
+        }
+
+        public void BackupConfig()
+        {
+            string temp = Path.GetTempPath();
+            string tempfile = Path.Combine(temp, String.Format("lemegeton_backup_{0}.json", DateTime.Now.ToString("yyyyMMdd_HHmmssfff")));
+            string data = SerializeConfig();
+            File.WriteAllText(tempfile, data);
+            _state.Log(State.LogLevelEnum.Debug, null, "Configuration backup saved to {0}", tempfile);
+        }
+
+        public string SerializeConfig()
+        {
+            return JsonConvert.SerializeObject(_state.cfg, Newtonsoft.Json.Formatting.Indented);
+        }
+
+        public string SerializeConfigSnapshot()
+        {
+            string temp = SerializeConfig();
+            int i = 80;
+            temp = Base64Encode(temp);
+            temp = GenerateMD5Hash(temp) + temp;
+#if !SANS_GOETIA
+            temp = "Lemegeton_" + temp;
+#else
+            temp = "Litegeton_" + temp;
+#endif
+            while (i < temp.Length)
+            {
+                temp = temp.Insert(i, Environment.NewLine);
+                i += 80;
+            }
+            return temp;
+        }
+
+        public IPluginConfiguration DeserializeConfigSnapshot(string data)
+        {
+            if (data.Length < 37)
+            {
+                Log(LogLevelEnum.Error, "Missing quite a lot of data on this snapshot!");
+                return null;
+            }
+            string tag = data.Substring(0, 10);
+#if !SANS_GOETIA
+            string mytag = "Lemegeton_";
+#else
+            string mytag = "Litegeton_";
+#endif
+            if (String.Compare(tag, mytag) != 0)
+            {
+                Log(LogLevelEnum.Error, "This config snapshot is from {0}, while this instance is {1}!", tag, mytag);
+                return null;
+            }
+            string md5 = data.Substring(10, 32);
+            string blob = data.Substring(42);
+            Regex rex = new Regex("[^A-Za-z0-9=+/]");
+            blob = rex.Replace(blob, "");
+            if (String.Compare(md5, GenerateMD5Hash(blob), true) != 0)
+            {
+                Log(LogLevelEnum.Error, "Snapshot does not seem to be intact!");
+                return null;
+            }
+            blob = Base64Decode(blob);
+            object o = JsonConvert.DeserializeObject<Config>(blob);
+            return (IPluginConfiguration)o;
+        }
+
+        private void GetContribs(ContentModule cm)
+        {
+            if (cm.Author != "" && _contribs.Contains(cm.Author) == false)
+            {
+                _contribs.Add(cm.Author);
+            }
+            foreach (ContentModule child in cm.Children)
+            {
+                GetContribs(child);
+            }
         }
 
         private void InitializeContent()
@@ -613,6 +744,19 @@ namespace Lemegeton
                         _other.Add(c);
                         break;
                 }                
+            }
+            foreach (Core.ContentCategory cc in _content)
+            {
+                GetContribs(cc);
+            }
+            foreach (Core.ContentCategory cc in _other)
+            {
+                GetContribs(cc);
+            }
+            if (_contribs.Count > 0)
+            {
+                _contribs.Sort();
+                _contribs.Insert(0, "- CONTRIBUTORS -");
             }
         }
 
@@ -642,10 +786,11 @@ namespace Lemegeton
             return _state.dm.GetImGuiTextureIcon(id);
         }
 
-        private List<Tuple<PropertyInfo, int>> GetConfigurableProperties(object o, bool disregardDebug)
-        {
-            PropertyInfo[] props = o.GetType().GetProperties();
+        private List<Tuple<PropertyInfo, int>> GetConfigurableProperties(ContentModule cm, bool disregardAdvanced, out bool hasDebug)
+        {            
+            PropertyInfo[] props = cm.GetType().GetProperties();
             List<Tuple<PropertyInfo, int>> result = new List<Tuple<PropertyInfo, int>>();
+            hasDebug = false;
             foreach (PropertyInfo pi in props)
             {
                 CustomAttributeData debugAttr = null, confAttr = null;
@@ -654,6 +799,7 @@ namespace Lemegeton
                     if (cad.AttributeType == typeof(DebugOption))
                     {
                         debugAttr = cad;
+                        hasDebug = true;
                     }
                     if (cad.AttributeType == typeof(AttributeOrderNumber))
                     {
@@ -662,7 +808,7 @@ namespace Lemegeton
                 }
                 if (confAttr != null)
                 {
-                    if (disregardDebug == true && debugAttr != null && _state.cfg.DebugOptions == false)
+                    if (disregardAdvanced == true && debugAttr != null && _state.cfg.AdvancedOptions == false)
                     {
                         continue;
                     }
@@ -997,6 +1143,61 @@ namespace Lemegeton
             }
         }
 
+        private void RenderAutomarkerTiming(string path, PropertyInfo pi, object o)
+        {
+            AutomarkerTiming amt = (AutomarkerTiming)pi.GetValue(o);
+            bool parent = false;
+            path += pi.Name;
+            bool inherited = amt.TimingType == AutomarkerTiming.TimingTypeEnum.Inherit;
+            if (amt.Parent != null)
+            {
+                if (ImGui.Checkbox(I18n.Translate("Automarker/TimingType/InheritDesc") + "##Inh" + path, ref inherited) == true)
+                {
+                    amt.TimingType = inherited == true ? AutomarkerTiming.TimingTypeEnum.Inherit : AutomarkerTiming.TimingTypeEnum.Explicit;
+                }
+                if (amt.TimingType == AutomarkerTiming.TimingTypeEnum.Inherit)
+                {
+                    amt = amt.Parent;
+                    ImGui.BeginDisabled();
+                    parent = true;
+                }
+            }
+            ImGui.TextWrapped((amt.Parent != null || parent == true ? Environment.NewLine : "") + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
+            float autoIniMin = amt.IniDelayMin;
+            float autoIniMax = amt.IniDelayMax;
+            if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Ini" + path, ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 2.0f) == true)
+            {
+                amt.IniDelayMin = autoIniMin;
+                amt.IniDelayMax = autoIniMax;
+            }
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSubsequentApplicationDelay"));
+            float autoSubMin = amt.SubDelayMin;
+            float autoSubMax = amt.SubDelayMax;
+            if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Sub" + path, ref autoSubMin, ref autoSubMax, 0.01f, 0.0f, 2.0f) == true)
+            {
+                amt.SubDelayMin = autoSubMin;
+                amt.SubDelayMax = autoSubMax;
+            }
+            if (parent == true)
+            {
+                ImGui.EndDisabled();
+            }
+        }
+
+        private void RenderPercentage(string path, PropertyInfo pi, object o)
+        {
+            Percentage pr = (Percentage)pi.GetValue(o);
+            string proptr = I18n.Translate(path + "/" + pi.Name);
+            ImGui.TextWrapped(proptr);
+            float cur = pr.CurrentValue;
+            ImGui.PushItemWidth(150.0f);
+            if (ImGui.SliderFloat("%##" + proptr, ref cur, pr.MinValue, pr.MaxValue, "%.1f") == true)
+            {
+                pr.CurrentValue = cur;
+            }
+            ImGui.PopItemWidth();
+        }
+
         private void RenderAutomarkerSigns(string path, PropertyInfo pi, object o)
         {
             AutomarkerSigns ams = (AutomarkerSigns)pi.GetValue(o);
@@ -1051,10 +1252,10 @@ namespace Lemegeton
             {
                 proptr = I18n.Translate(path + "/" + pi.Name + "/" + kp.Key);
                 string signtr = I18n.Translate("Signs/" + kp.Value);
-                ImGui.SetCursorPos(new Vector2(curPos.X + (250 * x), curPos.Y + (80 * y)));
+                ImGui.SetCursorPos(new Vector2(curPos.X + (220 * x), curPos.Y + (80 * y)));
                 ImGui.BeginGroup();
                 x++;
-                if (curPos.X + (250 * (x + 1)) >= wid)
+                if (curPos.X + (220 * (x + 1)) >= wid)
                 {
                     x = 0;
                     y++;
@@ -1095,13 +1296,44 @@ namespace Lemegeton
             }
         }
 
-        private void RenderProperties(string path, object o)
+        private void RenderProperties(string path, ContentModule cm)
         {
-            List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(o, true);
+            List<Tuple<PropertyInfo, int>> props = GetConfigurableProperties(cm, cm._debugDisplayToggled == false, out bool hasDebug);
             bool firstProp = true;
             int lastAon = 0;
             ImGuiStylePtr style = ImGui.GetStyle();
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
+            if (hasDebug == true && _state.cfg.AdvancedOptions == false)
+            {
+                Vector2 curpos = ImGui.GetCursorPos();                
+                ImGui.PushFont(UiBuilder.IconFont);
+                string ico = FontAwesomeIcon.Cog.ToIconString();
+                Vector2 sz = ImGui.CalcTextSize(ico);
+                sz.X += style.ItemInnerSpacing.X * 2.0f;
+                sz.Y += style.ItemInnerSpacing.Y * 2.0f;
+                ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - sz.X);
+                bool isToggled = cm._debugDisplayToggled;
+                if (isToggled)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Button, style.Colors[(int)ImGuiCol.ButtonActive]);
+                }
+                if (ImGui.Button(FontAwesomeIcon.Cog.ToIconString(), sz) == true)
+                {
+                    cm._debugDisplayToggled = (cm._debugDisplayToggled == false);
+                }
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered() == true)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text(isToggled == true ? I18n.Translate("Misc/HideAdvancedOptions") : I18n.Translate("Misc/ShowAdvancedOptions"));
+                    ImGui.EndTooltip();
+                }
+                if (isToggled)
+                {
+                    ImGui.PopStyleColor();
+                }                
+                ImGui.SetCursorPos(curpos);
+            }
             foreach (Tuple<PropertyInfo, int> prop in props)
             {
                 PropertyInfo pi = prop.Item1;
@@ -1124,68 +1356,76 @@ namespace Lemegeton
                 }
                 if (pi.PropertyType == typeof(bool))
                 {
-                    bool temp = (bool)pi.GetValue(o);
+                    bool temp = (bool)pi.GetValue(cm);
                     if (ImGui.Checkbox(proptr, ref temp) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
                 }
                 if (pi.PropertyType == typeof(string))
                 {
-                    string temp = (string)pi.GetValue(o);
+                    string temp = (string)pi.GetValue(cm);
                     ImGui.Text(proptr);
                     if (ImGui.InputText("##" + proptr, ref temp, 2048) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
                 }
                 else if (pi.PropertyType == typeof(Vector3))
                 {
-                    Vector3 temp = (Vector3)pi.GetValue(o);
+                    Vector3 temp = (Vector3)pi.GetValue(cm);
                     if (ImGui.ColorEdit3(proptr, ref temp, ImGuiColorEditFlags.NoInputs) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
                 }
                 else if (pi.PropertyType == typeof(int))
                 {
                     ImGui.PushItemWidth(250);
-                    int temp = (int)pi.GetValue(o);
+                    int temp = (int)pi.GetValue(cm);
                     if (ImGui.DragInt(proptr, ref temp, 1) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
                     ImGui.PopItemWidth();
                 }
                 else if (pi.PropertyType == typeof(float))
                 {
                     ImGui.PushItemWidth(250);
-                    float temp = (float)pi.GetValue(o);
+                    float temp = (float)pi.GetValue(cm);
                     if (ImGui.DragFloat(proptr, ref temp, 0.01f, 0.1f) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
                     ImGui.PopItemWidth();
                 }
                 else if (pi.PropertyType == typeof(Vector4))
                 {
-                    Vector4 temp = (Vector4)pi.GetValue(o);
+                    Vector4 temp = (Vector4)pi.GetValue(cm);
                     if (ImGui.ColorEdit4(proptr, ref temp, ImGuiColorEditFlags.NoInputs) == true)
                     {
-                        pi.SetValue(o, temp);
+                        pi.SetValue(cm, temp);
                     }
+                }
+                else if (pi.PropertyType == typeof(AutomarkerTiming))
+                {
+                    RenderAutomarkerTiming(path, pi, cm);
                 }
                 else if (pi.PropertyType == typeof(AutomarkerSigns))
                 {
-                    RenderAutomarkerSigns(path, pi, o);
+                    RenderAutomarkerSigns(path, pi, cm);
                 }
                 else if (pi.PropertyType == typeof(AutomarkerPrio))
                 {
-                    RenderAutomarkerPrio(path, pi, o);
+                    RenderAutomarkerPrio(path, pi, cm);
+                }
+                else if (pi.PropertyType == typeof(Percentage))
+                {
+                    RenderPercentage(path, pi, cm);
                 }
                 else if (pi.PropertyType == typeof(Action))
                 {
-                    Action act = (Action)pi.GetValue(o);
+                    Action act = (Action)pi.GetValue(cm);
                     if (act == null)
                     {
                         ImGui.BeginDisabled();
@@ -1201,7 +1441,7 @@ namespace Lemegeton
                 }
                 else if (pi.PropertyType.IsSubclassOf(typeof(CustomPropertyInterface)))
                 {
-                    CustomPropertyInterface cpi = (CustomPropertyInterface)pi.GetValue(o);
+                    CustomPropertyInterface cpi = (CustomPropertyInterface)pi.GetValue(cm);
                     cpi.RenderEditor(path + "/" + pi.Name);
                 }
                 if (mi == null || mi.IsPrivate == true)
@@ -1265,6 +1505,7 @@ namespace Lemegeton
                                     }
                                     ImGui.PushID(contentItem.Key);
                                     ImGui.Indent(30.0f);
+#if !SANS_GOETIA
                                     if ((contentItem.Value.Features & ContentModule.FeaturesEnum.Hack) != 0)
                                     {
                                         float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
@@ -1273,6 +1514,7 @@ namespace Lemegeton
                                         ImGui.PopStyleColor();
                                         ImGui.Separator();
                                     }
+#endif
                                     RenderProperties(path, contentItem.Value);
                                     ImGui.Unindent(30.0f);
                                     ImGui.PopID();
@@ -1338,7 +1580,9 @@ namespace Lemegeton
             _state.NumFeaturesAutomarker = 0;
             _state.NumFeaturesDrawing = 0;
             _state.NumFeaturesSound = 0;
+#if !SANS_GOETIA
             _state.NumFeaturesHack = 0;
+#endif
             if (_state.cs.LocalPlayer != null)
             {
                 foreach (Core.ContentCategory cc in _content)
@@ -1462,6 +1706,14 @@ namespace Lemegeton
             }
         }
 
+        private unsafe delegate bool UseActionLocationDelegate(ActionManager* self, ActionType actionType, uint actionID, ulong targetID, Vector3* targetPos, uint itemLocation);
+        Hook<UseActionLocationDelegate> hook = null;
+
+        private unsafe bool UseActionLocationDetour(ActionManager* self, ActionType actionType, uint actionID, ulong targetID, Vector3* targetPos, uint itemLocation)
+        {
+            return hook.Original(self, actionType, actionID, targetID, targetPos, itemLocation);
+        }
+
         private void DrawConfig()
         {
             if (_state.cfg.Opened == false)
@@ -1485,7 +1737,7 @@ namespace Lemegeton
             ImGui.PushStyleColor(ImGuiCol.TabActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
             ImGui.PushStyleColor(ImGuiCol.TabHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
             bool open = true;
-            if (ImGui.Begin("Lemegeton (Beta)", ref open, ImGuiWindowFlags.NoCollapse) == false)
+            if (ImGui.Begin(Name + " (Beta)", ref open, ImGuiWindowFlags.NoCollapse) == false)
             {
                 ImGui.End();
                 ImGui.PopStyleColor(3);
@@ -1557,11 +1809,13 @@ namespace Lemegeton
                     {
                         _state.cfg.QuickToggleSound = qtSound;
                     }
+#if !SANS_GOETIA
                     bool qtHacks = _state.cfg.QuickToggleHacks;
                     if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Hacks"), ref qtHacks) == true)
                     {
                         _state.cfg.QuickToggleHacks = qtHacks;
                     }
+#endif
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
                 }
@@ -1593,6 +1847,11 @@ namespace Lemegeton
                     {
                         _state.cfg.NagAboutStreaming = streamNag;
                     }
+                    bool advOpts = _state.cfg.AdvancedOptions;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AdvancedOptions"), ref advOpts) == true)
+                    {
+                        _state.cfg.AdvancedOptions = advOpts;
+                    }
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
                 }
@@ -1600,7 +1859,24 @@ namespace Lemegeton
                 {
                     ImGui.PushID("AutomarkerSettings");
                     ImGui.Indent(30.0f);
-                    ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
+                    bool remCombat = _state.cfg.RemoveMarkersAfterCombatEnd;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterCombatEnd"), ref remCombat) == true)
+                    {
+                        _state.cfg.RemoveMarkersAfterCombatEnd = remCombat;
+                    }
+                    bool remWipe = _state.cfg.RemoveMarkersAfterWipe;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterWipe"), ref remWipe) == true)
+                    {
+                        _state.cfg.RemoveMarkersAfterWipe = remWipe;
+                    }
+                    ImGui.Text(Environment.NewLine);
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/RemoveAutomarkers")) == true)
+                    {
+                        AutomarkerPayload ap = new AutomarkerPayload();
+                        ap.Clear = true;
+                        _state.ExecuteAutomarkers(ap, _state.cfg.DefaultAutomarkerTiming);
+                    }
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
                     float autoIniMin = _state.cfg.AutomarkerIniDelayMin;
                     float autoIniMax = _state.cfg.AutomarkerIniDelayMax;
                     if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersInitialApplicationDelay", ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 2.0f) == true)
@@ -1621,6 +1897,11 @@ namespace Lemegeton
                     if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersCommands"), ref autoCmd) == true)
                     {
                         _state.cfg.AutomarkerCommands = autoCmd;
+                    }
+                    bool debugLogMarkers = _state.cfg.DebugOnlyLogAutomarkers;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugOnlyLogAutomarkers"), ref debugLogMarkers) == true)
+                    {
+                        _state.cfg.DebugOnlyLogAutomarkers = debugLogMarkers;
                     }
                     ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine + Environment.NewLine);
                     bool autoSoft = _state.cfg.AutomarkerSoft;
@@ -1673,28 +1954,94 @@ namespace Lemegeton
                 {
                     ImGui.PushID("DebugSettings");
                     ImGui.Indent(30.0f);
-                    bool debugOpts = _state.cfg.DebugOptions;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugOptions"), ref debugOpts) == true)
+                    if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/Config")) == true)
                     {
-                        _state.cfg.DebugOptions = debugOpts;
-                    }
-                    bool debugLogMarkers = _state.cfg.DebugOnlyLogAutomarkers;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugOnlyLogAutomarkers"), ref debugLogMarkers) == true)
-                    {
-                        _state.cfg.DebugOnlyLogAutomarkers = debugLogMarkers;
+                        ImGui.PushID("Config");
+                        ImGui.Indent(30.0f);
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/LoadConfig")) == true)
+                        {
+                            LoadConfig();
+                            ApplyConfigToContent();
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/SaveConfig")) == true)
+                        {
+                            SaveConfig();
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/BackupConfig")) == true)
+                        {
+                            BackupConfig();
+                        }
+                        ImGui.Separator();
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ExportConfig")) == true)
+                        {
+                            _configSnapshot = SerializeConfigSnapshot();
+                            Log(LogLevelEnum.Debug, "Config snapshot generated");
+                        }
+                        ImGui.InputTextMultiline("##ConfigSnapshot", ref _configSnapshot, 100000, new Vector2(ImGui.GetContentRegionAvail().X, 200.0f), ImGuiInputTextFlags.AutoSelectAll);
+                        bool isempty = _configSnapshot.Trim().Length == 0;
+                        if (isempty == true)
+                        {
+                            ImGui.BeginDisabled();
+                        }
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/CopyToClipboard")) == true)
+                        {
+                            ImGui.SetClipboardText(_configSnapshot);
+                            Log(LogLevelEnum.Debug, "Config snapshot copied to clipboard");
+                        }
+                        if (isempty == true)
+                        {
+                            ImGui.EndDisabled();
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/PasteFromClipboard")) == true)
+                        {
+                            _configSnapshot = ImGui.GetClipboardText();
+                            Log(LogLevelEnum.Debug, "Config snapshot pasted from clipboard");
+                        }
+                        ImGui.SameLine();
+                        if (isempty == true)
+                        {
+                            ImGui.BeginDisabled();
+                        }
+                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ImportConfig")) == true)
+                        {
+                            IPluginConfiguration imp = DeserializeConfigSnapshot(_configSnapshot);
+                            if (imp != null)
+                            {
+                                _state.cfg = (Config)imp;
+                                Log(LogLevelEnum.Debug, "Config snapshot imported");
+                            }
+                            else
+                            {
+                                Log(LogLevelEnum.Error, "Couldn't import config snapshot");
+                            }
+                        }
+                        if (isempty == true)
+                        {
+                            ImGui.EndDisabled();
+                        }
+                        ImGui.Unindent(30.0f);
+                        ImGui.PopID();
                     }
                     if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/DelegateDebug")) == true)
                     {
                         ImGui.PushID("DelegateDebug");
                         ImGui.Indent(30.0f);
                         ImGui.PushItemWidth(100.0f);
+                        RenderMethodCall(_state.InvokeCombatantAdded);
+                        RenderMethodCall(_state.InvokeCombatantRemoved);
                         RenderMethodCall(_state.InvokeZoneChange);
                         RenderMethodCall(_state.InvokeCombatChange);
                         RenderMethodCall(_state.InvokeCastBegin);
                         RenderMethodCall(_state.InvokeAction);
                         RenderMethodCall(_state.InvokeHeadmarker);
+                        RenderMethodCall(_state.InvokeStatusChange);
+                        RenderMethodCall(_state.InvokeTether);
                         RenderMethodCall(_state.InvokeDirectorUpdate);
                         RenderMethodCall(_state.InvokeMapEffect);
+                        RenderMethodCall(_state.InvokeEventPlay);
                         ImGui.PopItemWidth();
                         ImGui.Unindent(30.0f);
                         ImGui.PopID();
@@ -1776,8 +2123,17 @@ namespace Lemegeton
                         32
                     );
                 }
-                int curtext = (int)Math.Floor(secs / delay) % _aboutScroller.Count();
-                string curstr = _aboutScroller[curtext].Replace("$auto", _state.cfg.AutomarkersServed.ToString());
+                int maxscroller = _aboutScroller.Count();
+                int curtext = (int)Math.Floor(secs / delay) % (maxscroller + _contribs.Count);
+                string curstr;
+                if (curtext < maxscroller)
+                {
+                    curstr = _aboutScroller[curtext].Replace("$auto", _state.cfg.AutomarkersServed.ToString());
+                }
+                else
+                {
+                    curstr = _contribs[curtext - maxscroller];
+                }                
                 Vector2 tsz = ImGui.CalcTextSize(curstr);                
                 tsz.X *= mul;
                 tsz.Y *= mul;
@@ -1927,6 +2283,12 @@ namespace Lemegeton
                     }
                     ImGui.InputText(pname, ref _delDebugInput[del][i], 256, flags);
                 }
+                if (ImGui.IsItemHovered() == true)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text(p.ParameterType.Name);
+                    ImGui.EndTooltip();
+                }
                 ImGui.SameLine();
                 i++;
             }
@@ -1936,7 +2298,20 @@ namespace Lemegeton
                 int k = 0;
                 foreach (ParameterInfo p in pis)
                 {
-                    if (p.ParameterType == typeof(byte[]))
+                    if (p.ParameterType == typeof(GameObject))
+                    {
+                        string temp = _delDebugInput[del][k];
+                        uint actorId = uint.Parse(temp, System.Globalization.NumberStyles.HexNumber);
+                        GameObject go = _state.GetActorById(actorId);
+                        conversions.Add(go);
+                    }
+                    else if (p.ParameterType == typeof(IntPtr))
+                    {
+                        string temp = _delDebugInput[del][k];
+                        nint addr = nint.Parse(temp, System.Globalization.NumberStyles.HexNumber);                        
+                        conversions.Add(new IntPtr(addr));
+                    }
+                    else if (p.ParameterType == typeof(byte[]))
                     {
                         string temp = _delDebugInput[del][k];
                         if ((temp.Length % 2) != 0)
@@ -2059,8 +2434,10 @@ namespace Lemegeton
                 ImGui.InputText(I18n.Translate("Status/NumFeaturesDrawing"), ref temp, 64, ImGuiInputTextFlags.ReadOnly);
                 temp = _state.NumFeaturesSound.ToString();
                 ImGui.InputText(I18n.Translate("Status/NumFeaturesSound"), ref temp, 64, ImGuiInputTextFlags.ReadOnly);
+#if !SANS_GOETIA
                 temp = _state.NumFeaturesHack.ToString();
                 ImGui.InputText(I18n.Translate("Status/NumFeaturesHack"), ref temp, 64, ImGuiInputTextFlags.ReadOnly);
+#endif
                 ImGui.PopItemWidth();
                 ImGui.EndTable();
             }
@@ -2068,10 +2445,12 @@ namespace Lemegeton
             ImGui.CollapsingHeader("  " + I18n.Translate("Status/ImpactToFunctionality"), ImGuiTreeNodeFlags.Leaf);
             ImGui.EndDisabled();
             ImGui.BeginChildFrame(1, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y));
+#if !SANS_GOETIA
             if (_state.NumFeaturesHack > 0 && _state.cfg.QuickToggleHacks == true && _state.cfg.NagAboutStreaming == true)
             {
                 complaints.Add(I18n.Translate("Status/WarnHacksActive"));
             }
+#endif
             if (_state.NumFeaturesDrawing > 0 && _state.cfg.QuickToggleOverlays == true && _state.cfg.NagAboutStreaming == true)
             {
                 complaints.Add(I18n.Translate("Status/WarnDrawsActive"));

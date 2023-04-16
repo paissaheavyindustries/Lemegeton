@@ -3,11 +3,36 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <Configurations>Debug (Full);Release (Full);Debug (Mini);Release (Mini)</Configurations>
   </PropertyGroup>
   
   <PropertyGroup>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Full)|AnyCPU'" />
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Mini)|AnyCPU'">
+    <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Full)|x64'" />
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Full)|AnyCPU'" />
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Mini)|AnyCPU'">
+    <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Full)|x64'" />
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Mini)|x64'">
+    <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Mini)|x64'">
+    <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

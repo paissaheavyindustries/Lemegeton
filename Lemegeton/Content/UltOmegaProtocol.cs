@@ -37,29 +37,38 @@ namespace Lemegeton.Content
         private const int StatusInLine2 = 3005;
         private const int StatusInLine3 = 3006;
         private const int StatusInLine4 = 3451;
-        private const uint StatusMidGlitch = 0xD63;
-        private const uint StatusRemoteGlitch = 0xD64;
-        private const uint StatusStackSniper = 0xD62;
-        private const uint StatusSpreadSniper = 0xD61;
+        private const uint StatusMidGlitch = 3427;
+        private const uint StatusRemoteGlitch = 3428;
+        private const uint StatusStackSniper = 3426;
+        private const uint StatusSpreadSniper = 3425;
+        private const uint StatusMonitorLeft = 0xD7D;
+        private const uint StatusMonitorRight = 0xD7C;
 
-        private const int HeadmarkerCircle = 0x1a0;
-        private const int HeadmarkerSquare = 0x1a2;
-        private const int HeadmarkerCross = 0x1a3;
-        private const int HeadmarkerTriangle = 0x1a1;
-        private const int HeadmarkerTarget = 0xf4;
+        private const int HeadmarkerCircle = 416;
+        private const int HeadmarkerSquare = 418;
+        private const int HeadmarkerCross = 419;
+        private const int HeadmarkerTriangle = 417;
+        private const int HeadmarkerTarget = 244;
 
         private bool ZoneOk = false;
+        private bool _sawFirstHeadMarker = false;
+        private uint _firstHeadMarker = 0;
 
+#if !SANS_GOETIA
         private ChibiOmega _chibiOmega;
         private GlitchTether _glitchTether;
+        private HelloWorldDrawBossMonitor _hwMonitor;
+        private DynamisDeltaDrawBossMonitor _deltaMonitor;
+        private DynamisOmegaDrawBossMonitor _omegaMonitor;
+#endif
+
         private ProgramLoopAM _loopAm;
         private PantokratorAM _pantoAm;
         private P3TransitionAM _p3transAm;
+        private P3MonitorAM _p3moniAm;
         private DynamisDeltaAM _deltaAm;
         private DynamisSigmaAM _sigmaAm;
         private DynamisOmegaAM _omegaAm;
-        private DynamisDeltaDrawBossMonitor _deltaMonitor;
-        private DynamisOmegaDrawBossMonitor _omegaMonitor;
 
         private enum PhaseEnum
         {
@@ -72,7 +81,24 @@ namespace Lemegeton.Content
             P5_Omega,
         }
 
-        private PhaseEnum CurrentPhase { get; set; } = PhaseEnum.P1_Start;
+        private PhaseEnum _CurrentPhase = PhaseEnum.P1_Start;
+        private PhaseEnum CurrentPhase
+        {
+            get
+            {
+                return _CurrentPhase;
+            }
+            set
+            {
+                if (_CurrentPhase != value)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Moving to phase {0}", value);
+                    _CurrentPhase = value;
+                }
+            }
+        }
+
+#if !SANS_GOETIA
 
         #region ChibiOmega
 
@@ -81,23 +107,44 @@ namespace Lemegeton.Content
 
             public override FeaturesEnum Features => FeaturesEnum.Hack;
 
+            [AttributeOrderNumber(1000)]
+            public bool ApplyP1 { get; set; } = true;
+            [AttributeOrderNumber(1001)]
+            public Percentage SizeP1 { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public bool ApplyP3 { get; set; } = true;
+            [AttributeOrderNumber(2001)]
+            public Percentage SizeP3 { get; set; }
+
             private bool _lookingForOmega = false;
-            private DateTime _omegaFound = DateTime.MinValue;
+            private DateTime _omegaSearchStartTime;
+            private DateTime _omegaFoundAt;
+            private DateTime _giveUpAt;
 
             public ChibiOmega(State state) : base(state)
             {
+                SizeP1 = new Percentage() { MinValue = 10.0f, MaxValue = 100.0f, CurrentValue = 100.0f };
+                SizeP3 = new Percentage() { MinValue = 10.0f, MaxValue = 100.0f, CurrentValue = 100.0f };
                 Enabled = false;
             }
 
-            public void StartLooking()
+            public void StartLooking(float giveUp)
             {
-                _omegaFound = DateTime.MinValue;
+                Log(State.LogLevelEnum.Debug, null, "Looking for Omega for {0} secs", giveUp);
+                _omegaSearchStartTime = DateTime.Now;
+                _giveUpAt = _omegaSearchStartTime.AddSeconds(giveUp);
+                _omegaFoundAt = DateTime.MinValue;
                 _lookingForOmega = true;
             }
 
             public void StopLooking()
             {
-                _lookingForOmega = false;
+                if (_lookingForOmega == true)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Not looking for Omega anymore");
+                    _lookingForOmega = false;
+                }
             }
 
             protected override bool ExecutionImplementation()
@@ -111,8 +158,15 @@ namespace Lemegeton.Content
 
             public unsafe void LookForOmega()
             {
-                if (_omegaFound != DateTime.MinValue && DateTime.Now > _omegaFound.AddSeconds(7))
+                if (_lookingForOmega == true && _omegaFoundAt == DateTime.MinValue && DateTime.Now > _giveUpAt)
                 {
+                    Log(State.LogLevelEnum.Debug, null, "Couldn't find Omega in time, giving up");
+                    StopLooking();
+                    return;
+                }
+                if (_omegaFoundAt != DateTime.MinValue && DateTime.Now > _omegaFoundAt.AddSeconds(3.0f))
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Done smollening Omega");
                     StopLooking();
                     return;
                 }
@@ -122,15 +176,41 @@ namespace Lemegeton.Content
                     {
                         Character bc = (Character)go;
                         CharacterStruct* bcs = (CharacterStruct*)bc.Address;
-                        if (bcs->ModelCharaId == 327 || (bcs->ModelCharaId == 3771 && bcs->Health == 8557964))
+                        if (
+                            // normal mode beetle, useful for testing
+                            (bcs->ModelCharaId == 327 && ApplyP1 == true)
+                            ||
+                            // p1 beetle omega
+                            (bcs->ModelCharaId == 3771 && bcs->Health == 8557964 && ApplyP1 == true)
+                        )
                         {
                             GameObjectStruct* gos = (GameObjectStruct*)go.Address;
-                            bcs->ModelScale = 0.1f;
-                            gos->Scale = 0.1f;
-                            if (_omegaFound == DateTime.MinValue)
+                            float scale = SizeP1.CurrentValue / 100.0f;
+                            bcs->ModelScale = scale;
+                            gos->Scale = scale;
+                            if (_omegaFoundAt == DateTime.MinValue)
                             {
-                                _state.Log(State.LogLevelEnum.Debug, null, "Omega found, ensmollening");
-                                _omegaFound = DateTime.Now;
+                                Log(State.LogLevelEnum.Debug, null, "P1 Omega found, ensmollening to {0}x", scale);
+                                _omegaFoundAt = DateTime.Now;
+                            }
+                            return;
+                        }
+                        else if (
+                            // normal mode beetle, useful for testing
+                            (bcs->ModelCharaId == 327 && ApplyP3 == true)
+                            ||
+                            // p3 not-really-final omega
+                            (bcs->ModelCharaId == 3775 && bcs->Health == 11125976 && ApplyP3 == true)
+                        )
+                        {
+                            GameObjectStruct* gos = (GameObjectStruct*)go.Address;
+                            float scale = SizeP3.CurrentValue / 100.0f;
+                            bcs->ModelScale = scale;
+                            gos->Scale = scale;
+                            if (_omegaFoundAt == DateTime.MinValue)
+                            {
+                                Log(State.LogLevelEnum.Debug, null, "P3 Omega found, ensmollening to {0}x", scale);
+                                _omegaFoundAt = DateTime.Now;
                             }
                             return;
                         }
@@ -141,6 +221,8 @@ namespace Lemegeton.Content
         }
 
         #endregion
+
+#endif
 
         #region ProgramLoopAM
 
@@ -157,11 +239,16 @@ namespace Lemegeton.Content
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
-            [AttributeOrderNumber(1001)]
+
+            [AttributeOrderNumber(2000)]
             public AutomarkerPrio Prio { get; set; }
 
             [DebugOption]
-            [AttributeOrderNumber(2000)]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
             private List<uint> _first = new List<uint>();
@@ -183,15 +270,23 @@ namespace Lemegeton.Content
                 Signs = new AutomarkerSigns();
                 Prio = new AutomarkerPrio();
                 Prio.Priority = AutomarkerPrio.PrioTypeEnum.Role;
+                Prio._prioByRole.Clear();
+                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Melee);
+                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Tank);
+                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Ranged);
+                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Caster);
+                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Healer);
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("Tower1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("Tower2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Tether1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Tether2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             internal void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _currentStep = 0;
                 _fired = false;
                 _first.Clear();
@@ -231,7 +326,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 _currentStep = index;
-                _state.Log(State.LogLevelEnum.Debug, null, "Sending marker set {0}", index);
+                Log(State.LogLevelEnum.Debug, null, "Sending marker set {0}", index);
                 switch (index)
                 {
                     case 1:
@@ -241,7 +336,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Tether2"]] = _thirdGo[1].GameObject;
                             ap.assignments[Signs.Roles["Tower1"]] = _firstGo[0].GameObject;
                             ap.assignments[Signs.Roles["Tower2"]] = _firstGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 2:
@@ -251,7 +346,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Tether2"]] = _fourthGo[1].GameObject;
                             ap.assignments[Signs.Roles["Tower1"]] = _secondGo[0].GameObject;
                             ap.assignments[Signs.Roles["Tower2"]] = _secondGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 3:
@@ -261,7 +356,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Tether2"]] = _firstGo[1].GameObject;
                             ap.assignments[Signs.Roles["Tower1"]] = _thirdGo[0].GameObject;
                             ap.assignments[Signs.Roles["Tower2"]] = _thirdGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 4:
@@ -271,14 +366,14 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Tether2"]] = _secondGo[1].GameObject;
                             ap.assignments[Signs.Roles["Tower1"]] = _fourthGo[0].GameObject;
                             ap.assignments[Signs.Roles["Tower2"]] = _fourthGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 5:
                         {
                             AutomarkerPayload ap = new AutomarkerPayload();
                             ap.Clear = true;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                 }
@@ -295,30 +390,39 @@ namespace Lemegeton.Content
                     switch (statusId)
                     {
                         case StatusInLine1:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _first.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine2:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _second.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine3:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _third.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine4:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _fourth.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                     }
-                    if (_symbols.Count == 8 && _fired == false)
+                    if (_fired == false)
                     {
-                        _state.Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
-                        PerformDecision();
+                        if (_symbols.Count == 8)
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
+                            PerformDecision();
+                        }
+                        else
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "No ready for automarkers yet; {0} symbols",
+                                _symbols.Count
+                            );
+                        }
                     }
                 }
                 else
@@ -326,19 +430,19 @@ namespace Lemegeton.Content
                     switch (statusId)
                     {
                         case StatusInLine1:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(2);
                             break;
                         case StatusInLine2:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(3);
                             break;
                         case StatusInLine3:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(4);
                             break;
                         case StatusInLine4:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(5);
                             break;
                     }
@@ -366,7 +470,11 @@ namespace Lemegeton.Content
             public AutomarkerSigns Signs { get; set; }
 
             [DebugOption]
-            [AttributeOrderNumber(2000)]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
             private List<uint> _first = new List<uint>();
@@ -385,16 +493,18 @@ namespace Lemegeton.Content
             public PantokratorAM(State state) : base(state)
             {
                 Enabled = false;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs = new AutomarkerSigns();
                 Signs.SetRole("Beam1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("Beam2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Missile1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Missile2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             internal void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _currentStep = 0;
                 _fired = false;
                 _first.Clear();
@@ -430,7 +540,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 _currentStep = index;
-                _state.Log(State.LogLevelEnum.Debug, null, "Sending marker set {0}", index);
+                Log(State.LogLevelEnum.Debug, null, "Sending marker set {0}", index);
                 switch (index)
                 {
                     case 1:
@@ -440,7 +550,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Beam2"]] = _thirdGo[1].GameObject;
                             ap.assignments[Signs.Roles["Missile1"]] = _firstGo[0].GameObject;
                             ap.assignments[Signs.Roles["Missile2"]] = _firstGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 2:
@@ -450,7 +560,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Beam2"]] = _fourthGo[1].GameObject;
                             ap.assignments[Signs.Roles["Missile1"]] = _secondGo[0].GameObject;
                             ap.assignments[Signs.Roles["Missile2"]] = _secondGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 3:
@@ -460,7 +570,7 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Beam2"]] = _firstGo[1].GameObject;
                             ap.assignments[Signs.Roles["Missile1"]] = _thirdGo[0].GameObject;
                             ap.assignments[Signs.Roles["Missile2"]] = _thirdGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 4:
@@ -470,14 +580,14 @@ namespace Lemegeton.Content
                             ap.assignments[Signs.Roles["Beam2"]] = _secondGo[1].GameObject;
                             ap.assignments[Signs.Roles["Missile1"]] = _fourthGo[0].GameObject;
                             ap.assignments[Signs.Roles["Missile2"]] = _fourthGo[1].GameObject;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                     case 5:
                         {
                             AutomarkerPayload ap = new AutomarkerPayload();
                             ap.Clear = true;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
                         break;
                 }
@@ -494,30 +604,39 @@ namespace Lemegeton.Content
                     switch (statusId)
                     {
                         case StatusInLine1:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _first.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine2:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _second.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine3:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _third.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                         case StatusInLine4:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _fourth.Add(actorId);
                             _symbols.Add(actorId);
                             break;
                     }
-                    if (_symbols.Count == 8 && _fired == false)
+                    if (_fired == false)
                     {
-                        _state.Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
-                        PerformDecision();
+                        if (_symbols.Count == 8)
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
+                            PerformDecision();
+                        }
+                        else
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "No ready for automarkers yet; {0} symbols",
+                                _symbols.Count
+                            );
+                        }
                     }
                 }
                 else
@@ -525,19 +644,19 @@ namespace Lemegeton.Content
                     switch (statusId)
                     {
                         case StatusInLine1:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(2);
                             break;
                         case StatusInLine2:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(3);
                             break;
                         case StatusInLine3:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(4);
                             break;
                         case StatusInLine4:
-                            _state.Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
+                            Log(State.LogLevelEnum.Debug, null, "Lost status {0}", statusId);
                             SendMarkers(5);
                             break;
                     }
@@ -547,6 +666,8 @@ namespace Lemegeton.Content
         }
 
         #endregion
+
+#if !SANS_GOETIA
 
         #region GlitchTether
 
@@ -566,86 +687,43 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2000)]
             public Action Test { get; set; }
 
-            private List<uint> _symbolSquare = new List<uint>();
-            private List<uint> _symbolTriangle = new List<uint>();
-            private List<uint> _symbolCircle = new List<uint>();
-            private List<uint> _symbolCross = new List<uint>();
-            private List<uint> _symbols = new List<uint>();
-
             private uint _partnerId = 0;
             private uint _currentDebuff = 0;
-            private int _myHeadmarker = 0;
 
             public GlitchTether(State state) : base(state)
             {
+                Enabled = false;
                 Test = new Action(() => TestFunctionality());
             }
 
             public void Reset()
             {
-                _symbolSquare.Clear();
-                _symbolTriangle.Clear();
-                _symbolCircle.Clear();
-                _symbolCross.Clear();
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _partnerId = 0;
                 _currentDebuff = 0;
-                _myHeadmarker = 0;
             }
 
-            public void FeedHeadmarker(uint actorId, int headMarkerId)
+            public void FeedTether(uint actorId1, uint actorId2)
             {
                 uint myid = _state.cs.LocalPlayer.ObjectId;
-                if (myid == actorId)
+                if (actorId1 == myid || actorId2 == myid)
                 {
-                    _myHeadmarker = headMarkerId;
+                    Log(State.LogLevelEnum.Debug, null, "Registered tether between {0} and {1}", actorId1, actorId2);
+                    if (actorId1 == myid)
+                    {
+                        _partnerId = actorId2;
+                    }
+                    if (actorId2 == myid)
+                    {
+                        _partnerId = actorId1;
+                    }
                 }
-                _symbols.Add(actorId);
-                switch (headMarkerId)
-                {
-                    case HeadmarkerCircle:
-                        _symbolCircle.Add(actorId);
-                        break;
-                    case HeadmarkerCross:
-                        _symbolCross.Add(actorId);
-                        break;
-                    case HeadmarkerTriangle:
-                        _symbolTriangle.Add(actorId);
-                        break;
-                    case HeadmarkerSquare:
-                        _symbolSquare.Add(actorId);
-                        break;
-                }
-                PerformDecision();
             }
 
             public void FeedStatus(uint statusId)
             {
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0}", statusId);
                 _currentDebuff = statusId;
-                PerformDecision();
-            }
-
-            private void PerformDecision()
-            {
-                if (_currentDebuff == 0 || _symbols.Count != 8)
-                {
-                    return;
-                }
-                uint myid = _state.cs.LocalPlayer.ObjectId;
-                switch (_myHeadmarker)
-                {
-                    case HeadmarkerCircle:
-                        _partnerId = (from ix in _symbolCircle where ix != myid select ix).FirstOrDefault();
-                        break;
-                    case HeadmarkerCross:
-                        _partnerId = (from ix in _symbolCross where ix != myid select ix).FirstOrDefault();
-                        break;
-                    case HeadmarkerTriangle:
-                        _partnerId = (from ix in _symbolTriangle where ix != myid select ix).FirstOrDefault();
-                        break;
-                    case HeadmarkerSquare:
-                        _partnerId = (from ix in _symbolSquare where ix != myid select ix).FirstOrDefault();
-                        break;
-                }
             }
 
             public void TestFunctionality()
@@ -684,7 +762,7 @@ namespace Lemegeton.Content
                     Random r = new Random();
                     _currentDebuff = r.Next(0, 2) == 0 ? StatusMidGlitch : StatusRemoteGlitch;
                     _partnerId = go.ObjectId;
-                    _state.Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
+                    Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
                     return;
                 }
             }
@@ -771,7 +849,9 @@ namespace Lemegeton.Content
 
         #endregion
 
-        #region DynamisOmegaAM
+#endif
+
+        #region P3TransitionAM
 
         public class P3TransitionAM : Core.ContentItem
         {
@@ -786,11 +866,16 @@ namespace Lemegeton.Content
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
-            [AttributeOrderNumber(1001)]
+
+            [AttributeOrderNumber(2000)]
             public AutomarkerPrio Prio { get; set; }
 
             [DebugOption]
-            [AttributeOrderNumber(2000)]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
             private List<uint> _stacks = new List<uint>();
@@ -802,6 +887,7 @@ namespace Lemegeton.Content
                 Enabled = false;
                 Signs = new AutomarkerSigns();
                 Prio = new AutomarkerPrio();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Prio.Priority = AutomarkerPrio.PrioTypeEnum.CongaX;
                 Signs.SetRole("Stack1_1", AutomarkerSigns.SignEnum.Bind1, false);
                 Signs.SetRole("Stack1_2", AutomarkerSigns.SignEnum.Ignore1, false);
@@ -811,11 +897,12 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             internal void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _signs = false;
                 _stacks.Clear();
                 _spreads.Clear();
@@ -832,16 +919,19 @@ namespace Lemegeton.Content
                     case 0:
                         if (_signs == true)
                         {
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                             _signs = false;
                             AutomarkerPayload ap = new AutomarkerPayload();
                             ap.Clear = true;
-                            _state.ExecuteAutomarkers(ap);
+                            _state.ExecuteAutomarkers(ap, Timing);
                         }
-                        break;
+                        return;
                     case StatusStackSniper:
+                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                         _stacks.Add(actorId);
                         break;
                     case StatusSpreadSniper:
+                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
                         _spreads.Add(actorId);
                         break;
                     default:
@@ -856,6 +946,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
                 Party pty = _state.GetPartyMembers();
                 List<Party.PartyMember> _stacksGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _stacks on ix.ObjectId equals jx select ix
@@ -878,7 +969,7 @@ namespace Lemegeton.Content
                 ap.assignments[Signs.Roles["Spread2"]] = _spreadsGo[1].GameObject;
                 ap.assignments[Signs.Roles["Spread3"]] = _spreadsGo[2].GameObject;
                 ap.assignments[Signs.Roles["Spread4"]] = _spreadsGo[3].GameObject;
-                _state.ExecuteAutomarkers(ap);
+                _state.ExecuteAutomarkers(ap, Timing);
                 _signs = true;
             }
 
@@ -886,9 +977,27 @@ namespace Lemegeton.Content
 
         #endregion
 
-        #region DynamisDeltaAM
+#if !SANS_GOETIA
 
-        public class DynamisDeltaAM : Core.ContentItem
+        #region HelloWorldDrawBossMonitor
+
+        public class HelloWorldDrawBossMonitor : DynamisOmegaDrawBossMonitor
+        {
+
+            public HelloWorldDrawBossMonitor(State st) : base(st)
+            {
+                Enabled = false;
+            }
+
+        }
+
+        #endregion
+
+#endif
+
+        #region P3MonitorAM
+
+        public class P3MonitorAM : Core.ContentItem
         {
 
             public override FeaturesEnum Features
@@ -902,54 +1011,108 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
 
-            [DebugOption]
             [AttributeOrderNumber(2000)]
-            public Action Test { get; set; } 
+            public AutomarkerPrio Prio { get; set; }
 
-            private Dictionary<uint, GameObject> _debuffs = new Dictionary<uint, GameObject>();
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
 
-            public DynamisDeltaAM(State state) : base(state)
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private List<uint> _monitors = new List<uint>();
+            private bool _signs = false;
+
+            public P3MonitorAM(State state) : base(state)
             {
                 Enabled = false;
                 Signs = new AutomarkerSigns();
-                SetupPresets();
-                Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, null));
-            }
-
-            private void SetupPresets()
-            {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                Signs.Presets["LPDU"] = pr;
+                Prio = new AutomarkerPrio();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.CongaY;
+                Signs.SetRole("Monitor1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Monitor2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("Monitor3", AutomarkerSigns.SignEnum.Bind3, false);
+                Signs.SetRole("None1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("None2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("None3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("None4", AutomarkerSigns.SignEnum.Attack4, false);
+                Signs.SetRole("None5", AutomarkerSigns.SignEnum.Attack5, false);
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             internal void Reset()
             {
-                _debuffs.Clear();
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _signs = false;
+                _monitors.Clear();
             }
 
-            internal void FeedStatus(uint actorId, uint statusId, float duration, int stacks)
+            internal void FeedStatus(uint actorId, uint statusId)
             {
-                if (Active == false || (statusId != StatusDistantWorld && statusId != StatusNearWorld))
+                if (Active == false)
                 {
                     return;
                 }
-                _debuffs[statusId] = _state.GetActorById(actorId);
-                if (_debuffs.Count == 2)
+                switch (statusId)
                 {
-                    AutomarkerPayload ap = new AutomarkerPayload();
-                    ap.assignments[Signs.Roles["DistantWorld"]] = _debuffs[StatusDistantWorld];
-                    ap.assignments[Signs.Roles["NearWorld"]] = _debuffs[StatusNearWorld];
-                    _state.ExecuteAutomarkers(ap);
+                    case 0:
+                        if (_signs == true)
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                            _signs = false;
+                            AutomarkerPayload ap = new AutomarkerPayload();
+                            ap.Clear = true;
+                            _state.ExecuteAutomarkers(ap, Timing);
+                        }
+                        return;
+                    case StatusMonitorLeft:
+                    case StatusMonitorRight:
+                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                        _monitors.Add(actorId);
+                        break;
+                    default:
+                        return;
                 }
+                ReadyForDecision();
+            }
+
+            internal void ReadyForDecision()
+            {
+                if (_monitors.Count != 3)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "All monitors registered, ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _monitorsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _monitors on ix.ObjectId equals jx select ix
+                );
+                List<Party.PartyMember> _unmarkedGo = new List<Party.PartyMember>(
+                    from ix in pty.Members where _monitorsGo.Contains(ix) == false select ix
+                );
+                Prio.SortByPriority(_monitorsGo);
+                Prio.SortByPriority(_unmarkedGo);
+                AutomarkerPayload ap = new AutomarkerPayload();
+                ap.assignments[Signs.Roles["Monitor1"]] = _monitorsGo[0].GameObject;
+                ap.assignments[Signs.Roles["Monitor2"]] = _monitorsGo[1].GameObject;
+                ap.assignments[Signs.Roles["Monitor3"]] = _monitorsGo[2].GameObject;
+                ap.assignments[Signs.Roles["None1"]] = _unmarkedGo[0].GameObject;
+                ap.assignments[Signs.Roles["None2"]] = _unmarkedGo[1].GameObject;
+                ap.assignments[Signs.Roles["None3"]] = _unmarkedGo[2].GameObject;
+                ap.assignments[Signs.Roles["None4"]] = _unmarkedGo[3].GameObject;
+                ap.assignments[Signs.Roles["None5"]] = _unmarkedGo[4].GameObject;
+                _state.ExecuteAutomarkers(ap, Timing);
+                _signs = true;
             }
 
         }
 
         #endregion
+
+#if !SANS_GOETIA
 
         #region DynamisDeltaDrawBossMonitor
 
@@ -978,6 +1141,7 @@ namespace Lemegeton.Content
 
             public DynamisDeltaDrawBossMonitor(State state) : base(state)
             {
+                Enabled = false;
                 Test = new Action(() => TestFunctionality());
             }
 
@@ -991,18 +1155,19 @@ namespace Lemegeton.Content
                     {
                         omegaPos = DirectionsEnum.West;
                     }
-                    if (pos.X > 90.0f)
+                    else if (pos.X > 110.0f)
                     {
                         omegaPos = DirectionsEnum.East;
                     }
-                    if (pos.Y < 90.0f)
+                    else if (pos.Z < 90.0f)
                     {
                         omegaPos = DirectionsEnum.North;
                     }
-                    if (pos.Y > 90.0f)
+                    else if (pos.Z > 110.0f)
                     {
                         omegaPos = DirectionsEnum.South;
                     }
+                    Log(State.LogLevelEnum.Debug, null, "Omega is {0} (pos: {1},{2},{3}) and currently {4}", omegachan, pos.X, pos.Y, pos.Z, omegaPos);
                 }
                 _currentAction = actionId;
             }
@@ -1031,7 +1196,7 @@ namespace Lemegeton.Content
                 if (_currentAction == 0)
                 {
                     return false;
-                }                
+                }
                 DirectionsEnum monitors = DirectionsEnum.North;
                 float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
                 switch (omegaPos)
@@ -1043,10 +1208,10 @@ namespace Lemegeton.Content
                         monitors = _currentAction == AbilityBossMonitorDeltaLeft ? DirectionsEnum.West : DirectionsEnum.East;
                         break;
                     case DirectionsEnum.East:
-                        monitors = _currentAction == AbilityBossMonitorDeltaLeft ? DirectionsEnum.North : DirectionsEnum.South;
+                        monitors = _currentAction == AbilityBossMonitorDeltaLeft ? DirectionsEnum.South : DirectionsEnum.North;
                         break;
                     case DirectionsEnum.West:
-                        monitors = _currentAction == AbilityBossMonitorDeltaLeft ? DirectionsEnum.South : DirectionsEnum.North;
+                        monitors = _currentAction == AbilityBossMonitorDeltaLeft ? DirectionsEnum.North : DirectionsEnum.South;
                         break;
                 }
                 switch (monitors)
@@ -1087,6 +1252,85 @@ namespace Lemegeton.Content
 
         #endregion
 
+#endif
+
+        #region DynamisDeltaAM
+
+        public class DynamisDeltaAM : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features
+            {
+                get
+                {
+                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
+                }
+            }
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private Dictionary<uint, GameObject> _debuffs = new Dictionary<uint, GameObject>();
+
+            public DynamisDeltaAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                SetupPresets();
+                Signs.ApplyPreset("LPDU");
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+            }
+
+            private void SetupPresets()
+            {
+                Dictionary<string, AutomarkerSigns.SignEnum> pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
+                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                Signs.Presets["LPDU"] = pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                Signs.Presets["ElementalDC"] = pr;
+            }
+
+            internal void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _debuffs.Clear();
+            }
+
+            internal void FeedStatus(uint actorId, uint statusId, float duration, int stacks)
+            {
+                if (Active == false || (statusId != StatusDistantWorld && statusId != StatusNearWorld))
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                _debuffs[statusId] = _state.GetActorById(actorId);
+                if (_debuffs.Count == 2)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
+                    AutomarkerPayload ap = new AutomarkerPayload();
+                    ap.assignments[Signs.Roles["DistantWorld"]] = _debuffs[StatusDistantWorld];
+                    ap.assignments[Signs.Roles["NearWorld"]] = _debuffs[StatusNearWorld];
+                    _state.ExecuteAutomarkers(ap, Timing);
+                }
+            }
+
+        }
+
+        #endregion
+
         #region DynamisSigmaAM
 
         public class DynamisSigmaAM : Core.ContentItem
@@ -1104,7 +1348,11 @@ namespace Lemegeton.Content
             public AutomarkerSigns Signs { get; set; }
 
             [DebugOption]
-            [AttributeOrderNumber(2000)]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
             private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
@@ -1121,9 +1369,10 @@ namespace Lemegeton.Content
             {
                 Enabled = false;
                 Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, null));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             private void SetupPresets()
@@ -1139,10 +1388,21 @@ namespace Lemegeton.Content
                 pr["NearBait1"] = AutomarkerSigns.SignEnum.Attack2;
                 pr["NearBait2"] = AutomarkerSigns.SignEnum.Attack3;
                 Signs.Presets["LPDU"] = pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["Arm1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr["Arm2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack3;
+                pr["DistantCloseBait"] = AutomarkerSigns.SignEnum.Bind1;
+                pr["NearBait1"] = AutomarkerSigns.SignEnum.Bind2;
+                pr["NearBait2"] = AutomarkerSigns.SignEnum.Bind3;
+                Signs.Presets["ElementalDC"] = pr;
             }
 
             internal void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _dynamisStacks.Clear();
                 _debuffs.Clear();
                 _psMarkers.Clear();
@@ -1153,12 +1413,13 @@ namespace Lemegeton.Content
                 _wavecannons.Clear();
             }
 
-            internal void FeedHeadmarker(uint actorId, int headMarkerId)
+            internal void FeedHeadmarker(uint actorId, uint headMarkerId)
             {
                 if (Active == false)
                 {
                     return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "Registered headmarker {0} on {1}", headMarkerId, actorId);
                 switch (headMarkerId)
                 {
                     case HeadmarkerCircle:
@@ -1192,6 +1453,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1} with {2} stacks", statusId, actorId, stacks);
                 if (statusId == StatusDynamis)
                 {
                     _dynamisStacks[actorId] = stacks;
@@ -1205,8 +1467,12 @@ namespace Lemegeton.Content
             {
                 if (_wavecannons.Count != 6 || _debuffs.Count != 2 || _psMarkers.Count != 8)
                 {
+                    Log(State.LogLevelEnum.Debug, null, "No ready for automarkers yet; {0} cannons {1} debuffs {2} markers",
+                        _wavecannons.Count, _debuffs.Count, _psMarkers.Count
+                    );
                     return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
                 AutomarkerPayload ap = new AutomarkerPayload();
                 uint distant = _debuffs[StatusDistantWorld];
                 uint near = _debuffs[StatusNearWorld];
@@ -1228,172 +1494,14 @@ namespace Lemegeton.Content
                 ap.assignments[Signs.Roles["Arm1"]] = _state.GetActorById(theRest[0]);
                 ap.assignments[Signs.Roles["Arm2"]] = _state.GetActorById(theRest[1]);
                 ap.assignments[Signs.Roles["DistantFarBait"]] = _state.GetActorById(theRest[2]);
-                _state.ExecuteAutomarkers(ap);
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
         }
 
         #endregion
 
-        #region DynamisOmegaAM
-
-        public class DynamisOmegaAM : Core.ContentItem
-        {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
-
-            [AttributeOrderNumber(1000)]
-            public AutomarkerSigns Signs { get; set; }
-
-            [DebugOption]
-            [AttributeOrderNumber(2000)]
-            public Action Test { get; set; }
-
-            private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
-            private List<uint> _distants = new List<uint>();
-            private List<uint> _nears = new List<uint>();
-            private List<uint> _firsts = new List<uint>();
-            private List<uint> _seconds = new List<uint>();
-
-            internal AutomarkerPayload SecondPayload;
-
-            public DynamisOmegaAM(State state) : base(state)
-            {
-                Enabled = false;
-                Signs = new AutomarkerSigns();
-                SetupPresets();
-                Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, null));
-            }
-
-            private void SetupPresets()
-            {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Monitor1"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["Monitor2"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
-                pr["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["Bait4"] = AutomarkerSigns.SignEnum.Attack4;
-                Signs.Presets["LPDU"] = pr;
-            }
-
-            internal void Reset()
-            {
-                _dynamisStacks.Clear();
-                _distants.Clear();
-                _nears.Clear();
-                _firsts.Clear();
-                _seconds.Clear();
-            }
-
-            internal void FeedStatus(uint actorId, uint statusId, float duration, int stacks)
-            {
-                if (Active == false)
-                {
-                    return;
-                }
-                switch (statusId)
-                {
-                    case StatusDistantWorld:
-                        _distants.Add(actorId);
-                        break;
-                    case StatusNearWorld:
-                        _nears.Add(actorId);
-                        break;
-                    case StatusInLine1:
-                        _firsts.Add(actorId);
-                        break;
-                    case StatusInLine2:
-                        _seconds.Add(actorId);
-                        break;
-                    case StatusDynamis:
-                        _dynamisStacks[actorId] = stacks;
-                        break;
-                    default:
-                        return;
-                }
-                ReadyForDecision();
-            }
-
-            internal void ReadyForDecision()
-            {
-                if (_distants.Count != 2 || _nears.Count != 2 || _firsts.Count != 2 || _seconds.Count != 2)
-                {
-                    return;
-                }
-                List<uint> firstMonitorsSelection = new List<uint>();
-                var distant2nd = (from s in _seconds join d in _distants on s equals d select s).FirstOrDefault();
-                var near2nd = (from s in _seconds join d in _distants on s equals d select s).FirstOrDefault();
-                if (distant2nd > 0 && _dynamisStacks[distant2nd] == 2)
-                {
-                    firstMonitorsSelection.Add(distant2nd);
-                }
-                if (near2nd > 0 && _dynamisStacks[near2nd] == 2)
-                {
-                    firstMonitorsSelection.Add(near2nd);
-                }
-                if (firstMonitorsSelection.Count < 2)
-                {
-                    firstMonitorsSelection.AddRange(
-                        (from ix in _dynamisStacks where ix.Value == 2 && ix.Key != distant2nd && ix.Key != near2nd select ix.Key).Take(2 - firstMonitorsSelection.Count)
-                    );
-                }
-                var distant1st = (from s in _seconds join d in _distants on s equals d select s).FirstOrDefault();
-                var near1st = (from s in _seconds join d in _distants on s equals d select s).FirstOrDefault();
-                AutomarkerPayload ap1 = new AutomarkerPayload();
-                ap1.assignments[Signs.Roles["Monitor1"]] = _state.GetActorById(firstMonitorsSelection[0]);
-                ap1.assignments[Signs.Roles["Monitor2"]] = _state.GetActorById(firstMonitorsSelection[1]);
-                ap1.assignments[Signs.Roles["DistantWorld"]] = _state.GetActorById(distant1st);
-                ap1.assignments[Signs.Roles["NearWorld"]] = _state.GetActorById(near1st);
-                var theRest1 = (from ix in _dynamisStacks
-                                where firstMonitorsSelection.Contains(ix.Key) == false
-                                && ix.Key != distant1st
-                                && ix.Key != near1st
-                                select ix.Key).Take(4).ToList();
-                ap1.assignments[Signs.Roles["Bait1"]] = _state.GetActorById(theRest1[0]);
-                ap1.assignments[Signs.Roles["Bait2"]] = _state.GetActorById(theRest1[1]);
-                ap1.assignments[Signs.Roles["Bait3"]] = _state.GetActorById(theRest1[2]);
-                ap1.assignments[Signs.Roles["Bait4"]] = _state.GetActorById(theRest1[3]);
-                _dynamisStacks[distant1st] = _dynamisStacks[distant1st] + 1;
-                _dynamisStacks[near1st] = _dynamisStacks[near1st] + 1;
-                _dynamisStacks[theRest1[0]] = _dynamisStacks[theRest1[0]] + 1;
-                _dynamisStacks[theRest1[1]] = _dynamisStacks[theRest1[1]] + 1;
-                _dynamisStacks[theRest1[2]] = _dynamisStacks[theRest1[2]] + 1;
-                _dynamisStacks[theRest1[3]] = _dynamisStacks[theRest1[3]] + 1;
-                AutomarkerPayload ap2 = new AutomarkerPayload();
-                var threeStacks = (from ix in _dynamisStacks
-                                   where ix.Value == 3
-                                   select ix.Key).Take(2).ToList();
-                ap2.assignments[Signs.Roles["Monitor1"]] = _state.GetActorById(threeStacks[0]);
-                ap2.assignments[Signs.Roles["Monitor2"]] = _state.GetActorById(threeStacks[1]);
-                ap2.assignments[Signs.Roles["DistantWorld"]] = _state.GetActorById(distant2nd);
-                ap2.assignments[Signs.Roles["NearWorld"]] = _state.GetActorById(near2nd);
-                var theRest2 = (from ix in _dynamisStacks
-                                where threeStacks.Contains(ix.Key) == false
-                                && ix.Key != distant2nd
-                                && ix.Key != near2nd
-                                select ix.Key).Take(4).ToList();
-                ap2.assignments[Signs.Roles["Bait1"]] = _state.GetActorById(theRest2[0]);
-                ap2.assignments[Signs.Roles["Bait2"]] = _state.GetActorById(theRest2[1]);
-                ap2.assignments[Signs.Roles["Bait3"]] = _state.GetActorById(theRest2[2]);
-                ap2.assignments[Signs.Roles["Bait4"]] = _state.GetActorById(theRest2[3]);
-                SecondPayload = ap2;
-                _state.ExecuteAutomarkers(ap1);
-            }
-
-        }
-
-        #endregion
+#if !SANS_GOETIA
 
         #region DynamisOmegaDrawBossMonitor
 
@@ -1413,11 +1521,13 @@ namespace Lemegeton.Content
 
             public DynamisOmegaDrawBossMonitor(State state) : base(state)
             {
+                Enabled = false;
                 Test = new Action(() => TestFunctionality());
             }
 
             public void FeedAction(uint actionId)
             {
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0}", actionId);
                 _currentAction = actionId;
             }
 
@@ -1480,6 +1590,186 @@ namespace Lemegeton.Content
 
         #endregion
 
+#endif
+
+        #region DynamisOmegaAM
+
+        public class DynamisOmegaAM : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features
+            {
+                get
+                {
+                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
+                }
+            }
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
+            private List<uint> _distants = new List<uint>();
+            private List<uint> _nears = new List<uint>();
+            private List<uint> _firsts = new List<uint>();
+            private List<uint> _seconds = new List<uint>();
+
+            internal AutomarkerPayload SecondPayload;
+
+            public DynamisOmegaAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                SetupPresets();
+                Signs.ApplyPreset("LPDU");
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+            }
+
+            private void SetupPresets()
+            {
+                Dictionary<string, AutomarkerSigns.SignEnum> pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["Monitor1"] = AutomarkerSigns.SignEnum.Bind1;
+                pr["Monitor2"] = AutomarkerSigns.SignEnum.Bind2;
+                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
+                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr["Bait4"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs.Presets["LPDU"] = pr;
+            }
+
+            internal void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _dynamisStacks.Clear();
+                _distants.Clear();
+                _nears.Clear();
+                _firsts.Clear();
+                _seconds.Clear();
+            }
+
+            internal void FeedStatus(uint actorId, uint statusId, float duration, int stacks)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                switch (statusId)
+                {
+                    case StatusDistantWorld:
+                        _distants.Add(actorId);
+                        break;
+                    case StatusNearWorld:
+                        _nears.Add(actorId);
+                        break;
+                    case StatusInLine1:
+                        _firsts.Add(actorId);
+                        break;
+                    case StatusInLine2:
+                        _seconds.Add(actorId);
+                        break;
+                    case StatusDynamis:
+                        _dynamisStacks[actorId] = stacks;
+                        break;
+                    default:
+                        return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1} with {2} stacks", statusId, actorId, stacks);
+                ReadyForDecision();
+            }
+
+            internal void ReadyForDecision()
+            {
+                if (_distants.Count != 2 || _nears.Count != 2 || _firsts.Count != 2 || _seconds.Count != 2)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "No ready for automarkers yet; {0} distants {1} nears {2} firsts {3} seconds",
+                        _distants.Count, _nears.Count, _firsts.Count, _seconds.Count
+                    );
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "All statuses registered, ready for automarkers");
+                List<uint> firstMonitorsSelection = new List<uint>();
+                var distant2nd = (from s in _seconds join d in _distants on s equals d select s).FirstOrDefault();
+                var near2nd = (from s in _seconds join d in _nears on s equals d select s).FirstOrDefault();
+                var distant1st = (from s in _firsts join d in _distants on s equals d select s).FirstOrDefault();
+                var near1st = (from s in _firsts join d in _nears on s equals d select s).FirstOrDefault();
+                if (distant2nd > 0 && _dynamisStacks[distant2nd] == 2)
+                {
+                    firstMonitorsSelection.Add(distant2nd);
+                }
+                if (near2nd > 0 && _dynamisStacks[near2nd] == 2)
+                {
+                    firstMonitorsSelection.Add(near2nd);
+                }
+                if (firstMonitorsSelection.Count < 2)
+                {
+                    firstMonitorsSelection.AddRange(
+                        (from ix in _dynamisStacks
+                         where ix.Value == 2
+                         && ix.Key != distant1st && ix.Key != near1st
+                         && ix.Key != distant2nd && ix.Key != near2nd
+                         select ix.Key).Take(2 - firstMonitorsSelection.Count)
+                    );
+                }
+                AutomarkerPayload ap1 = new AutomarkerPayload();
+                ap1.assignments[Signs.Roles["Monitor1"]] = _state.GetActorById(firstMonitorsSelection[0]);
+                ap1.assignments[Signs.Roles["Monitor2"]] = _state.GetActorById(firstMonitorsSelection[1]);
+                ap1.assignments[Signs.Roles["DistantWorld"]] = _state.GetActorById(distant1st);
+                ap1.assignments[Signs.Roles["NearWorld"]] = _state.GetActorById(near1st);
+                var theRest1 = (from ix in _dynamisStacks
+                                where firstMonitorsSelection.Contains(ix.Key) == false
+                                && ix.Key != distant1st
+                                && ix.Key != near1st
+                                select ix.Key).Take(4).ToList();
+                ap1.assignments[Signs.Roles["Bait1"]] = _state.GetActorById(theRest1[0]);
+                ap1.assignments[Signs.Roles["Bait2"]] = _state.GetActorById(theRest1[1]);
+                ap1.assignments[Signs.Roles["Bait3"]] = _state.GetActorById(theRest1[2]);
+                ap1.assignments[Signs.Roles["Bait4"]] = _state.GetActorById(theRest1[3]);
+                _dynamisStacks[distant1st] = _dynamisStacks[distant1st] + 1;
+                _dynamisStacks[near1st] = _dynamisStacks[near1st] + 1;
+                _dynamisStacks[theRest1[0]] = _dynamisStacks[theRest1[0]] + 1;
+                _dynamisStacks[theRest1[1]] = _dynamisStacks[theRest1[1]] + 1;
+                _dynamisStacks[theRest1[2]] = _dynamisStacks[theRest1[2]] + 1;
+                _dynamisStacks[theRest1[3]] = _dynamisStacks[theRest1[3]] + 1;
+                AutomarkerPayload ap2 = new AutomarkerPayload();
+                var threeStacks = (from ix in _dynamisStacks
+                                   where ix.Value == 3
+                                   select ix.Key).Take(2).ToList();
+                Log(State.LogLevelEnum.Debug, null, "SET 1 -- m1 {0} m2 {1} distant {2} near {3} spreads {4} {5} {6} {7}",
+                    firstMonitorsSelection[0], firstMonitorsSelection[1], distant1st, near1st, theRest1[0], theRest1[1], theRest1[2], theRest1[3]
+                );
+                ap2.assignments[Signs.Roles["Monitor1"]] = _state.GetActorById(threeStacks[0]);
+                ap2.assignments[Signs.Roles["Monitor2"]] = _state.GetActorById(threeStacks[1]);
+                ap2.assignments[Signs.Roles["DistantWorld"]] = _state.GetActorById(distant2nd);
+                ap2.assignments[Signs.Roles["NearWorld"]] = _state.GetActorById(near2nd);
+                var theRest2 = (from ix in _dynamisStacks
+                                where threeStacks.Contains(ix.Key) == false
+                                && ix.Key != distant2nd
+                                && ix.Key != near2nd
+                                select ix.Key).Take(4).ToList();
+                ap2.assignments[Signs.Roles["Bait1"]] = _state.GetActorById(theRest2[0]);
+                ap2.assignments[Signs.Roles["Bait2"]] = _state.GetActorById(theRest2[1]);
+                ap2.assignments[Signs.Roles["Bait3"]] = _state.GetActorById(theRest2[2]);
+                ap2.assignments[Signs.Roles["Bait4"]] = _state.GetActorById(theRest2[3]);
+                SecondPayload = ap2;
+                _state.ExecuteAutomarkers(ap1, Timing);
+            }
+
+        }
+
+        #endregion
+
         public UltOmegaProtocol(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -1499,17 +1789,25 @@ namespace Lemegeton.Content
             _state.OnCastBegin += OnCastBegin;
             _state.OnAction += OnAction;
             _state.OnStatusChange += OnStatusChange;
+            _state.OnHeadMarker += OnHeadMarker;
+            _state.OnTether += OnTether;
         }
 
         private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
+#if !SANS_GOETIA
             if (statusId == StatusMidGlitch || statusId == StatusRemoteGlitch)
             {
                 _glitchTether.FeedStatus(gained == false ? 0 : statusId);
             }
+#endif
             if (statusId == StatusStackSniper || statusId == StatusSpreadSniper)
             {
                 _p3transAm.FeedStatus(dest, gained == false ? 0 : statusId);
+            }
+            if (statusId == StatusMonitorLeft || statusId == StatusMonitorRight)
+            {
+                _p3moniAm.FeedStatus(dest, gained == false ? 0 : statusId);
             }
             if (statusId == StatusDynamis)
             {
@@ -1573,19 +1871,24 @@ namespace Lemegeton.Content
                 case AbilityLaserShower:
                     CurrentPhase = PhaseEnum.P3_Transition;
                     _p3transAm.Reset();
+                    _p3moniAm.Reset();
+#if !SANS_GOETIA
+                    _chibiOmega.StartLooking(120.0f);
+#endif
                     break;
                 case AbilityDynamisDelta:
                     CurrentPhase = PhaseEnum.P5_Delta;
+                    _sigmaAm.Reset();
+                    _omegaAm.Reset();
                     _deltaAm.Reset();
                     break;
                 case AbilityDynamisSigma:
                     CurrentPhase = PhaseEnum.P5_Sigma;
-                    _sigmaAm.Reset();
                     break;
                 case AbilityDynamisOmega:
                     CurrentPhase = PhaseEnum.P5_Omega;
-                    _omegaAm.Reset();
                     break;
+#if !SANS_GOETIA
                 case AbilityBossMonitorDeltaLeft:
                 case AbilityBossMonitorDeltaRight:
                     if (CurrentPhase == PhaseEnum.P5_Delta)
@@ -1595,11 +1898,16 @@ namespace Lemegeton.Content
                     break;
                 case AbilityBossMonitorEast:
                 case AbilityBossMonitorWest:
+                    if (CurrentPhase == PhaseEnum.P3_Transition)
+                    {
+                        _hwMonitor.FeedAction(actionId);
+                    }
                     if (CurrentPhase == PhaseEnum.P5_Omega)
                     {
                         _omegaMonitor.FeedAction(actionId);
                     }
                     break;
+#endif
             }
         }
 
@@ -1607,6 +1915,7 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
+#if !SANS_GOETIA
                 case AbilityBossMonitorDeltaLeft:
                 case AbilityBossMonitorDeltaRight:
                     if (CurrentPhase == PhaseEnum.P5_Delta)
@@ -1614,37 +1923,73 @@ namespace Lemegeton.Content
                         _deltaMonitor.FeedAction(dest, 0);
                     }
                     break;
+#endif
                 case AbilityBossMonitorEast:
                 case AbilityBossMonitorWest:
+                    if (CurrentPhase == PhaseEnum.P3_Transition)
+                    {
+#if !SANS_GOETIA
+                        _hwMonitor.FeedAction(0);
+#endif
+                        AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
+                        _state.ExecuteAutomarkers(ap, _p3moniAm.Timing);
+                    }
+                    break;
                     if (CurrentPhase == PhaseEnum.P5_Omega)
                     {
+#if !SANS_GOETIA
                         _omegaMonitor.FeedAction(0);
+#endif
                         AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                        _state.ExecuteAutomarkers(ap);
-                        _state.ExecuteAutomarkers(_omegaAm.SecondPayload);
+                        _state.ExecuteAutomarkers(ap, _omegaAm.Timing);
+                        _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
                     }
                     break;
                 case AbilityHelloDistantWorldBig:
                     if (CurrentPhase == PhaseEnum.P5_Delta)
                     {
                         AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                        _state.ExecuteAutomarkers(ap);
+                        _state.ExecuteAutomarkers(ap, _deltaAm.Timing);
                     }
                     if (CurrentPhase == PhaseEnum.P5_Sigma)
                     {
                         AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                        _state.ExecuteAutomarkers(ap);
+                        _state.ExecuteAutomarkers(ap, _sigmaAm.Timing);
                     }
                     break;
             }
         }
 
+        private void OnHeadMarker(uint dest, uint markerId)
+        {
+            if (_sawFirstHeadMarker == false)
+            {
+                _sawFirstHeadMarker = true;
+                _firstHeadMarker = markerId - 23;
+            }
+            uint realMarkerId = markerId - _firstHeadMarker;
+            if (CurrentPhase == PhaseEnum.P5_Sigma)
+            {
+                _sigmaAm.FeedHeadmarker(dest, realMarkerId);
+            }
+        }
+
+        private void OnTether(uint src, uint dest, uint tetherId)
+        {
+#if !SANS_GOETIA
+            if (tetherId == 222)
+            {
+                _glitchTether.FeedTether(src, dest);
+            }
+#endif
+        }
+
         private void UnsubscribeFromEvents()
         {
+            _state.OnHeadMarker -= OnHeadMarker;
             _state.OnStatusChange -= OnStatusChange;
             _state.OnAction -= OnAction;
             _state.OnCastBegin -= OnCastBegin;
-
         }
 
         private void OnCombatChange(bool inCombat)
@@ -1652,6 +1997,8 @@ namespace Lemegeton.Content
             if (inCombat == true)
             {
                 CurrentPhase = PhaseEnum.P1_Start;
+                _sawFirstHeadMarker = false;
+                _firstHeadMarker = 0;
                 SubscribeToEvents();
             }
             else
@@ -1662,27 +2009,32 @@ namespace Lemegeton.Content
 
         private void OnZoneChange(ushort newZone)
         {
-            bool newZoneOk = (newZone == 1122);
+            // normal modes included for some easier testing
+            bool newZoneOk = (newZone == 800 || newZone == 804 || newZone == 1122);
             if (newZoneOk == true && ZoneOk == false)
             {
-                _state.Log(State.LogLevelEnum.Info, null, "Content {0} available", GetType().Name);
+                Log(State.LogLevelEnum.Info, null, "Content available");
+#if !SANS_GOETIA
                 _chibiOmega = (ChibiOmega)Items["ChibiOmega"];
-                _chibiOmega.StartLooking();
+                _chibiOmega.StartLooking(10.0f);
+                _glitchTether = (GlitchTether)Items["GlitchTether"];
+                _hwMonitor = (HelloWorldDrawBossMonitor)Items["HelloWorldDrawBossMonitor"];
+                _deltaMonitor = (DynamisDeltaDrawBossMonitor)Items["DynamisDeltaDrawBossMonitor"];
+                _omegaMonitor = (DynamisOmegaDrawBossMonitor)Items["DynamisOmegaDrawBossMonitor"];
+#endif
                 _loopAm = (ProgramLoopAM)Items["ProgramLoopAM"];
                 _pantoAm = (PantokratorAM)Items["PantokratorAM"];
-                _glitchTether = (GlitchTether)Items["GlitchTether"];
                 _p3transAm = (P3TransitionAM)Items["P3TransitionAM"];
+                _p3moniAm = (P3MonitorAM)Items["P3MonitorAM"];
                 _deltaAm = (DynamisDeltaAM)Items["DynamisDeltaAM"];
                 _sigmaAm = (DynamisSigmaAM)Items["DynamisSigmaAM"];
                 _omegaAm = (DynamisOmegaAM)Items["DynamisOmegaAM"];
-                _deltaMonitor = (DynamisDeltaDrawBossMonitor)Items["DynamisDeltaDrawBossMonitor"];
-                _omegaMonitor = (DynamisOmegaDrawBossMonitor)Items["DynamisOmegaDrawBossMonitor"];
                 _state.OnCombatChange += OnCombatChange;
                 _state.OnDirectorUpdate += OnDirectorUpdate;
             }
             else if (newZoneOk == false && ZoneOk == true)
             {
-                _state.Log(State.LogLevelEnum.Info, null, "Content {0} unavailable", GetType().Name);
+                Log(State.LogLevelEnum.Info, null, "Content unavailable");
                 _state.OnDirectorUpdate -= OnDirectorUpdate;
                 _state.OnCombatChange -= OnCombatChange;
             }
@@ -1691,14 +2043,16 @@ namespace Lemegeton.Content
 
         private void OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
         {
+#if !SANS_GOETIA
             if (param2 == 0x4000000F)
             {
-                _chibiOmega.StartLooking();
+                _chibiOmega.StartLooking(10.0f);
             }
             if (param2 == 0x40000006)
             {
                 _chibiOmega.StopLooking();
             }
+#endif
         }
 
     }

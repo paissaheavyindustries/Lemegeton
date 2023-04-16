@@ -29,6 +29,8 @@ namespace Lemegeton.Content
 
         public override FeaturesEnum Features => FeaturesEnum.None;
 
+        #if !SANS_GOETIA
+
         public class DrawEnemies : Core.ContentItem
         {
 
@@ -405,6 +407,8 @@ namespace Lemegeton.Content
             }
 
         }
+
+        #endif
 
         public class AlertFinder : Core.ContentItem
         {
@@ -1096,7 +1100,7 @@ namespace Lemegeton.Content
 
             private void AlertForEntry(GameObject go, Entry e)
             {
-                _state.Log(LogLevelEnum.Debug, null, "Found object {0}", go);
+                Log(LogLevelEnum.Debug, null, "Found object {0}", go);
                 if (SoundAlert == true && _state.cfg.QuickToggleSound == true)
                 {
                     if (_lastSoundAlert > DateTime.Now.AddSeconds(-10))
@@ -1362,6 +1366,7 @@ namespace Lemegeton.Content
 
             public AlertFinder(State state) : base(state)
             {
+                Enabled = false;
                 _loaded = DateTime.Now;
                 entries = new List<Entry>();
                 LookFor = new AlertEditor();

@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using static Lemegeton.Content.UltOmegaProtocol;
 
 namespace Lemegeton.Core
 {
@@ -132,6 +133,7 @@ namespace Lemegeton.Core
             internal ushort ActorControlSelf = 0;
             internal ushort ActorControlTarget = 0;
             internal ushort MapEffect = 0;
+            internal ushort EventPlay = 0;
 
         }
 
@@ -168,13 +170,14 @@ namespace Lemegeton.Core
             Opcodes.ActorCast = region.OpcodeLookup["ActorCast"].Id;
             Opcodes.EffectResult = region.OpcodeLookup["EffectResult"].Id;
             Opcodes.MapEffect = region.OpcodeLookup["MapEffect"].Id;
+            Opcodes.EventPlay = region.OpcodeLookup["EventPlay"].Id;
             Opcodes.ActorControl = region.OpcodeLookup["ActorControl"].Id;
             Opcodes.ActorControlSelf = region.OpcodeLookup["ActorControlSelf"].Id;
             Opcodes.ActorControlTarget = region.OpcodeLookup["ActorControlTarget"].Id;
-            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13}",
+            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14}",
                 Opcodes.StatusEffectList, Opcodes.StatusEffectList2, Opcodes.StatusEffectList3,
                 Opcodes.Ability1, Opcodes.Ability8, Opcodes.Ability16, Opcodes.Ability24, Opcodes.Ability32,
-                Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect,
+                Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect, Opcodes.EventPlay,
                 Opcodes.ActorControl, Opcodes.ActorControlSelf, Opcodes.ActorControlTarget
             );
         }
@@ -216,6 +219,12 @@ namespace Lemegeton.Core
                     _st.InvokeTether(targetActorId, param3, param2);
                     break;
                 case ActorControlCategory.Director:
+                    if (param2 == 0x40000006 && _st.cfg.RemoveMarkersAfterWipe == true)
+                    {
+                        _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");
+                        AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
+                        _st.ExecuteAutomarkers(ap, _st.cfg.DefaultAutomarkerTiming);
+                    }
                     _st.InvokeDirectorUpdate(param1, param2, param3, param4);
                     break;
             }
@@ -353,6 +362,15 @@ namespace Lemegeton.Core
                 Marshal.Copy(dataPtr, bytes, 0, bytes.Length);
                 _st.InvokeMapEffect(bytes);
             }
+            else if (opCode == Opcodes.EventPlay)
+            {
+                EventPlay ac = Marshal.PtrToStructure<EventPlay>(dataPtr);
+                _st.InvokeEventPlay((uint)ac.actorId, ac.eventId, ac.scene, ac.flags, ac.param1, ac.param2, ac.param3, ac.param4);
+            }
+            else
+            {
+                //_st.Log(State.LogLevelEnum.Debug, null, "opcode {0}", opCode);
+            }
         }
 
         internal IEnumerable<string> GetOpcodeRegions()
@@ -382,6 +400,7 @@ namespace Lemegeton.Core
                     using HttpResponseMessage resp = http.Send(req);
                     if (resp.StatusCode != System.Net.HttpStatusCode.OK)
                     {
+                        _st.Log(State.LogLevelEnum.Error, null, "Couldn't load blueprint from {0}, response code was: {1}", uri, resp.StatusCode);
                         return null;
                     }
                     using StreamReader sr = new StreamReader(resp.Content.ReadAsStream());
@@ -403,6 +422,7 @@ namespace Lemegeton.Core
             try
             {
                 bool fromBackup = false;
+                _st.Log(State.LogLevelEnum.Debug, null, "Loading blueprint from {0}", _st.cfg.OpcodeUrl);
                 Blueprint bp = GetBlueprintFromURI(_st.cfg.OpcodeUrl);
                 if (bp == null && fallback == true)
                 {
@@ -458,6 +478,10 @@ namespace Lemegeton.Core
             {
                 Blueprint.Region r = _blueprint.RegionLookup[name];
                 _st.Log(State.LogLevelEnum.Info, null, "Setting opcode region to {0} ({1})", r.Name, r.Version);
+                if (String.Compare(r.Version, _st.GameVersion) != 0)
+                {
+                    _st.Log(State.LogLevelEnum.Warning, null, "Opcode version {0} and game version {1} differ, things may be broken", r.Version, _st.GameVersion);
+                }
                 _nextOpcodeRegion = r;
                 return;
             }

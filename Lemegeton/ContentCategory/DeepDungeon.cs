@@ -29,6 +29,7 @@ namespace Lemegeton.ContentCategory
 
         public DeepDungeon(State st) : base(st)
         {
+            Enabled = false;
         }
 
     }

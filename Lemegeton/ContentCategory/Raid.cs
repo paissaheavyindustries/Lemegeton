@@ -27,6 +27,7 @@ namespace Lemegeton.ContentCategory
 
         public Raid(State st) : base(st)
         {
+            Enabled = false;
         }
 
     }

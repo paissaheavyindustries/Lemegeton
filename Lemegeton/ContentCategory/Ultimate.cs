@@ -21,6 +21,7 @@ namespace Lemegeton.ContentCategory
         protected override Dictionary<string, Core.Content> InitializeContentItems(State st)
         {
             Dictionary<string, Core.Content> items = new Dictionary<string, Core.Content>();
+            items["UltUcob"] = new UltUcob(st);
             items["UltWeaponsRefrain"] = new UltWeaponsRefrain(st);
             items["UltDragonsongReprise"] = new UltDragonsongReprise(st);
             items["UltOmegaProtocol"] = new UltOmegaProtocol(st);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Lemegeton.Content.UltOmegaProtocol;
 
 namespace Lemegeton.Core
 {
@@ -14,15 +15,21 @@ namespace Lemegeton.Core
             Automarker = 0x01,
             Drawing = 0x02,
             Sound = 0x04,
-            Hack = 0x08
+            #if !SANS_GOETIA
+            Hack = 0x08,
+            #endif
         }
 
         public abstract FeaturesEnum Features { get; }
 
+        public virtual string Author { get; } = "";
+
         protected State _state = null;
         private bool _enabled = true;
         private bool _active = true;
+        internal bool _debugDisplayToggled = false;
         private ContentModule _owner = null;
+        internal State.LogLevelEnum LogLevel { get; set; } = State.LogLevelEnum.Debug;
 
         internal delegate void StateChangeDelegate(bool newState);
         internal event StateChangeDelegate OnActiveChanged;
@@ -97,6 +104,15 @@ namespace Lemegeton.Core
             _state = st;
         }
 
+        internal void Log(State.LogLevelEnum level, Exception ex, string message, params object[] args)
+        {
+            if (level > LogLevel)
+            {
+                return;
+            }
+            _state.Log(level, null, GetType().Name + ": " + message, args);
+        }
+
         protected virtual bool ExecutionImplementation()
         {
             return true;
@@ -124,11 +140,13 @@ namespace Lemegeton.Core
                 _state.NumFeaturesSound++;
                 escape = (escape == true || _state.cfg.QuickToggleSound == false);
             }
+#if !SANS_GOETIA
             if ((Features & FeaturesEnum.Hack) != 0)
             {
                 _state.NumFeaturesHack++;
                 escape = (escape == true || _state.cfg.QuickToggleHacks == false);
             }
+#endif
             if (escape == true)
             {
                 return;

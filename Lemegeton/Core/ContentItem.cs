@@ -1,4 +1,6 @@
-﻿namespace Lemegeton.Core
+﻿using System;
+
+namespace Lemegeton.Core
 {
 
     public abstract class ContentItem : ContentModule

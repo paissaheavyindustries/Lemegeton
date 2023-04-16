@@ -2,27 +2,25 @@
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Game.ClientState.Fates;
 
 namespace Lemegeton.Content
 {
 
-    internal class UltWeaponsRefrain : Core.Content
+    internal class UltUcob : Core.Content
     {
 
         public override FeaturesEnum Features => FeaturesEnum.None;
 
-        private const int AbilityTitanGaol1 = 0x2b6b;
-        private const int AbilityTitanGaol2 = 0x2b6c;
-        private const int StatusFetters = 292;
+        private const int AbilityChainLighting = 0x26c7;
+        private const int StatusThunderstruck = 466;
 
         private bool ZoneOk = false;
 
-        private GaolAM _gaolAm;
+        private ChainLightningAm _chainLightningAm;
 
-        #region GaolAM
+        #region ChainLightningAm
 
-        public class GaolAM : Core.ContentItem
+        public class ChainLightningAm : Core.ContentItem
         {
 
             public override FeaturesEnum Features
@@ -36,9 +34,6 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
 
-            [AttributeOrderNumber(2000)]
-            public AutomarkerPrio Prio { get; set; }
-
             [DebugOption]
             [AttributeOrderNumber(2500)]
             public AutomarkerTiming Timing { get; set; }
@@ -47,59 +42,45 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
-            private List<uint> _gaols = new List<uint>();
+            private List<uint> _lightnings = new List<uint>();
             private bool _fired = false;
 
-            public GaolAM(State state) : base(state)
+            public ChainLightningAm(State state) : base(state)
             {
                 Enabled = false;
                 Signs = new AutomarkerSigns();
-                Prio = new AutomarkerPrio();
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
-                Prio.Priority = AutomarkerPrio.PrioTypeEnum.Role;
-                Prio._prioByRole.Clear();
-                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Melee);
-                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Tank);
-                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Healer);
-                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Ranged);
-                Prio._prioByRole.Add(AutomarkerPrio.PrioRoleEnum.Caster);
-                Signs.SetRole("Gaol1", AutomarkerSigns.SignEnum.Attack1, false);
-                Signs.SetRole("Gaol2", AutomarkerSigns.SignEnum.Attack2, false);
-                Signs.SetRole("Gaol3", AutomarkerSigns.SignEnum.Attack3, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
+                Signs.SetRole("Lightning1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Lightning2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
             internal void Reset()
             {
                 _fired = false;
-                _gaols.Clear();
+                _lightnings.Clear();
             }
 
             internal void FeedAction(uint actorId, uint actionId)
             {
-                if (Active == false)
+                if (Active == false || actionId != AbilityChainLighting)
                 {
                     return;
                 }
-                if (actionId == AbilityTitanGaol1 || actionId == AbilityTitanGaol2)
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1}", actionId, actorId);
+                _lightnings.Add(actorId);
+                if (_lightnings.Count == 2)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1}", actionId, actorId);
-                    _gaols.Add(actorId);
-                    if (_gaols.Count == 3)
-                    {
-                        Log(State.LogLevelEnum.Debug, null, "All gaols registered, ready for automarkers");
-                        Party pty = _state.GetPartyMembers();
-                        List<Party.PartyMember> _gaolsGo = new List<Party.PartyMember>(
-                            from ix in pty.Members join jx in _gaols on ix.ObjectId equals jx select ix
-                        );
-                        Prio.SortByPriority(_gaolsGo);
-                        AutomarkerPayload ap = new AutomarkerPayload();
-                        ap.assignments[Signs.Roles["Gaol1"]] = _gaolsGo[0].GameObject;
-                        ap.assignments[Signs.Roles["Gaol2"]] = _gaolsGo[1].GameObject;
-                        ap.assignments[Signs.Roles["Gaol3"]] = _gaolsGo[2].GameObject;
-                        _fired = true;
-                        _state.ExecuteAutomarkers(ap, Timing);
-                    }
+                    Log(State.LogLevelEnum.Debug, null, "All lightnings registered, ready for automarkers");
+                    Party pty = _state.GetPartyMembers();
+                    List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
+                        from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
+                    );
+                    AutomarkerPayload ap = new AutomarkerPayload();
+                    ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
+                    ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
+                    _fired = true;
+                    _state.ExecuteAutomarkers(ap, Timing);
                 }
             }
 
@@ -109,10 +90,11 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (statusId == StatusFetters && gained == false && _fired == true)
+                if (statusId == StatusThunderstruck && gained == false && _fired == true)
                 {
                     Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
                     _fired = false;
+                    _lightnings.Clear();
                     AutomarkerPayload ap = new AutomarkerPayload();
                     ap.Clear = true;
                     _state.ExecuteAutomarkers(ap, Timing);
@@ -123,7 +105,7 @@ namespace Lemegeton.Content
 
         #endregion
 
-        public UltWeaponsRefrain(State st) : base(st)
+        public UltUcob(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
         }
@@ -145,17 +127,17 @@ namespace Lemegeton.Content
 
         private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
-            if (statusId == StatusFetters)
+            if (statusId == StatusThunderstruck)
             {
-                _gaolAm.FeedStatus(statusId, gained);
+                _chainLightningAm.FeedStatus(statusId, gained);
             }
         }
 
         private void _state_OnAction(uint src, uint dest, ushort actionId)
         {
-            if (actionId == AbilityTitanGaol1 || actionId == AbilityTitanGaol2)
+            if (actionId == AbilityChainLighting)
             {
-                _gaolAm.FeedAction(dest, actionId);
+                _chainLightningAm.FeedAction(dest, actionId);
             }
         }
 
@@ -179,11 +161,11 @@ namespace Lemegeton.Content
 
         private void OnZoneChange(ushort newZone)
         {
-            bool newZoneOk = (newZone == 777);
+            bool newZoneOk = (newZone == 733);
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
-                _gaolAm = (GaolAM)Items["GaolAM"];
+                _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _state.OnCombatChange += OnCombatChange;
             }
             else if (newZoneOk == false && ZoneOk == true)
