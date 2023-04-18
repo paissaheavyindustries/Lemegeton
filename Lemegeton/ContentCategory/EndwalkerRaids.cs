@@ -21,6 +21,7 @@ namespace Lemegeton.ContentCategory
         protected override Dictionary<string, Core.Content> InitializeContentItems(State st)
         {
             Dictionary<string, Core.Content> items = new Dictionary<string, Core.Content>();
+            items["EwRaidAbyssos"] = new EwRaidAbyssos(st);
             items["EwRaidAnabaseios"] = new EwRaidAnabaseios(st);
             return items;
         }

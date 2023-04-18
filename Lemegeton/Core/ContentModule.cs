@@ -17,6 +17,7 @@ namespace Lemegeton.Core
             Sound = 0x04,
             #if !SANS_GOETIA
             Hack = 0x08,
+            Automation = 0x10,
             #endif
         }
 
@@ -145,6 +146,11 @@ namespace Lemegeton.Core
             {
                 _state.NumFeaturesHack++;
                 escape = (escape == true || _state.cfg.QuickToggleHacks == false);
+            }
+            if ((Features & FeaturesEnum.Automation) != 0)
+            {
+                _state.NumFeaturesAutomation++;
+                escape = (escape == true || _state.cfg.QuickToggleAutomation == false);
             }
 #endif
             if (escape == true)

@@ -294,7 +294,10 @@ namespace Lemegeton.Content
             {
                 try
                 {
-                    File.AppendAllText(CurrentLogFilename, "[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff") + "] " + msg + Environment.NewLine);
+                    lock (this)
+                    {
+                        File.AppendAllText(CurrentLogFilename, "[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff") + "] " + msg + Environment.NewLine);
+                    }
                 }
                 catch (Exception)
                 {

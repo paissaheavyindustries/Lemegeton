@@ -30,6 +30,12 @@ namespace Lemegeton.Core
             DPS,
         }
 
+        public enum PrioArchetypeEnum
+        {
+            Support,
+            DPS,
+        }
+
         public enum PrioRoleEnum
         {
             Tank,
@@ -89,7 +95,7 @@ namespace Lemegeton.Core
             } );
         }
 
-        private PrioRoleEnum JobToRole(uint job)
+        internal static PrioRoleEnum JobToRole(uint job)
         {
             switch ((PrioJobEnum)job)
             {
@@ -106,7 +112,7 @@ namespace Lemegeton.Core
             }
         }
 
-        private PrioTrinityEnum JobToTrinity(uint job)
+        internal static PrioTrinityEnum JobToTrinity(uint job)
         {
             switch ((PrioJobEnum)job)
             {
@@ -116,6 +122,18 @@ namespace Lemegeton.Core
                     return PrioTrinityEnum.Healer;
                 default:
                     return PrioTrinityEnum.DPS;
+            }
+        }
+
+        internal static PrioArchetypeEnum JobToArchetype(uint job)
+        {
+            switch ((PrioJobEnum)job)
+            {
+                case PrioJobEnum.PLD: case PrioJobEnum.WAR: case PrioJobEnum.DRK: case PrioJobEnum.GNB:
+                case PrioJobEnum.WHM: case PrioJobEnum.SCH: case PrioJobEnum.AST: case PrioJobEnum.SGE:
+                    return PrioArchetypeEnum.Support;
+                default:
+                    return PrioArchetypeEnum.DPS;
             }
         }
 

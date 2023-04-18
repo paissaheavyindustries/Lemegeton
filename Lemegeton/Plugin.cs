@@ -53,9 +53,9 @@ namespace Lemegeton
         public string VersionInfo => "v0.9";
 
 #if !SANS_GOETIA
-        public string Name => "Lemegeton";
+        public string Name => "Lemegeton Goetia";
 #else
-        public string Name => "Lemegeton Lite";
+        public string Name => "Lemegeton";
 #endif
 
         private State _state = new State();
@@ -84,9 +84,9 @@ namespace Lemegeton
 
         private string[] _aboutScroller = new string[] {
 #if !SANS_GOETIA
-            "LEMEGETON",
+            "LEMEGETON GOETIA",
 #else
-            "LEMEGETON LITE",
+            "LEMEGETON",
 #endif
             "a Dalamud plogon",
             "and a FFXIV trainer / cracktro",
@@ -624,9 +624,9 @@ namespace Lemegeton
 
         public void LoadConfig()
         {
-            _state.Log(State.LogLevelEnum.Info, null, "Loading configuration");
+            Log(State.LogLevelEnum.Info, "Loading configuration");
             _state.cfg = _state.pi.GetPluginConfig() as Config ?? new Config();
-            _state.Log(State.LogLevelEnum.Info, null, "Configuration loaded");
+            Log(State.LogLevelEnum.Info, "Configuration loaded");
         }
 
         public void ApplyConfigToContent()
@@ -636,10 +636,10 @@ namespace Lemegeton
 
         public void SaveConfig()
         {
-            _state.Log(State.LogLevelEnum.Info, null, "Saving configuration");
+            Log(State.LogLevelEnum.Info, "Saving configuration");
             _state.cfg.PropertyBlob = SerializeProperties();
             _state.pi.SavePluginConfig(_state.cfg);
-            _state.Log(State.LogLevelEnum.Info, null, "Configuration saved");
+            Log(State.LogLevelEnum.Info, "Configuration saved");
         }
 
         public string GenerateMD5Hash(string data)
@@ -658,7 +658,7 @@ namespace Lemegeton
             string tempfile = Path.Combine(temp, String.Format("lemegeton_backup_{0}.json", DateTime.Now.ToString("yyyyMMdd_HHmmssfff")));
             string data = SerializeConfig();
             File.WriteAllText(tempfile, data);
-            _state.Log(State.LogLevelEnum.Debug, null, "Configuration backup saved to {0}", tempfile);
+            Log(State.LogLevelEnum.Debug, "Configuration backup saved to {0}", tempfile);
         }
 
         public string SerializeConfig()
@@ -673,9 +673,9 @@ namespace Lemegeton
             temp = Base64Encode(temp);
             temp = GenerateMD5Hash(temp) + temp;
 #if !SANS_GOETIA
-            temp = "Lemegeton_" + temp;
+            temp = "Lemegeton2_" + temp;
 #else
-            temp = "Litegeton_" + temp;
+            temp = "Lemegeton1_" + temp;
 #endif
             while (i < temp.Length)
             {
@@ -694,9 +694,9 @@ namespace Lemegeton
             }
             string tag = data.Substring(0, 10);
 #if !SANS_GOETIA
-            string mytag = "Lemegeton_";
+            string mytag = "Lemegeton2_";
 #else
-            string mytag = "Litegeton_";
+            string mytag = "Lemegeton1_";
 #endif
             if (String.Compare(tag, mytag) != 0)
             {
@@ -1582,6 +1582,7 @@ namespace Lemegeton
             _state.NumFeaturesSound = 0;
 #if !SANS_GOETIA
             _state.NumFeaturesHack = 0;
+            _state.NumFeaturesAutomation = 0;
 #endif
             if (_state.cs.LocalPlayer != null)
             {
@@ -1814,6 +1815,11 @@ namespace Lemegeton
                     if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Hacks"), ref qtHacks) == true)
                     {
                         _state.cfg.QuickToggleHacks = qtHacks;
+                    }
+                    bool qtAutomation = _state.cfg.QuickToggleAutomation;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Automation"), ref qtAutomation) == true)
+                    {
+                        _state.cfg.QuickToggleAutomation = qtAutomation;
                     }
 #endif
                     ImGui.Unindent(30.0f);
@@ -2437,6 +2443,8 @@ namespace Lemegeton
 #if !SANS_GOETIA
                 temp = _state.NumFeaturesHack.ToString();
                 ImGui.InputText(I18n.Translate("Status/NumFeaturesHack"), ref temp, 64, ImGuiInputTextFlags.ReadOnly);
+                temp = _state.NumFeaturesAutomation.ToString();
+                ImGui.InputText(I18n.Translate("Status/NumFeaturesAutomation"), ref temp, 64, ImGuiInputTextFlags.ReadOnly);
 #endif
                 ImGui.PopItemWidth();
                 ImGui.EndTable();
@@ -2449,6 +2457,10 @@ namespace Lemegeton
             if (_state.NumFeaturesHack > 0 && _state.cfg.QuickToggleHacks == true && _state.cfg.NagAboutStreaming == true)
             {
                 complaints.Add(I18n.Translate("Status/WarnHacksActive"));
+            }
+            if (_state.NumFeaturesAutomation > 0 && _state.cfg.QuickToggleAutomation == true && _state.cfg.NagAboutStreaming == true)
+            {
+                complaints.Add(I18n.Translate("Status/WarnAutomationsActive"));
             }
 #endif
             if (_state.NumFeaturesDrawing > 0 && _state.cfg.QuickToggleOverlays == true && _state.cfg.NagAboutStreaming == true)
@@ -2467,6 +2479,16 @@ namespace Lemegeton
             {
                 complaints.Add(I18n.Translate("Status/WarnSoundQuickDisabled"));
             }
+#if !SANS_GOETIA
+            if (_state.NumFeaturesHack > 0 && _state.cfg.QuickToggleHacks == false)
+            {
+                complaints.Add(I18n.Translate("Status/WarnHackQuickDisabled"));
+            }
+            if (_state.NumFeaturesAutomation > 0 && _state.cfg.QuickToggleAutomation == false)
+            {
+                complaints.Add(I18n.Translate("Status/WarnAutomationQuickDisabled"));
+            }
+#endif
             if (complaints.Count == 0)
             {
                 tw = _misc[5];
@@ -2507,8 +2529,8 @@ namespace Lemegeton
                 }
             }
             catch (Exception ex)
-            {   
-                _state.Log(LogLevelEnum.Error, ex, "Couldn't deserialize {0} due to exception: {1}", typeof(T).Name, ex.Message);
+            {
+                GenericExceptionHandler(ex);
             }
             return null;
         }

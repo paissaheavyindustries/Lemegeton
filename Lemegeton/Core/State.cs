@@ -60,9 +60,10 @@ namespace Lemegeton.Core
         internal int NumFeaturesAutomarker { get; set; } = 0;
         internal int NumFeaturesDrawing { get; set; } = 0;
         internal int NumFeaturesSound { get; set; } = 0;
-        #if !SANS_GOETIA
+#if !SANS_GOETIA
         internal int NumFeaturesHack { get; set; } = 0;
-        #endif
+        internal int NumFeaturesAutomation { get; set; } = 0;
+#endif
         internal string GameVersion { get; set; } = "(unknown)";
 
         internal Plugin plug;
@@ -637,14 +638,14 @@ namespace Lemegeton.Core
             if (_markingFuncPtr != null && cfg.AutomarkerCommands == false)
             {
                 bool removal = false;
+                AutomarkerSigns.SignEnum cursign = GetCurrentMarker(actorId);
+                Log(LogLevelEnum.Debug, null, "Current sign on actor {0} is {1}, target is {2}", actorId, cursign, sign);
                 if (sign == AutomarkerSigns.SignEnum.None)
                 {
-                    Log(LogLevelEnum.Debug, null, "Need to figure out current sign on actor {0}", actorId);
-                    sign = GetCurrentMarker(actorId);
-                    Log(LogLevelEnum.Debug, null, "Current sign on actor {0} is {1}", actorId, sign);
+                    sign = cursign;
                     removal = true;
                 }
-                if (sign != AutomarkerSigns.SignEnum.None)
+                if (sign != AutomarkerSigns.SignEnum.None && (sign != cursign || removal == true))
                 {
                     Log(LogLevelEnum.Debug, null, "Using function pointer to mark actor {0} with {1}", actorId, sign);
                     if (removal == false)

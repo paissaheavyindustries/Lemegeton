@@ -19,9 +19,10 @@ namespace Lemegeton.Core
         public bool QuickToggleAutomarkers { get; set; } = true;
         public bool QuickToggleOverlays { get; set; } = false;
         public bool QuickToggleSound { get; set; } = false;
-        #if !SANS_GOETIA
+#if !SANS_GOETIA
         public bool QuickToggleHacks { get; set; } = false;
-        #endif
+        public bool QuickToggleAutomation { get; set; } = false;
+#endif
 
         public bool NagAboutStreaming { get; set; } = true;
 

@@ -22,10 +22,11 @@ namespace Lemegeton.ContentCategory
         {
             Dictionary<string, Core.Content> items = new Dictionary<string, Core.Content>();
             items["Radar"] = new Radar(st);
-            #if !SANS_GOETIA
-            items["Hack"] = new Hack(st);
-            #endif
             items["VisualEnhancement"] = new VisualEnhancement(st);
+#if !SANS_GOETIA
+            items["Hack"] = new Hack(st);
+            items["Automation"] = new Automation(st);
+#endif
             return items;
         }
 

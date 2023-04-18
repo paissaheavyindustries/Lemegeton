@@ -19,9 +19,11 @@ namespace Lemegeton.Content
         private const int StatusEntangledFlames = 2759;
         private const int StatusSpreadingFlames = 2758;
         private const int StatusThunderstruck = 2833;
+        private const int StatusPrey = 562;
 
         private bool ZoneOk = false;
 
+        private MeteorAM _meteorAm;
         private ChainLightningAm _chainLightningAm;
         private WrothAM _wrothAm;
 
@@ -33,6 +35,145 @@ namespace Lemegeton.Content
         }
 
         private PhaseEnum CurrentPhase { get; set; } = PhaseEnum.P2;
+
+        #region MeteorAM
+
+        public class MeteorAM : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features
+            {
+                get
+                {
+                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
+                }
+            }
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private List<uint> _meteors = new List<uint>();
+            private bool _fired = false;
+
+            public MeteorAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Prio = new AutomarkerPrio();
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.Job;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("Meteor1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Meteor2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("MeteorRole1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("MeteorRole2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("NonMeteor1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("NonMeteor2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("NonMeteor3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("NonMeteor4", AutomarkerSigns.SignEnum.Attack4, false);
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+            }
+
+            internal void Reset()
+            {
+                _fired = false;
+                _meteors.Clear();
+            }
+
+            internal void FeedStatus(uint actorId, uint statusId, bool gained)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (statusId == StatusPrey)
+                {
+                    if (gained == false)
+                    {
+                        if (_fired == true)
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
+                            _fired = false;
+                            _meteors.Clear();
+                            AutomarkerPayload ap = new AutomarkerPayload();
+                            ap.Clear = true;
+                            _state.ExecuteAutomarkers(ap, Timing);
+                        }
+                    }
+                    else
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
+                        _meteors.Add(actorId);
+                        if (_meteors.Count == 2)
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "All meteors registered, ready for automarkers");
+                            Party pty = _state.GetPartyMembers();
+                            List<Party.PartyMember> _meteorsGo = new List<Party.PartyMember>(
+                                from ix in pty.Members join jx in _meteors on ix.ObjectId equals jx select ix
+                            );
+                            List<Party.PartyMember> _meteorRoleGo, _nonMeteorGo;
+                            AutomarkerPrio.PrioTrinityEnum role = AutomarkerPrio.JobToTrinity(_meteorsGo[0].Job);
+                            if (role != AutomarkerPrio.PrioTrinityEnum.DPS)
+                            {
+                                _meteorRoleGo = new List<Party.PartyMember>(
+                                    from ix in pty.Members where 
+                                        AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
+                                        && _meteors.Contains(ix.ObjectId) == false
+                                        select ix
+                                );
+                                _nonMeteorGo = new List<Party.PartyMember>(
+                                    from ix in pty.Members
+                                    where AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
+                                    select ix
+                                );
+                            }
+                            else
+                            {
+                                _meteorRoleGo = new List<Party.PartyMember>(
+                                    from ix in pty.Members
+                                    where
+                                        AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
+                                        && _meteors.Contains(ix.ObjectId) == false
+                                    select ix
+                                );
+                                _nonMeteorGo = new List<Party.PartyMember>(
+                                    from ix in pty.Members
+                                    where AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
+                                    select ix
+                                );
+                            }
+                            Prio.SortByPriority(_meteorsGo);
+                            Prio.SortByPriority(_meteorRoleGo);
+                            Prio.SortByPriority(_nonMeteorGo);
+                            AutomarkerPayload ap = new AutomarkerPayload();
+                            ap.assignments[Signs.Roles["Meteor1"]] = _meteorsGo[0].GameObject;
+                            ap.assignments[Signs.Roles["Meteor2"]] = _meteorsGo[1].GameObject;
+                            ap.assignments[Signs.Roles["MeteorRole1"]] = _meteorRoleGo[0].GameObject;
+                            ap.assignments[Signs.Roles["MeteorRole2"]] = _meteorRoleGo[1].GameObject;
+                            ap.assignments[Signs.Roles["NonMeteor1"]] = _nonMeteorGo[0].GameObject;
+                            ap.assignments[Signs.Roles["NonMeteor2"]] = _nonMeteorGo[1].GameObject;
+                            ap.assignments[Signs.Roles["NonMeteor3"]] = _nonMeteorGo[2].GameObject;
+                            ap.assignments[Signs.Roles["NonMeteor4"]] = _nonMeteorGo[3].GameObject;
+                            _fired = true;
+                            _state.ExecuteAutomarkers(ap, Timing);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        #endregion
 
         #region ChainLightningAm
 
@@ -296,6 +437,10 @@ namespace Lemegeton.Content
             {
                 return;
             }
+            if (statusId == StatusPrey && CurrentPhase == PhaseEnum.P2)
+            {
+                _meteorAm.FeedStatus(dest, statusId, gained);
+            }
             if (statusId == StatusEntangledFlames || statusId == StatusSpreadingFlames)
             {
                 _wrothAm.FeedStatus(dest, statusId);
@@ -353,6 +498,7 @@ namespace Lemegeton.Content
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
+                _meteorAm = (MeteorAM)Items["MeteorAM"];
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _wrothAm = (WrothAM)Items["WrothAM"];
                 _state.OnCombatChange += OnCombatChange;
