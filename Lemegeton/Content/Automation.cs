@@ -33,22 +33,25 @@ namespace Lemegeton.Content
             }
 
             [AttributeOrderNumber(1000)]
-            public bool IgnoreLight { get; set; } = false;
-            [AttributeOrderNumber(1001)]
-            public bool IgnoreMedium { get; set; } = false;
-            [AttributeOrderNumber(1002)]
-            public bool IgnoreHeavy { get; set; } = false;
+            public FoodSelector Food { get; set; }
 
             [AttributeOrderNumber(2000)]
-            public bool UsePatience2 { get; set; } = true;
+            public bool IgnoreLight { get; set; } = false;
             [AttributeOrderNumber(2001)]
-            public bool UseMooch { get; set; } = true;
+            public bool IgnoreMedium { get; set; } = false;
             [AttributeOrderNumber(2002)]
-            public bool UseMooch2 { get; set; } = true;
-            [AttributeOrderNumber(2003)]
-            public bool UseThaliakFavor { get; set; } = true;
+            public bool IgnoreHeavy { get; set; } = false;
 
             [AttributeOrderNumber(3000)]
+            public bool UsePatience2 { get; set; } = true;
+            [AttributeOrderNumber(3001)]
+            public bool UseMooch { get; set; } = true;
+            [AttributeOrderNumber(3002)]
+            public bool UseMooch2 { get; set; } = true;
+            [AttributeOrderNumber(3003)]
+            public bool UseThaliakFavor { get; set; } = true;
+
+            [AttributeOrderNumber(4000)]
             public bool ReleaseEverything { get; set; } = false;
 
             private bool _listening = false;
@@ -268,7 +271,7 @@ namespace Lemegeton.Content
 
             protected override bool ExecutionImplementation()
             {
-                if (DateTime.Now < _reeval && _state.cs.LocalPlayer.ClassJob.Id != 18)
+                if (DateTime.Now < _reeval || _state.cs.LocalPlayer.ClassJob.Id != 18)
                 {
                     return false;
                 }
@@ -289,6 +292,12 @@ namespace Lemegeton.Content
                         }
                         if (CanCast() == true)
                         {
+                            if (Food.Cycle() == false)
+                            {
+                                Log(Core.State.LogLevelEnum.Debug, null, "Used food");
+                                _reeval = DateTime.Now.AddMilliseconds(3000 + GetRandomDelay(500));
+                                return true;
+                            }
                             if (UseThaliakFavor == true && _state.cs.LocalPlayer.CurrentGp < _state.cs.LocalPlayer.MaxGp - 200 && _anglerStacks >= 3)
                             {
                                 Log(Core.State.LogLevelEnum.Debug, null, "Applying Thaliak's Favor");
@@ -331,6 +340,9 @@ namespace Lemegeton.Content
 
             public FishForever(State state) : base(state)
             {
+                Food = new FoodSelector();
+                Food.State = state;
+                Food.MinimumTime = 120.0f;
                 OnEnabledChanged += FishForever_OnEnabledChanged;
                 Enabled = false;
             }

@@ -73,6 +73,8 @@
             //AddEntry("ObjectKind/Cutscene", "Cutscene object");
             //AddEntry("ObjectKind/CardStand", "Card stand");
             //AddEntry("ObjectKind/Ornament", "Ornament");
+            //AddEntry("Misc/None", "(none)");
+            //AddEntry("Misc/HQ", "HQ");
             //AddEntry("Misc/OpenShortcut", "Open Lemegeton");
             //AddEntry("Misc/ShowAdvancedOptions", "Show advanced options");
             //AddEntry("Misc/HideAdvancedOptions", "Hide advanced options");
@@ -173,6 +175,7 @@
             //AddEntry("MainMenu/Settings/AutomarkersSubsequentApplicationDelay", "Delay between subsequent marker applications (random within specified range)");
             //AddEntry("MainMenu/Settings/AutomarkerSeconds", "second(s)");
             //AddEntry("MainMenu/Settings/OpcodeSettings", "Opcode settings");
+            //AddEntry("MainMenu/Settings/LogUnhandledOpcodes", "Log unhandled opcodes");
             //AddEntry("MainMenu/Settings/OpcodeUrl", "Opcode URL");
             //AddEntry("MainMenu/Settings/OpcodeRegion", "Opcode region");
             //AddEntry("MainMenu/About", "About");
@@ -204,6 +207,7 @@
             //AddEntry("Content/Miscellaneous/Automation/FishForever/UseMooch2", "Use Mooch II");
             //AddEntry("Content/Miscellaneous/Automation/FishForever/UseThaliakFavor", "Use Thaliak's Favor");
             //AddEntry("Content/Miscellaneous/Automation/FishForever/ReleaseEverything", "Release everything");
+            //AddEntry("Content/Miscellaneous/Automation/FishForever/Food", "Use food");
             //AddEntry("Content/Miscellaneous/VisualEnhancement", "Visual enhancements");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Enabled", "Enabled");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Hitbox", "Hitbox");

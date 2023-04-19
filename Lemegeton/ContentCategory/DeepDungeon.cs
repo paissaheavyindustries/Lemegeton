@@ -5,6 +5,8 @@ using System.Collections.Generic;
 namespace Lemegeton.ContentCategory
 {
 
+#if !SANS_GOETIA
+
     public class DeepDungeon : Core.ContentCategory
     {
 
@@ -33,5 +35,7 @@ namespace Lemegeton.ContentCategory
         }
 
     }
+
+#endif
 
 }

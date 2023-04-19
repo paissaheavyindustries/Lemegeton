@@ -9,6 +9,8 @@ namespace Lemegeton.Core
 
         public bool IsDefault { get; set; }
         public string LanguageName { get; set; }
+        
+        internal float Coverage { get; set; }
 
         private Dictionary<string, string> Translations { get; set; }
 
@@ -35,6 +37,11 @@ namespace Lemegeton.Core
                 return String.Format(Translations[key], args);
             }
             return String.Format(key, args);
+        }
+
+        internal void CalculateCoverage(Language master)
+        {
+            Coverage = (float)Translations.Count / (float)master.Translations.Count;
         }
 
     }

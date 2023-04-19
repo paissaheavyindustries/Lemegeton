@@ -24,6 +24,12 @@ using System.Linq;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using Lumina.Excel.GeneratedSheets;
+using Condition = Dalamud.Game.ClientState.Conditions.Condition;
+using Dalamud.Game.ClientState.Statuses;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton.Core
 {
@@ -83,7 +89,8 @@ namespace Lemegeton.Core
         private ImDrawListPtr _drawListPtr;
         private bool _listening = false;
         public bool _inCombat = false;
-        private ulong _run = 0;
+        private ulong _runObject = 0;
+        private ulong _runInstance = 1;
 
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
         private Dictionary<nint, uint> _objectsToActors = new Dictionary<nint, uint>();
@@ -123,6 +130,9 @@ namespace Lemegeton.Core
 
         internal delegate void EventPlayDelegate(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4);
         internal event EventPlayDelegate OnEventPlay;
+
+        internal delegate void EventPlay64Delegate();
+        internal event EventPlay64Delegate OnEventPlay64;
 
         internal void InvokeZoneChange(ushort newZone)
         {
@@ -182,6 +192,11 @@ namespace Lemegeton.Core
         internal void InvokeEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
         {
             OnEventPlay?.Invoke(actorId, eventId, scene, flags, param1, param2, param3, param4);
+        }
+
+        internal void InvokeEventPlay64()
+        {
+            OnEventPlay64?.Invoke();
         }
 
         public State()
@@ -246,6 +261,10 @@ namespace Lemegeton.Core
             if (flag == ConditionFlag.InCombat)
             {
                 _inCombat = value;
+                if (value == true)
+                {
+                    _runInstance++;
+                }
                 if (value == false && cfg.RemoveMarkersAfterCombatEnd == true)
                 {
                     Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
@@ -339,9 +358,129 @@ namespace Lemegeton.Core
             }
         }
 
+        internal unsafe List<InventoryItem> GetAllFoodInInventoryContainer(InventoryContainer* ic)
+        {
+            List<InventoryItem> items = new List<InventoryItem>();
+            if (ic == null)
+            {
+                return items;
+            }
+            for (int i = 0; i < 35; i++)
+            {
+                FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* ii = ic->GetInventorySlot(i);
+                if (ii != null)
+                {
+                    var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemID);
+                    if (item.ItemUICategory.Row == 46)
+                    {
+                        items.Add(new InventoryItem() { Type = ic->Type, Slot = i, HQ = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HQ) != 0, Item = item });
+                    }
+                }
+            }
+            return items;
+        }
+
+        internal unsafe InventoryItem FindItemInInventoryContainer(InventoryContainer* ic, uint itemId, bool hq)
+        {            
+            if (ic == null)
+            {
+                return null;
+            }
+            for (int i = 0; i < 35; i++)
+            {
+                FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* ii = ic->GetInventorySlot(i);
+                if (ii != null)
+                {
+                    bool isHq = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HQ) != 0;
+                    if (
+                        (ii->ItemID == itemId)
+                        &&
+                        (
+                            (isHq == true && hq == true)
+                            ||
+                            (isHq == false && hq == false)
+                        )
+                    )
+                    {
+                        var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemID);
+                        return new InventoryItem() { Type = ic->Type, Slot = i, HQ = isHq, Item = item };
+                    }
+                }
+            }
+            return null;
+        }
+
+        internal unsafe InventoryItem FindItemInInventory(uint itemId, bool hq)
+        {
+            InventoryManager* im = InventoryManager.Instance();
+            InventoryItem ii;
+            ii = FindItemInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory1), itemId, hq);
+            if (ii != null)
+            {
+                return ii;
+            }
+            ii = FindItemInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory2), itemId, hq);
+            if (ii != null)
+            {
+                return ii;
+            }
+            ii = FindItemInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory3), itemId, hq);
+            if (ii != null)
+            {
+                return ii;
+            }
+            ii = FindItemInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory4), itemId, hq);
+            if (ii != null)
+            {
+                return ii;
+            }
+            return null;
+        }
+
+        internal unsafe List<InventoryItem> GetAllFoodInInventory()
+        {
+            List<InventoryItem> items = new List<InventoryItem>();
+            InventoryManager* im = InventoryManager.Instance();
+            items.AddRange(GetAllFoodInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory1)));
+            items.AddRange(GetAllFoodInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory2)));
+            items.AddRange(GetAllFoodInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory3)));
+            items.AddRange(GetAllFoodInInventoryContainer(im->GetInventoryContainer(InventoryType.Inventory4)));
+            items = items.GroupBy(x => new { x.Item.RowId, x.HQ }).Select(x => x.First()).ToList();
+            items.Sort((a, b) =>
+            {
+                int ex = b.Item.LevelItem.Row.CompareTo(a.Item.LevelItem.Row);
+                if (ex != 0)
+                {
+                    return ex;
+                }
+                ex = a.Item.Name.ToString().CompareTo(b.Item.Name.ToString());
+                if (ex != 0)
+                {
+                    return ex;
+                }
+                ex = b.HQ.CompareTo(a.HQ);
+                return ex;
+            });
+            return items;
+        }
+
+        internal bool CurrentlyWellFed(float forAtLeast)
+        {
+            StatusList sl = cs.LocalPlayer.StatusList;
+            for (int i = 0; i < sl.Length; i++)
+            {
+                Status st = sl[i];
+                if (st.StatusId == 48)
+                {
+                    return (st.RemainingTime >= forAtLeast);
+                }
+            }
+            return false;
+        }
+
         internal void TrackObjects()
         {
-            _run++;
+            _runObject++;
             List<GameObject> newobjs = new List<GameObject>();
             Dictionary<nint, uint> repobjs = new Dictionary<nint, uint>();
             int numcurrent = _objectsSeen.Count;
@@ -369,13 +508,13 @@ namespace Lemegeton.Core
                     newobjs.Add(go);
                     _objectsToActors[go.Address] = go.ObjectId;
                 }
-                _objectsSeen[go.Address] = _run;
+                _objectsSeen[go.Address] = _runObject;
             }
             if (numcurrent != numobjs)
             {
                 foreach (KeyValuePair<nint, ulong> kp in _objectsSeen)
                 {
-                    if (kp.Value != _run)
+                    if (kp.Value != _runObject)
                     {
                         nint addr = kp.Key;
                         InvokeCombatantRemoved(_objectsToActors[addr], addr);
@@ -444,7 +583,7 @@ namespace Lemegeton.Core
                 Party pty = GetPartyMembers();
                 foreach (Party.PartyMember pm in pty.Members)
                 {
-                    PerformMarking(pm.GameObject, AutomarkerSigns.SignEnum.None);
+                    PerformMarking(0, pm.GameObject, AutomarkerSigns.SignEnum.None);
                 }
                 return;
             }
@@ -456,11 +595,12 @@ namespace Lemegeton.Core
                 Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1} with {2}", delay, kp.Value, kp.Key);
                 tx = new Task(() =>
                 {
+                    ulong run = _runInstance;
                     if (delay > 0)
                     {
                         Thread.Sleep(delay);
                     }
-                    PerformMarking(kp.Value, kp.Key);
+                    PerformMarking(run, kp.Value, kp.Key);
                 });
                 if (first == null)
                 {
@@ -501,58 +641,6 @@ namespace Lemegeton.Core
                         }
                         Marshal.FreeHGlobal(p);
                     }
-                }
-            }
-        }
-
-        internal void PerformMarking(GameObject go, AutomarkerSigns.SignEnum sign)
-        {
-            if (go == null)
-            {
-                return;
-            }
-            if (cfg.AutomarkerSoft == true)
-            {
-                PerformSoftMarking(go.ObjectId, sign);
-                return;
-            }
-            if (_markingFuncPtr != null && cfg.AutomarkerCommands == false)
-            {
-                PerformMarking(go.ObjectId, sign);
-                return;
-            }
-            string cmd = "/mk ";
-            switch (sign)
-            {
-                case AutomarkerSigns.SignEnum.None: cmd += "off"; break;
-                case AutomarkerSigns.SignEnum.Attack1: cmd += "attack1"; break;
-                case AutomarkerSigns.SignEnum.Attack2: cmd += "attack2"; break;
-                case AutomarkerSigns.SignEnum.Attack3: cmd += "attack3"; break;
-                case AutomarkerSigns.SignEnum.Attack4: cmd += "attack4"; break;
-                case AutomarkerSigns.SignEnum.Attack5: cmd += "attack5"; break;
-                case AutomarkerSigns.SignEnum.Bind1: cmd += "bind1"; break;
-                case AutomarkerSigns.SignEnum.Bind2: cmd += "bind2"; break;
-                case AutomarkerSigns.SignEnum.Bind3: cmd += "bind3"; break;
-                case AutomarkerSigns.SignEnum.Ignore1: cmd += "ignore1"; break;
-                case AutomarkerSigns.SignEnum.Ignore2: cmd += "ignore2"; break;
-                case AutomarkerSigns.SignEnum.Circle: cmd += "circle"; break;
-                case AutomarkerSigns.SignEnum.Plus: cmd += "cross"; break;
-                case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
-                case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
-            }
-            string name = go.Name.ToString();
-            int index = GetPartyMemberIndex(name);
-            if (index > 0)
-            {
-                Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", name, index, sign);
-                cmd += " <" + index + ">";
-                if (sign != AutomarkerSigns.SignEnum.None)
-                {
-                    cfg.AutomarkersServed++;
-                }
-                if (cfg.DebugOnlyLogAutomarkers == false)
-                {
-                    SubmitCommand(cmd);
                 }
             }
         }
@@ -623,13 +711,18 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void PerformMarking(string name, AutomarkerSigns.SignEnum sign)
+        internal void PerformMarking(ulong run, string name, AutomarkerSigns.SignEnum sign)
         {
-            PerformMarking(GetActorByName(name), sign);
+            PerformMarking(run, GetActorByName(name), sign);
         }
 
-        internal void PerformMarking(uint actorId, AutomarkerSigns.SignEnum sign)
+        internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign)
         {
+            if (run > 0 && _runInstance != run)
+            {
+                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", actorId, sign);
+                return;
+            }
             if (cfg.AutomarkerSoft == true)
             {
                 PerformSoftMarking(actorId, sign);
@@ -659,7 +752,64 @@ namespace Lemegeton.Core
                 }
                 return;
             }
-            PerformMarking(GetActorById(actorId), sign);
+            PerformMarking(run, GetActorById(actorId), sign);
+        }
+
+        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign)
+        {
+            if (go == null)
+            {
+                return;
+            }
+            if (run > 0 && _runInstance != run)
+            {
+                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", go, sign);
+                return;
+            }
+            if (cfg.AutomarkerSoft == true)
+            {
+                PerformSoftMarking(go.ObjectId, sign);
+                return;
+            }
+            if (_markingFuncPtr != null && cfg.AutomarkerCommands == false)
+            {
+                PerformMarking(run, go.ObjectId, sign);
+                return;
+            }
+            string cmd = "/mk ";
+            switch (sign)
+            {
+                case AutomarkerSigns.SignEnum.None: cmd += "off"; break;
+                case AutomarkerSigns.SignEnum.Attack1: cmd += "attack1"; break;
+                case AutomarkerSigns.SignEnum.Attack2: cmd += "attack2"; break;
+                case AutomarkerSigns.SignEnum.Attack3: cmd += "attack3"; break;
+                case AutomarkerSigns.SignEnum.Attack4: cmd += "attack4"; break;
+                case AutomarkerSigns.SignEnum.Attack5: cmd += "attack5"; break;
+                case AutomarkerSigns.SignEnum.Bind1: cmd += "bind1"; break;
+                case AutomarkerSigns.SignEnum.Bind2: cmd += "bind2"; break;
+                case AutomarkerSigns.SignEnum.Bind3: cmd += "bind3"; break;
+                case AutomarkerSigns.SignEnum.Ignore1: cmd += "ignore1"; break;
+                case AutomarkerSigns.SignEnum.Ignore2: cmd += "ignore2"; break;
+                case AutomarkerSigns.SignEnum.Circle: cmd += "circle"; break;
+                case AutomarkerSigns.SignEnum.Plus: cmd += "cross"; break;
+                case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
+                case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
+            }
+            string name = go.Name.ToString();
+            int index = GetPartyMemberIndex(name);
+            if (index > 0)
+            {
+                Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", name, index, sign);
+                cmd += " <" + index + ">";
+                if (sign != AutomarkerSigns.SignEnum.None)
+                {
+                    cfg.AutomarkersServed++;
+                }
+                if (cfg.DebugOnlyLogAutomarkers == false)
+                {
+                    SubmitCommand(cmd);
+                }
+            }
         }
 
         internal void PerformSoftMarking(uint actorId, AutomarkerSigns.SignEnum sign)

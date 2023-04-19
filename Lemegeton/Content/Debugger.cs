@@ -11,11 +11,10 @@ using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
 using Lumina.Excel.GeneratedSheets;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
 
 namespace Lemegeton.Content
 {
-
-    #if !SANS_GOETIA
 
     public class Debugger : Core.Content
     {
@@ -240,6 +239,7 @@ namespace Lemegeton.Content
                     _state.OnCombatantAdded += _state_OnCombatantAdded;
                     _state.OnCombatantRemoved += _state_OnCombatantRemoved;
                     _state.OnEventPlay += _state_OnEventPlay;
+                    _state.OnEventPlay64 += _state_OnEventPlay64;
                 }
             }
 
@@ -252,6 +252,7 @@ namespace Lemegeton.Content
                         return;
                     }
                     Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                    _state.OnEventPlay64 -= _state_OnEventPlay64;
                     _state.OnEventPlay -= _state_OnEventPlay;
                     _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
                     _state.OnCombatantAdded -= _state_OnCombatantAdded;
@@ -311,6 +312,23 @@ namespace Lemegeton.Content
                     SubscribeToEvents();
                 }
                 return true;
+            }
+
+            private void _state_OnEventPlay64()
+            {
+                if (GoodToLog() == false)
+                {
+                    return;
+                }
+                string fmt = "InvokeEventPlay64";
+                if (LogToDalamudLog == true)
+                {
+                    Log(LogLevelEnum.Debug, null, fmt);
+                }
+                if (LogToFile == true)
+                {
+                    LogEventToFile(String.Format(fmt));
+                }
             }
 
             private void _state_OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
@@ -539,7 +557,5 @@ namespace Lemegeton.Content
         }
 
     }
-
-    #endif
 
 }

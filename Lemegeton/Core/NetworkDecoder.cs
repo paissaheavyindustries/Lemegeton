@@ -1,8 +1,10 @@
 ﻿using Dalamud.Game.Gui;
 using Dalamud.Game.Network;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Common.Lua;
 using Lemegeton.PacketHeaders;
+using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
 using System;
@@ -134,6 +136,7 @@ namespace Lemegeton.Core
             internal ushort ActorControlTarget = 0;
             internal ushort MapEffect = 0;
             internal ushort EventPlay = 0;
+            internal ushort EventPlay64 = 0;
 
         }
 
@@ -156,28 +159,38 @@ namespace Lemegeton.Core
             _tracker.OnStatusLose += _tracker_OnStatusLose;
         }
 
+        internal ushort GetOpcodeForRegion(Blueprint.Region region, string id)
+        {
+            if (region.OpcodeLookup.TryGetValue(id, out Blueprint.Region.Opcode val) == true)
+            {
+                return val.Id;
+            }
+            return 0;
+        }
+
         internal void SetOpcodes(Blueprint.Region region)
         {
             Opcodes = new OpcodeList();
-            Opcodes.StatusEffectList = region.OpcodeLookup["StatusEffectList"].Id;
-            Opcodes.StatusEffectList2 = region.OpcodeLookup["StatusEffectList2"].Id;
-            Opcodes.StatusEffectList3 = region.OpcodeLookup["StatusEffectList3"].Id;
-            Opcodes.Ability1 = region.OpcodeLookup["Ability1"].Id;
-            Opcodes.Ability8 = region.OpcodeLookup["Ability8"].Id;
-            Opcodes.Ability16 = region.OpcodeLookup["Ability16"].Id;
-            Opcodes.Ability24 = region.OpcodeLookup["Ability24"].Id;
-            Opcodes.Ability32 = region.OpcodeLookup["Ability32"].Id;
-            Opcodes.ActorCast = region.OpcodeLookup["ActorCast"].Id;
-            Opcodes.EffectResult = region.OpcodeLookup["EffectResult"].Id;
-            Opcodes.MapEffect = region.OpcodeLookup["MapEffect"].Id;
-            Opcodes.EventPlay = region.OpcodeLookup["EventPlay"].Id;
-            Opcodes.ActorControl = region.OpcodeLookup["ActorControl"].Id;
-            Opcodes.ActorControlSelf = region.OpcodeLookup["ActorControlSelf"].Id;
-            Opcodes.ActorControlTarget = region.OpcodeLookup["ActorControlTarget"].Id;
-            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14}",
+            Opcodes.StatusEffectList = GetOpcodeForRegion(region, "StatusEffectList");
+            Opcodes.StatusEffectList2 = GetOpcodeForRegion(region, "StatusEffectList2");
+            Opcodes.StatusEffectList3 = GetOpcodeForRegion(region, "StatusEffectList3");
+            Opcodes.Ability1 = GetOpcodeForRegion(region, "Ability1");
+            Opcodes.Ability8 = GetOpcodeForRegion(region, "Ability8");
+            Opcodes.Ability16 = GetOpcodeForRegion(region, "Ability16");
+            Opcodes.Ability24 = GetOpcodeForRegion(region, "Ability24");
+            Opcodes.Ability32 = GetOpcodeForRegion(region, "Ability32");
+            Opcodes.ActorCast = GetOpcodeForRegion(region, "ActorCast");
+            Opcodes.EffectResult = GetOpcodeForRegion(region, "EffectResult");
+            Opcodes.MapEffect = GetOpcodeForRegion(region, "MapEffect");
+            Opcodes.EventPlay = GetOpcodeForRegion(region, "EventPlay");
+            Opcodes.EventPlay64 = GetOpcodeForRegion(region, "EventPlay64");
+            Opcodes.ActorControl = GetOpcodeForRegion(region, "ActorControl");
+            Opcodes.ActorControlSelf = GetOpcodeForRegion(region, "ActorControlSelf");
+            Opcodes.ActorControlTarget = GetOpcodeForRegion(region, "ActorControlTarget");
+            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
                 Opcodes.StatusEffectList, Opcodes.StatusEffectList2, Opcodes.StatusEffectList3,
                 Opcodes.Ability1, Opcodes.Ability8, Opcodes.Ability16, Opcodes.Ability24, Opcodes.Ability32,
-                Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect, Opcodes.EventPlay,
+                Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect, Opcodes.EventPlay, Opcodes.EventPlay64,
                 Opcodes.ActorControl, Opcodes.ActorControlSelf, Opcodes.ActorControlTarget
             );
         }
@@ -367,9 +380,13 @@ namespace Lemegeton.Core
                 EventPlay ac = Marshal.PtrToStructure<EventPlay>(dataPtr);
                 _st.InvokeEventPlay((uint)ac.actorId, ac.eventId, ac.scene, ac.flags, ac.param1, ac.param2, ac.param3, ac.param4);
             }
-            else
+            else if (opCode == Opcodes.EventPlay64)
             {
-                //_st.Log(State.LogLevelEnum.Debug, null, "opcode {0}", opCode);
+                _st.InvokeEventPlay64();
+            }
+            else if (_st.cfg.LogUnhandledOpcodes == true)
+            {
+                _st.Log(State.LogLevelEnum.Debug, null, "Unhandled opcode: {0} (source: {1:X8}, target: {2:X8})", opCode, sourceActorId, targetActorId);
             }
         }
 

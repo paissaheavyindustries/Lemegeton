@@ -43,6 +43,8 @@ using System.Text.RegularExpressions;
 using Dalamud.Hooking;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System.Runtime.InteropServices;
+using Dalamud.Game.ClientState.Statuses;
+using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton
 {
@@ -348,6 +350,11 @@ namespace Lemegeton
                     Percentage v = (Percentage)pi.GetValue(o);
                     val = v.Serialize();
                 }
+                else if (pi.PropertyType == typeof(FoodSelector))
+                {
+                    FoodSelector v = (FoodSelector)pi.GetValue(o);
+                    val = v.Serialize();
+                }
                 else if (pi.PropertyType == typeof(Action))
                 {
                     continue;
@@ -497,6 +504,11 @@ namespace Lemegeton
                     else if (pi.PropertyType == typeof(AutomarkerPrio))
                     {
                         AutomarkerPrio v = (AutomarkerPrio)pi.GetValue(cm);
+                        v.Deserialize(attr.Value);
+                    }
+                    else if (pi.PropertyType == typeof(FoodSelector))
+                    {
+                        FoodSelector v = (FoodSelector)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
                     else if (pi.PropertyType == typeof(AutomarkerTiming))
@@ -767,6 +779,11 @@ namespace Lemegeton
                 //Log(LogLevelEnum.Debug, "Creating Language {0}", type.Name.ToString());
                 Core.Language c = (Core.Language)Activator.CreateInstance(type);
                 I18n.AddLanguage(c);
+            }
+            Core.Language def = I18n.DefaultLanguage;
+            foreach (var kp in I18n.RegisteredLanguages)
+            {
+                kp.Value.CalculateCoverage(def);
             }
         }
 
@@ -1165,7 +1182,7 @@ namespace Lemegeton
             ImGui.TextWrapped((amt.Parent != null || parent == true ? Environment.NewLine : "") + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
             float autoIniMin = amt.IniDelayMin;
             float autoIniMax = amt.IniDelayMax;
-            if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Ini" + path, ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 2.0f) == true)
+            if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Ini" + path, ref autoIniMin, ref autoIniMax, 0.1f, 0.0f, 60.0f) == true)
             {
                 amt.IniDelayMin = autoIniMin;
                 amt.IniDelayMax = autoIniMax;
@@ -1422,6 +1439,11 @@ namespace Lemegeton
                 else if (pi.PropertyType == typeof(Percentage))
                 {
                     RenderPercentage(path, pi, cm);
+                }
+                else if (pi.PropertyType == typeof(FoodSelector))
+                {
+                    FoodSelector fs = (FoodSelector)pi.GetValue(cm);
+                    fs.Render(path + "/" + pi.Name);
                 }
                 else if (pi.PropertyType == typeof(Action))
                 {
@@ -1707,14 +1729,6 @@ namespace Lemegeton
             }
         }
 
-        private unsafe delegate bool UseActionLocationDelegate(ActionManager* self, ActionType actionType, uint actionID, ulong targetID, Vector3* targetPos, uint itemLocation);
-        Hook<UseActionLocationDelegate> hook = null;
-
-        private unsafe bool UseActionLocationDetour(ActionManager* self, ActionType actionType, uint actionID, ulong targetID, Vector3* targetPos, uint itemLocation)
-        {
-            return hook.Original(self, actionType, actionID, targetID, targetPos, itemLocation);
-        }
-
         private void DrawConfig()
         {
             if (_state.cfg.Opened == false)
@@ -1834,7 +1848,7 @@ namespace Lemegeton
                     {
                         foreach (KeyValuePair<string, Core.Language> kp in I18n.RegisteredLanguages)
                         {
-                            if (ImGui.Selectable(kp.Key, kp.Key == _state.cfg.Language) == true)
+                            if (ImGui.Selectable(kp.Key + " (" + (int)Math.Floor(kp.Value.Coverage * 100.0f) + " %)", kp.Key == _state.cfg.Language) == true)
                             {
                                 ChangeLanguage(kp.Key);
                                 _state.cfg.Language = kp.Key;
@@ -1885,7 +1899,7 @@ namespace Lemegeton
                     ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
                     float autoIniMin = _state.cfg.AutomarkerIniDelayMin;
                     float autoIniMax = _state.cfg.AutomarkerIniDelayMax;
-                    if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersInitialApplicationDelay", ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 2.0f) == true)
+                    if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersInitialApplicationDelay", ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 60.0f) == true)
                     {
                         _state.cfg.AutomarkerIniDelayMin = autoIniMin;
                         _state.cfg.AutomarkerIniDelayMax = autoIniMax;
@@ -1922,6 +1936,11 @@ namespace Lemegeton
                 {
                     ImGui.PushID("OpcodeSettings");
                     ImGui.Indent(30.0f);
+                    bool qtLog = _state.cfg.LogUnhandledOpcodes;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/LogUnhandledOpcodes"), ref qtLog) == true)
+                    {
+                        _state.cfg.LogUnhandledOpcodes = qtLog;
+                    }
                     string temp = _state.cfg.OpcodeUrl;
                     ImGui.Text(I18n.Translate("MainMenu/Settings/OpcodeUrl"));
                     if (ImGui.InputText("##MainMenu/Settings/OpcodeUrl", ref temp, 256) == true)
@@ -2086,7 +2105,11 @@ namespace Lemegeton
                 thicc = Math.Clamp(thicc, 2.0f, 5.0f);
                 mul = Math.Clamp(mul, 0.5f, 5.0f);
                 ImDrawListPtr draw = ImGui.GetWindowDrawList();
-                maxp = (now.Month == 4 && now.Day == 1) ? 5 : 10;
+#if !SANS_GOETIA
+                maxp = 5;
+#else
+                maxp = 10;
+#endif
                 float inner = (sz / 2.0f) - rim - 10.0f;
                 for (int i = 0; i < maxp; i++)
                 {

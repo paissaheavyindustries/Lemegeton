@@ -1491,9 +1491,9 @@ namespace Lemegeton.Content
                                && ix != distant
                                && ix != near
                                select ix).Take(3).ToList();
-                ap.assignments[Signs.Roles["Arm1"]] = _state.GetActorById(theRest[0]);
-                ap.assignments[Signs.Roles["Arm2"]] = _state.GetActorById(theRest[1]);
-                ap.assignments[Signs.Roles["DistantFarBait"]] = _state.GetActorById(theRest[2]);
+                ap.assignments[Signs.Roles["DistantCloseBait"]] = _state.GetActorById(theRest[0]);
+                ap.assignments[Signs.Roles["NearBait1"]] = _state.GetActorById(theRest[1]);
+                ap.assignments[Signs.Roles["NearBait2"]] = _state.GetActorById(theRest[2]);
                 _state.ExecuteAutomarkers(ap, Timing);
             }
 
@@ -1558,11 +1558,11 @@ namespace Lemegeton.Content
                 float x1 = 0.0f, x2 = 0.0f;
                 switch (_currentAction)
                 {
-                    case AbilityBossMonitorWest:
+                    case AbilityBossMonitorDeltaLeft:
                         x1 = 80.0f;
                         x2 = 100.0f;
                         break;
-                    case AbilityBossMonitorEast:
+                    case AbilityBossMonitorDeltaRight:
                         x1 = 100.0f;
                         x2 = 120.0f;
                         break;
@@ -1621,6 +1621,7 @@ namespace Lemegeton.Content
             private List<uint> _nears = new List<uint>();
             private List<uint> _firsts = new List<uint>();
             private List<uint> _seconds = new List<uint>();
+            private bool _fired = false;
 
             internal AutomarkerPayload SecondPayload;
 
@@ -1657,11 +1658,12 @@ namespace Lemegeton.Content
                 _nears.Clear();
                 _firsts.Clear();
                 _seconds.Clear();
+                _fired = false;
             }
 
             internal void FeedStatus(uint actorId, uint statusId, float duration, int stacks)
             {
-                if (Active == false)
+                if (Active == false || _fired == true)
                 {
                     return;
                 }
@@ -1763,6 +1765,7 @@ namespace Lemegeton.Content
                 ap2.assignments[Signs.Roles["Bait3"]] = _state.GetActorById(theRest2[2]);
                 ap2.assignments[Signs.Roles["Bait4"]] = _state.GetActorById(theRest2[3]);
                 SecondPayload = ap2;
+                _fired = true;
                 _state.ExecuteAutomarkers(ap1, Timing);
             }
 
@@ -1895,16 +1898,16 @@ namespace Lemegeton.Content
                     {
                         _deltaMonitor.FeedAction(dest, actionId);
                     }
+                    if (CurrentPhase == PhaseEnum.P5_Omega)
+                    {
+                        _omegaMonitor.FeedAction(actionId);
+                    }
                     break;
                 case AbilityBossMonitorEast:
                 case AbilityBossMonitorWest:
                     if (CurrentPhase == PhaseEnum.P3_Transition)
                     {
                         _hwMonitor.FeedAction(actionId);
-                    }
-                    if (CurrentPhase == PhaseEnum.P5_Omega)
-                    {
-                        _omegaMonitor.FeedAction(actionId);
                     }
                     break;
 #endif
@@ -1915,15 +1918,23 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
-#if !SANS_GOETIA
                 case AbilityBossMonitorDeltaLeft:
                 case AbilityBossMonitorDeltaRight:
                     if (CurrentPhase == PhaseEnum.P5_Delta)
                     {
+#if !SANS_GOETIA
                         _deltaMonitor.FeedAction(dest, 0);
+#endif
+                    }
+                    if (CurrentPhase == PhaseEnum.P5_Omega)
+                    {
+#if !SANS_GOETIA
+                        _omegaMonitor.FeedAction(0);
+#endif
+                        AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
+                        _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
                     }
                     break;
-#endif
                 case AbilityBossMonitorEast:
                 case AbilityBossMonitorWest:
                     if (CurrentPhase == PhaseEnum.P3_Transition)
@@ -1933,16 +1944,6 @@ namespace Lemegeton.Content
 #endif
                         AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
                         _state.ExecuteAutomarkers(ap, _p3moniAm.Timing);
-                    }
-                    break;
-                    if (CurrentPhase == PhaseEnum.P5_Omega)
-                    {
-#if !SANS_GOETIA
-                        _omegaMonitor.FeedAction(0);
-#endif
-                        AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                        _state.ExecuteAutomarkers(ap, _omegaAm.Timing);
-                        _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
                     }
                     break;
                 case AbilityHelloDistantWorldBig:
