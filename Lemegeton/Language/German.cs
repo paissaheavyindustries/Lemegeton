@@ -237,6 +237,10 @@
             //AddEntry("Content/Debug/Debugger/EventLogger/LogToFile", "Output to file");
             //AddEntry("Content/Debug/Debugger/EventLogger/LogFilename", "Log filename");
             //AddEntry("Content/Debug/Debugger/EventLogger/CurrentLogFilename", "Current log file");
+            //AddEntry("Content/Debug/Debugger/StressTest", "Stress test");
+            AddEntry("Content/Debug/Debugger/StressTest/Enabled", "Aktiviert");
+            //AddEntry("Content/Debug/Debugger/StressTest/TestAutomarkers", "Test automarkers");
+            //AddEntry("Content/Debug/Debugger/StressTest/AmFails", "Automarker errors");
             //AddEntry("Content/Miscellaneous", "Miscellaneous");
             AddEntry("Content/Miscellaneous/Enabled", "Aktiviert");
             //AddEntry("Content/Miscellaneous/Radar", "Radar");

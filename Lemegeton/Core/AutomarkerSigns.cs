@@ -96,7 +96,7 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at)
+        internal AutomarkerPayload TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at)
         {            
             Party pty = st.GetPartyMembers();
             if (amp != null)
@@ -125,6 +125,7 @@ namespace Lemegeton.Core
                 roleId++;
             }            
             st.ExecuteAutomarkers(ap, at);
+            return ap;
         }
 
     }

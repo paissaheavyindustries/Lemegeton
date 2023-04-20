@@ -12,6 +12,7 @@ using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
 using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
 namespace Lemegeton.Content
 {
@@ -164,6 +165,144 @@ namespace Lemegeton.Content
                 Enabled = false;
             }
 
+        }
+
+        public class StressTest : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => TestAutomarkers == true ? FeaturesEnum.Automarker : FeaturesEnum.None;
+
+            [AttributeOrderNumber(1000)]
+            public bool TestAutomarkers { get; set; } = true;
+            [AttributeOrderNumber(1001)]
+            public int AmFails { get; private set; } = 0;
+
+
+            private int _amTestCycle = 0;
+            private DateTime _amTestCycleNext = DateTime.MinValue;
+            private AutomarkerPayload _amLastPayload = null;            
+
+            private AutomarkerSigns Signs;
+
+            protected override bool ExecutionImplementation()
+            {
+                if (TestAutomarkers == true)
+                {
+                    if (DateTime.Now > _amTestCycleNext)
+                    {
+                        _amTestCycle++;
+                        if (_amTestCycle > 6)
+                        {
+                            _amTestCycle = 1;
+                        }
+                        Log(LogLevelEnum.Debug, null, "Running AM test step {0}", _amTestCycle);
+                        switch (_amTestCycle)
+                        {
+                            case 1: // full clear
+                                {
+                                    _amLastPayload = null;
+                                    _state.ClearAutoMarkers();
+                                    _amTestCycleNext = DateTime.Now.AddSeconds(2.0f);
+                                }
+                                break;
+                            case 3: // assign on full clear
+                            case 5: // reassign/overwrite
+                                {
+                                    _amLastPayload = Signs.TestFunctionality(_state, null, _state.cfg.DefaultAutomarkerTiming);
+                                    double delay = _state.cfg.DefaultAutomarkerTiming.IniDelayMax + 0.5f
+                                        + (_state.cfg.DefaultAutomarkerTiming.SubDelayMax * (float)_amLastPayload.assignments.Count);
+                                    _amTestCycleNext = DateTime.Now.AddSeconds(delay);
+                                }
+                                break;
+                            case 2: // check result
+                            case 4: // check result
+                            case 6: // check result
+                                CheckAmResult();
+                                _amTestCycleNext = DateTime.Now.AddSeconds(2);
+                                break;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            private void CheckAmResult()
+            {
+                if (_amLastPayload != null)
+                {
+                    foreach (var kp in _amLastPayload.assignments)
+                    {
+                        AutomarkerSigns.SignEnum expectedSign = kp.Key;
+                        GameObject expectedActor = kp.Value;
+                        bool ret = _state.GetCurrentMarker(expectedActor.ObjectId, out AutomarkerSigns.SignEnum currentSign);
+                        if (ret == false)
+                        {
+                            Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActor);
+                            AmFails++;
+                        }
+                        else
+                        {
+                            if (currentSign == expectedSign)
+                            {
+                                Log(LogLevelEnum.Debug, null, "{0} has {1} as expected", expectedActor, expectedSign);
+                            }
+                            else
+                            {
+                                Log(LogLevelEnum.Error, null, "{0} has {1} instead of expected {2}", expectedActor, currentSign, expectedSign);
+                                AmFails++;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Party pty = _state.GetPartyMembers();
+                    foreach (Party.PartyMember pm in pty.Members)
+                    {
+                        bool ret = _state.GetCurrentMarker(pm.ObjectId, out AutomarkerSigns.SignEnum currentSign);
+                        if (ret == false)
+                        {
+                            Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", pm.GameObject);
+                            AmFails++;
+                        }
+                        else
+                        {
+                            if (currentSign == AutomarkerSigns.SignEnum.None)
+                            {
+                                Log(LogLevelEnum.Debug, null, "{0} doesn't have a sign as expected", pm.GameObject);
+                            }
+                            else
+                            {
+                                Log(LogLevelEnum.Error, null, "{0} has {1} instead of nothing", pm.GameObject, currentSign);
+                                AmFails++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            public StressTest(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Signs.SetRole("Ignore1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Ignore2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("Bind1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Bind2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("Attack1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("Attack2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("Attack3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("Attack4", AutomarkerSigns.SignEnum.Attack4, false);
+                OnEnabledChanged += StressTest_OnEnabledChanged;
+            }
+
+            private void StressTest_OnEnabledChanged(bool newState)
+            {
+                _amTestCycle = 0;
+                AmFails = 0;
+                _amTestCycleNext = DateTime.MinValue;
+                _amLastPayload = null;
+            }
         }
 
         public class EventLogger : Core.ContentItem

@@ -10,6 +10,14 @@ namespace Lemegeton.Core
 
         public Dictionary<string, ContentItem> Items;
 
+        public override void Reset()
+        {
+            foreach (var kp in Items)
+            {
+                kp.Value.Reset();
+            }
+        }
+
         public Content(State st) : base(st)
         {
             Items = new Dictionary<string, ContentItem>();

@@ -2,7 +2,6 @@
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Game.ClientState.Fates;
 
 namespace Lemegeton.Content
 {
@@ -69,8 +68,9 @@ namespace Lemegeton.Content
                 Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
             }
 
-            internal void Reset()
+            public override void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;
                 _gaols.Clear();
             }
@@ -81,26 +81,24 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actionId == AbilityTitanGaol1 || actionId == AbilityTitanGaol2)
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
+                _gaols.Add(actorId);
+                if (_gaols.Count < 3)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1}", actionId, actorId);
-                    _gaols.Add(actorId);
-                    if (_gaols.Count == 3)
-                    {
-                        Log(State.LogLevelEnum.Debug, null, "All gaols registered, ready for automarkers");
-                        Party pty = _state.GetPartyMembers();
-                        List<Party.PartyMember> _gaolsGo = new List<Party.PartyMember>(
-                            from ix in pty.Members join jx in _gaols on ix.ObjectId equals jx select ix
-                        );
-                        Prio.SortByPriority(_gaolsGo);
-                        AutomarkerPayload ap = new AutomarkerPayload();
-                        ap.assignments[Signs.Roles["Gaol1"]] = _gaolsGo[0].GameObject;
-                        ap.assignments[Signs.Roles["Gaol2"]] = _gaolsGo[1].GameObject;
-                        ap.assignments[Signs.Roles["Gaol3"]] = _gaolsGo[2].GameObject;
-                        _fired = true;
-                        _state.ExecuteAutomarkers(ap, Timing);
-                    }
+                    return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _gaolsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _gaols on ix.ObjectId equals jx select ix
+                );
+                Prio.SortByPriority(_gaolsGo);
+                AutomarkerPayload ap = new AutomarkerPayload();
+                ap.assignments[Signs.Roles["Gaol1"]] = _gaolsGo[0].GameObject;
+                ap.assignments[Signs.Roles["Gaol2"]] = _gaolsGo[1].GameObject;
+                ap.assignments[Signs.Roles["Gaol3"]] = _gaolsGo[2].GameObject;
+                _fired = true;
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
             internal void FeedStatus(uint statusId, bool gained)
@@ -109,13 +107,12 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (statusId == StatusFetters && gained == false && _fired == true)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1}", statusId, gained);
+                if (gained == false && _fired == true)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
-                    _fired = false;
-                    AutomarkerPayload ap = new AutomarkerPayload();
-                    ap.Clear = true;
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                    Reset();
+                    _state.ClearAutoMarkers();
                 }
             }
 
@@ -167,6 +164,7 @@ namespace Lemegeton.Content
 
         private void OnCombatChange(bool inCombat)
         {
+            Reset();
             if (inCombat == true)
             {
                 SubscribeToEvents();

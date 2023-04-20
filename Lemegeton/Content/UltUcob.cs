@@ -55,33 +55,35 @@ namespace Lemegeton.Content
                 Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
-            internal void Reset()
+            public override void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;
                 _lightnings.Clear();
             }
 
             internal void FeedAction(uint actorId, uint actionId)
             {
-                if (Active == false || actionId != AbilityChainLighting)
+                if (Active == false)
                 {
                     return;
                 }
-                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1}", actionId, actorId);
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
                 _lightnings.Add(actorId);
-                if (_lightnings.Count == 2)
+                if (_lightnings.Count < 2)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "All lightnings registered, ready for automarkers");
-                    Party pty = _state.GetPartyMembers();
-                    List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
-                        from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
-                    );
-                    AutomarkerPayload ap = new AutomarkerPayload();
-                    ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
-                    ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
-                    _fired = true;
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
+                );
+                AutomarkerPayload ap = new AutomarkerPayload();
+                ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
+                ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
+                _fired = true;
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
             internal void FeedStatus(uint statusId, bool gained)
@@ -90,14 +92,12 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (statusId == StatusThunderstruck && gained == false && _fired == true)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1}", statusId, gained);
+                if (gained == false && _fired == true)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
-                    _fired = false;
-                    _lightnings.Clear();
-                    AutomarkerPayload ap = new AutomarkerPayload();
-                    ap.Clear = true;
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                    Reset();
+                    _state.ClearAutoMarkers();
                 }
             }
 
@@ -149,6 +149,7 @@ namespace Lemegeton.Content
 
         private void OnCombatChange(bool inCombat)
         {
+            Reset();
             if (inCombat == true)
             {
                 SubscribeToEvents();

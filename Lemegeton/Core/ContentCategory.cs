@@ -21,6 +21,18 @@ namespace Lemegeton.Core
         protected abstract Dictionary<string, ContentCategory> InitializeSubcategories(State st);
         protected abstract Dictionary<string, Content> InitializeContentItems(State st);
 
+        public override void Reset()
+        {
+            foreach (var kp in Subcategories)
+            {
+                kp.Value.Reset();
+            }
+            foreach (var kp in ContentItems)
+            {
+                kp.Value.Reset();
+            }
+        }
+
         public ContentCategory(State st) : base(st)
         {
             Subcategories = InitializeSubcategories(st);

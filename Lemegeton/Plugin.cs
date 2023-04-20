@@ -182,6 +182,10 @@ namespace Lemegeton
             _stopEvent.Set();            
             UnloadTextures();
             SaveConfig();
+            if (_state.InvoqueueNew != null)
+            {
+                _state.InvoqueueNew.Dispose();
+            }
         }
 
         internal TextureWrap GetJobIcon(uint jobId)
@@ -546,7 +550,6 @@ namespace Lemegeton
 
         internal static string Base64Decode(string text)
         {
-            ClientLanguage c;
             var bytes = Convert.FromBase64String(text);
             return Encoding.UTF8.GetString(bytes);
         }
@@ -1712,6 +1715,36 @@ namespace Lemegeton
                         _movingShortcut = false;
                     }
                 }
+                else
+                {
+                    Vector2 pt = ImGui.GetWindowPos();
+                    bool moved = false;
+                    Vector2 sz = ImGui.GetIO().DisplaySize;
+                    if (pt.X < 0)
+                    {
+                        pt.X += (0.0f - pt.X) / 5.0f;
+                        moved = true;
+                    }
+                    if (pt.Y < 0)
+                    {
+                        pt.Y += (0.0f - pt.Y) / 5.0f;
+                        moved = true;
+                    }
+                    if (pt.X + tw.Width + 10 > sz.X)
+                    {
+                        pt.X -= ((pt.X + tw.Width + 10) - sz.X) / 5.0f;
+                        moved = true;
+                    }
+                    if (pt.Y + tw.Height + 10 > sz.Y)
+                    {
+                        pt.Y -= ((pt.Y + tw.Height + 10) - sz.Y) / 5.0f;
+                        moved = true;
+                    }
+                    if (moved == true)
+                    {
+                        ImGui.SetWindowPos(pt);
+                    }
+                }
                 ImGui.End();
             }
         }
@@ -1892,9 +1925,7 @@ namespace Lemegeton
                     ImGui.Text(Environment.NewLine);
                     if (ImGui.Button(I18n.Translate("MainMenu/Settings/RemoveAutomarkers")) == true)
                     {
-                        AutomarkerPayload ap = new AutomarkerPayload();
-                        ap.Clear = true;
-                        _state.ExecuteAutomarkers(ap, _state.cfg.DefaultAutomarkerTiming);
+                        _state.ClearAutoMarkers();
                     }
                     ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
                     float autoIniMin = _state.cfg.AutomarkerIniDelayMin;
@@ -2230,7 +2261,41 @@ namespace Lemegeton
             }
             ImGui.SameLine();
             _adjusterX += ImGui.GetContentRegionAvail().X;
-            ImGui.PopStyleColor(3);            
+            ImGui.PopStyleColor(3);
+            Vector2 pt = ImGui.GetWindowPos();
+            Vector2 szy = ImGui.GetWindowSize();
+            bool moved = false;
+            Vector2 szx = ImGui.GetIO().DisplaySize;
+            if (szy.X > szx.X || szy.Y > szx.Y)
+            {
+                szy.X = Math.Min(szy.X, szx.X);
+                szy.Y = Math.Min(szy.Y, szx.Y);
+                ImGui.SetWindowSize(szy);
+            }
+            if (pt.X < 0)
+            {
+                pt.X += (0.0f - pt.X) / 5.0f;
+                moved = true;
+            }
+            if (pt.Y < 0)
+            {
+                pt.Y += (0.0f - pt.Y) / 5.0f;
+                moved = true;
+            }
+            if (pt.X + szy.X > szx.X)
+            {
+                pt.X -= ((pt.X + szy.X) - szx.X) / 5.0f;
+                moved = true;
+            }
+            if (pt.Y + szy.Y > szx.Y)
+            {
+                pt.Y -= ((pt.Y + szy.Y) - szx.Y) / 5.0f;
+                moved = true;
+            }
+            if (moved == true)
+            {
+                ImGui.SetWindowPos(pt);
+            }
             ImGui.End();
             ImGui.PopStyleColor(3);
         }
@@ -2578,13 +2643,38 @@ namespace Lemegeton
             return doc;
         }
 
+        public int ProcessInvoqueue()
+        {
+            DeferredInvoke di = null;
+            lock (_state.Invoqueue)
+            {
+                if (_state.Invoqueue.Count > 0)
+                {
+                    di = _state.Invoqueue[0];
+                    if (di.CanInvoke() == false)
+                    {
+                        return (int)(di.FireAt - DateTime.Now).TotalMilliseconds;
+                    }
+                    _state.Invoqueue.RemoveAt(0);
+                }
+                else
+                {
+                    return Timeout.Infinite;
+                }
+            }
+            di.Invoke();
+            return 0;
+        }
+
         public void MainThreadProc(object o)
         {
             Plugin p = (Plugin)o;
-            WaitHandle[] wh = new WaitHandle[1];
+            WaitHandle[] wh = new WaitHandle[2];
             wh[0] = p._stopEvent;
+            wh[1] = _state.InvoqueueNew;
             int timeout = 0;
             int tries = 0;
+            bool ready = false;
             try
             {
                 while (true)
@@ -2593,15 +2683,25 @@ namespace Lemegeton
                     {
                         case 0:
                             return;
+                        case 1:
+                            timeout = ProcessInvoqueue();
+                            break;
                         case WaitHandle.WaitTimeout:
-                            if (_state.PrepareInternals(tries >= 5) == true)
+                            if (ready == false)
                             {
-                                timeout = Timeout.Infinite;
+                                if (_state.PrepareInternals(tries >= 5) == true)
+                                {
+                                    ready = true;
+                                }
+                                else
+                                {
+                                    timeout = 10000;
+                                    tries++;
+                                }
                             }
                             else
                             {
-                                timeout = 10000;
-                                tries++;
+                                timeout = ProcessInvoqueue();
                             }
                             break;
                     }

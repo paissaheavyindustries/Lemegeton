@@ -52,7 +52,6 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public Action Test { get; set; }
 
-            private bool _fired = false;
             private uint _currentAction = 0;
             private uint _share1 = 0;
             private uint _share2 = 0;
@@ -79,9 +78,9 @@ namespace Lemegeton.Content
                 Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
             }
 
-            internal void Reset()
+            public override void Reset()
             {
-                _fired = false;
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 payloads.Clear();
                 _currentAction = 0;
                 _share1 = 0;
@@ -90,17 +89,15 @@ namespace Lemegeton.Content
                 _share4 = 0;
             }
 
-            internal void FeedAction(uint actorId, uint actionId)
+            internal void FeedAction(uint actionId)
             {
                 if (Active == false)
                 {
                     return;
                 }
-                if (actionId == AbilityInviolateBonds || actionId == AbilityInviolatePurgation)
-                {
-                    Reset();
-                    _currentAction = actionId;
-                }
+                Reset();
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0}", actionId);
+                _currentAction = actionId;
             }
 
             internal void NextAutomarkers()
@@ -109,13 +106,12 @@ namespace Lemegeton.Content
                 if (payloads.Count > 0)
                 {
                     ap = payloads.Dequeue();
+                    _state.ExecuteAutomarkers(ap, Timing);
                 }
                 else
                 {
-                    ap = new AutomarkerPayload();
-                    ap.Clear = true;
+                    _state.ClearAutoMarkers();
                 }
-                _state.ExecuteAutomarkers(ap, Timing);
             }
 
             internal void FeedStatus(uint dest, uint statusId, bool gained)
@@ -124,6 +120,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, dest);
                 switch (statusId)
                 {
                     case StatusBond1:
@@ -134,7 +131,6 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, dest);
                             _share1 = dest;
                         }
                         break;
@@ -146,7 +142,6 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, dest);
                             _share2 = dest;
                         }
                         break;
@@ -157,7 +152,6 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, dest);
                             _share3 = dest;
                         }
                         break;
@@ -168,7 +162,6 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, dest);
                             _share4 = dest;
                         }
                         break;
@@ -179,7 +172,7 @@ namespace Lemegeton.Content
                     (_currentAction == AbilityInviolatePurgation && _share1 > 0 && _share2 > 0 && _share3 > 0 && _share4 > 0)
                 )
                 {
-                    Log(State.LogLevelEnum.Debug, null, "All shares registered, ready for automarkers");
+                    Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
                     CreatePayloadForShare(_share1);
                     CreatePayloadForShare(_share2);
                     if (_currentAction == AbilityInviolatePurgation)
@@ -243,7 +236,7 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnAction += _state_OnAction;
+            _state.OnCastBegin += _state_OnCastBegin;
             _state.OnStatusChange += _state_OnStatusChange;
         }
 
@@ -255,22 +248,23 @@ namespace Lemegeton.Content
             }
         }
 
-        private void _state_OnAction(uint src, uint dest, ushort actionId)
-        {
-            if (actionId == AbilityInviolateBonds || actionId == AbilityInviolatePurgation)
-            {
-                _inviolateAm.FeedAction(dest, actionId);
-            }
-        }
-
         private void UnsubscribeFromEvents()
         {
             _state.OnStatusChange -= _state_OnStatusChange;
-            _state.OnAction -= _state_OnAction;
+            _state.OnCastBegin -= _state_OnCastBegin;
+        }
+
+        private void _state_OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
+        {
+            if (actionId == AbilityInviolateBonds || actionId == AbilityInviolatePurgation)
+            {
+                _inviolateAm.FeedAction(actionId);
+            }
         }
 
         private void OnCombatChange(bool inCombat)
         {
+            Reset();
             if (inCombat == true)
             {
                 SubscribeToEvents();

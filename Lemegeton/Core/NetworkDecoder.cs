@@ -232,11 +232,14 @@ namespace Lemegeton.Core
                     _st.InvokeTether(targetActorId, param3, param2);
                     break;
                 case ActorControlCategory.Director:
+                    if (param2 == 0x4000000F)
+                    {
+                        _st._runInstance++;
+                    }
                     if (param2 == 0x40000006 && _st.cfg.RemoveMarkersAfterWipe == true)
                     {
                         _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");
-                        AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                        _st.ExecuteAutomarkers(ap, _st.cfg.DefaultAutomarkerTiming);
+                        _st.ClearAutoMarkers();
                     }
                     _st.InvokeDirectorUpdate(param1, param2, param3, param4);
                     break;

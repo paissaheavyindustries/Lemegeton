@@ -10,12 +10,7 @@ namespace Lemegeton.Content
     {
 
         public override FeaturesEnum Features => FeaturesEnum.None;
-
-        private const int AbilityAscalonsMercyConcealed = 25544;
-        private const int AbilityWrothFlames = 27973;
-        private const int AbilityHotWing = 27947;
-        private const int AbilityHotTail = 27949;
-
+        
         private const int StatusEntangledFlames = 2759;
         private const int StatusSpreadingFlames = 2758;
         private const int StatusThunderstruck = 2833;
@@ -26,15 +21,6 @@ namespace Lemegeton.Content
         private MeteorAM _meteorAm;
         private ChainLightningAm _chainLightningAm;
         private WrothAM _wrothAm;
-
-        private enum PhaseEnum
-        {
-            P2,
-            P6,
-            P6_PastWroth,
-        }
-
-        private PhaseEnum CurrentPhase { get; set; } = PhaseEnum.P2;
 
         #region MeteorAM
 
@@ -84,8 +70,9 @@ namespace Lemegeton.Content
                 Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
-            internal void Reset()
+            public override void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;
                 _meteors.Clear();
             }
@@ -96,79 +83,72 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (statusId == StatusPrey)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, actorId);
+                if (gained == false)
                 {
-                    if (gained == false)
+                    if (_fired == true)
                     {
-                        if (_fired == true)
-                        {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
-                            _fired = false;
-                            _meteors.Clear();
-                            AutomarkerPayload ap = new AutomarkerPayload();
-                            ap.Clear = true;
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
+                        Log(State.LogLevelEnum.Debug, null, "Clearing automarkers", statusId);
+                        Reset();
+                        _state.ClearAutoMarkers();
                     }
-                    else
-                    {
-                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
-                        _meteors.Add(actorId);
-                        if (_meteors.Count == 2)
-                        {
-                            Log(State.LogLevelEnum.Debug, null, "All meteors registered, ready for automarkers");
-                            Party pty = _state.GetPartyMembers();
-                            List<Party.PartyMember> _meteorsGo = new List<Party.PartyMember>(
-                                from ix in pty.Members join jx in _meteors on ix.ObjectId equals jx select ix
-                            );
-                            List<Party.PartyMember> _meteorRoleGo, _nonMeteorGo;
-                            AutomarkerPrio.PrioTrinityEnum role = AutomarkerPrio.JobToTrinity(_meteorsGo[0].Job);
-                            if (role != AutomarkerPrio.PrioTrinityEnum.DPS)
-                            {
-                                _meteorRoleGo = new List<Party.PartyMember>(
-                                    from ix in pty.Members where 
-                                        AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
-                                        && _meteors.Contains(ix.ObjectId) == false
-                                        select ix
-                                );
-                                _nonMeteorGo = new List<Party.PartyMember>(
-                                    from ix in pty.Members
-                                    where AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
-                                    select ix
-                                );
-                            }
-                            else
-                            {
-                                _meteorRoleGo = new List<Party.PartyMember>(
-                                    from ix in pty.Members
-                                    where
-                                        AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
-                                        && _meteors.Contains(ix.ObjectId) == false
-                                    select ix
-                                );
-                                _nonMeteorGo = new List<Party.PartyMember>(
-                                    from ix in pty.Members
-                                    where AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
-                                    select ix
-                                );
-                            }
-                            Prio.SortByPriority(_meteorsGo);
-                            Prio.SortByPriority(_meteorRoleGo);
-                            Prio.SortByPriority(_nonMeteorGo);
-                            AutomarkerPayload ap = new AutomarkerPayload();
-                            ap.assignments[Signs.Roles["Meteor1"]] = _meteorsGo[0].GameObject;
-                            ap.assignments[Signs.Roles["Meteor2"]] = _meteorsGo[1].GameObject;
-                            ap.assignments[Signs.Roles["MeteorRole1"]] = _meteorRoleGo[0].GameObject;
-                            ap.assignments[Signs.Roles["MeteorRole2"]] = _meteorRoleGo[1].GameObject;
-                            ap.assignments[Signs.Roles["NonMeteor1"]] = _nonMeteorGo[0].GameObject;
-                            ap.assignments[Signs.Roles["NonMeteor2"]] = _nonMeteorGo[1].GameObject;
-                            ap.assignments[Signs.Roles["NonMeteor3"]] = _nonMeteorGo[2].GameObject;
-                            ap.assignments[Signs.Roles["NonMeteor4"]] = _nonMeteorGo[3].GameObject;
-                            _fired = true;
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
-                    }
+                    return;
                 }
+                _meteors.Add(actorId);
+                if (_meteors.Count < 2)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _meteorsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _meteors on ix.ObjectId equals jx select ix
+                );
+                List<Party.PartyMember> _meteorRoleGo, _nonMeteorGo;
+                AutomarkerPrio.PrioTrinityEnum role = AutomarkerPrio.JobToTrinity(_meteorsGo[0].Job);
+                if (role != AutomarkerPrio.PrioTrinityEnum.DPS)
+                {
+                    _meteorRoleGo = new List<Party.PartyMember>(
+                        from ix in pty.Members where 
+                            AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
+                            && _meteors.Contains(ix.ObjectId) == false
+                            select ix
+                    );
+                    _nonMeteorGo = new List<Party.PartyMember>(
+                        from ix in pty.Members
+                        where AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
+                        select ix
+                    );
+                }
+                else
+                {
+                    _meteorRoleGo = new List<Party.PartyMember>(
+                        from ix in pty.Members
+                        where
+                            AutomarkerPrio.JobToTrinity(ix.Job) == AutomarkerPrio.PrioTrinityEnum.DPS
+                            && _meteors.Contains(ix.ObjectId) == false
+                        select ix
+                    );
+                    _nonMeteorGo = new List<Party.PartyMember>(
+                        from ix in pty.Members
+                        where AutomarkerPrio.JobToTrinity(ix.Job) != AutomarkerPrio.PrioTrinityEnum.DPS
+                        select ix
+                    );
+                }
+                Prio.SortByPriority(_meteorsGo);
+                Prio.SortByPriority(_meteorRoleGo);
+                Prio.SortByPriority(_nonMeteorGo);
+                AutomarkerPayload ap = new AutomarkerPayload();
+                ap.assignments[Signs.Roles["Meteor1"]] = _meteorsGo[0].GameObject;
+                ap.assignments[Signs.Roles["Meteor2"]] = _meteorsGo[1].GameObject;
+                ap.assignments[Signs.Roles["MeteorRole1"]] = _meteorRoleGo[0].GameObject;
+                ap.assignments[Signs.Roles["MeteorRole2"]] = _meteorRoleGo[1].GameObject;
+                ap.assignments[Signs.Roles["NonMeteor1"]] = _nonMeteorGo[0].GameObject;
+                ap.assignments[Signs.Roles["NonMeteor2"]] = _nonMeteorGo[1].GameObject;
+                ap.assignments[Signs.Roles["NonMeteor3"]] = _nonMeteorGo[2].GameObject;
+                ap.assignments[Signs.Roles["NonMeteor4"]] = _nonMeteorGo[3].GameObject;
+                _fired = true;
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
         }
@@ -212,8 +192,9 @@ namespace Lemegeton.Content
                 Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
             }
 
-            internal void Reset()
+            public override void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;
                 _lightnings.Clear();
             }
@@ -224,39 +205,32 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (statusId == StatusThunderstruck)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, actorId);
+                if (gained == false)
                 {
-                    if (gained == false)
+                    if (_fired == true)
                     {
-                        if (_fired == true)
-                        {
-                            Log(State.LogLevelEnum.Debug, null, "Registered status {0}, clearing automarkers", statusId);
-                            _fired = false;
-                            _lightnings.Clear();
-                            AutomarkerPayload ap = new AutomarkerPayload();
-                            ap.Clear = true;
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
+                        Log(State.LogLevelEnum.Debug, null, "Clearing automarkers", statusId);
+                        Reset();
+                        _state.ClearAutoMarkers();
                     }
-                    else
-                    {
-                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1}", statusId, actorId);
-                        _lightnings.Add(actorId);
-                        if (_lightnings.Count == 2)
-                        {
-                            Log(State.LogLevelEnum.Debug, null, "All lightnings registered, ready for automarkers");
-                            Party pty = _state.GetPartyMembers();
-                            List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
-                                from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
-                            );
-                            AutomarkerPayload ap = new AutomarkerPayload();
-                            ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
-                            ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
-                            _fired = true;
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
-                    }
+                    return;
                 }
+                _lightnings.Add(actorId);
+                if (_lightnings.Count < 2)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
+                );
+                AutomarkerPayload ap = new AutomarkerPayload();
+                ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
+                ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
+                _fired = true;
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
         }
@@ -292,6 +266,7 @@ namespace Lemegeton.Content
 
             private List<uint> _spreads = new List<uint>();
             private List<uint> _stacks = new List<uint>();
+            private bool _fired = false;
 
             public WrothAM(State state) : base(state)
             {
@@ -336,51 +311,44 @@ namespace Lemegeton.Content
                 Signs.Presets["ElementalDC"] = pr;
             }
 
-            internal void Reset()
+            public override void Reset()
             {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
                 _spreads.Clear();
                 _stacks.Clear();
+                _fired = false;
             }
 
-            internal void FeedAction(uint actionId)
+            internal void FeedStatus(uint actorId, uint statusId, bool gained)
             {
                 if (Active == false)
                 {
                     return;
                 }
-                if (actionId == AbilityHotTail || actionId == AbilityHotWing)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} for {2:X}", statusId, gained, actorId);
+                if (gained == false)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Registered ability {0}, clearing automarkers", actionId);
-                    AutomarkerPayload ap = new AutomarkerPayload();
-                    ap.Clear = true;
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    if (_fired == true)
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                        Reset();
+                        _state.ClearAutoMarkers();
+                    }
+                    return;
                 }
-            }
-
-            internal void FeedStatus(uint actorId, uint statusId)
-            {
-                if (Active == false)
+                if (statusId == StatusEntangledFlames)
+                {
+                    _stacks.Add(actorId);
+                }
+                if (statusId == StatusSpreadingFlames)
+                { 
+                    _spreads.Add(actorId);
+                }
+                if (_stacks.Count < 2 || _spreads.Count < 4)
                 {
                     return;
                 }
-                switch (statusId)
-                {
-                    case StatusEntangledFlames:
-                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} for {1}", statusId, actorId);
-                        _stacks.Add(actorId);
-                        break;
-                    case StatusSpreadingFlames:
-                        Log(State.LogLevelEnum.Debug, null, "Registered status {0} for {1}", statusId, actorId);
-                        _spreads.Add(actorId);
-                        break;
-                    default:
-                        return;
-                }
-                if (_stacks.Count != 2 && _spreads.Count != 4)
-                {
-                    return;
-                }
-                Log(State.LogLevelEnum.Debug, null, "All stacks and spreads registered, ready for automarkers");
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
                 Party pty = _state.GetPartyMembers();
                 List<Party.PartyMember> _stacksGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _stacks on ix.ObjectId equals jx select ix
@@ -404,6 +372,7 @@ namespace Lemegeton.Content
                 ap.assignments[Signs.Roles["Spread3"]] = _spreadsGo[2].GameObject;
                 ap.assignments[Signs.Roles["Spread4"]] = _spreadsGo[3].GameObject;
                 _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
             }
 
         }
@@ -426,24 +395,18 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnCastBegin += OnCastBegin;
-            _state.OnAction += OnAction;
             _state.OnStatusChange += OnStatusChange;
         }
 
         private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
-            if (gained == false)
-            {
-                return;
-            }
-            if (statusId == StatusPrey && CurrentPhase == PhaseEnum.P2)
+            if (statusId == StatusPrey)
             {
                 _meteorAm.FeedStatus(dest, statusId, gained);
             }
             if (statusId == StatusEntangledFlames || statusId == StatusSpreadingFlames)
             {
-                _wrothAm.FeedStatus(dest, statusId);
+                _wrothAm.FeedStatus(dest, statusId, gained);
             }
             if (statusId == StatusThunderstruck)
             {
@@ -451,39 +414,16 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
-        {
-            if (actionId == AbilityAscalonsMercyConcealed)
-            {
-                CurrentPhase = PhaseEnum.P2;
-            }
-            if (actionId == AbilityWrothFlames)
-            {
-                CurrentPhase = PhaseEnum.P6;
-            }
-        }
-
-        private void OnAction(uint src, uint dest, ushort actionId)
-        {
-            if ((actionId == AbilityHotWing || actionId == AbilityHotTail) && CurrentPhase == PhaseEnum.P6)
-            {
-                CurrentPhase = PhaseEnum.P6_PastWroth;
-                _wrothAm.FeedAction(actionId);
-            }
-        }
-
         private void UnsubscribeFromEvents()
         {
             _state.OnStatusChange -= OnStatusChange;
-            _state.OnAction -= OnAction;
-            _state.OnCastBegin -= OnCastBegin;
         }
 
         private void OnCombatChange(bool inCombat)
         {
+            Reset();
             if (inCombat == true)
             {
-                CurrentPhase = PhaseEnum.P2;
                 SubscribeToEvents();
             }
             else

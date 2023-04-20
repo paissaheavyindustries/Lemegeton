@@ -119,6 +119,10 @@ namespace Lemegeton.Core
             return true;
         }
 
+        public virtual void Reset()
+        {
+        }
+
         public void Execute()
         {
             if (Active == false)

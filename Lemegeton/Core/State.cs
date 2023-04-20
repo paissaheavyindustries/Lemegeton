@@ -30,6 +30,7 @@ using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
+using System.Xml.Linq;
 
 namespace Lemegeton.Core
 {
@@ -43,6 +44,68 @@ namespace Lemegeton.Core
             Warning,
             Info,
             Debug
+        }
+
+        internal class DeferredInvoke
+        {
+            
+            public State State { get; set; }
+            public Delegate Function { get; set; } = null;
+            public string CommandText { get; set; }
+            public object[] Params { get; set; }
+            public DateTime FireAt { get; set; } = DateTime.MinValue;
+            public uint ActorId { get; set; } = 0;
+
+            private unsafe void InvokeCommand()
+            {
+                GameGui gg = State.gg;
+                AtkUnitBase* ptr = (AtkUnitBase*)gg.GetAddonByName("ChatLog", 1);
+                if (ptr != null && ptr->IsVisible == true)
+                {
+                    IntPtr uiModule = gg.GetUIModule();
+                    if (uiModule != IntPtr.Zero)
+                    {
+                        using (Command payload = new Command(CommandText))
+                        {
+                            IntPtr p = Marshal.AllocHGlobal(32);
+                            try
+                            {
+                                Marshal.StructureToPtr(payload, p, false);
+                                State.Log(LogLevelEnum.Debug, null, "Executing command {0}", CommandText);
+                                State._postCmdFuncptr(uiModule, p, IntPtr.Zero, 0);
+                            }
+                            catch (Exception)
+                            {
+                            }
+                            Marshal.FreeHGlobal(p);
+                        }
+                    }
+                }
+            }
+
+            public bool CanInvoke()
+            {
+                return (DateTime.Now > FireAt);
+            }
+
+            public void Invoke()
+            {
+                try
+                {
+                    if (Function != null)
+                    {
+                        Function.DynamicInvoke(Params);
+                    }
+                    else
+                    {
+                        InvokeCommand();
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+
         }
 
         internal DalamudPluginInterface pi { get; init; }
@@ -90,7 +153,9 @@ namespace Lemegeton.Core
         private bool _listening = false;
         public bool _inCombat = false;
         private ulong _runObject = 0;
-        private ulong _runInstance = 1;
+        internal ulong _runInstance = 1;
+        internal List<DeferredInvoke> Invoqueue = new List<DeferredInvoke>();
+        internal AutoResetEvent InvoqueueNew = new AutoResetEvent(false);
 
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
         private Dictionary<nint, uint> _objectsToActors = new Dictionary<nint, uint>();
@@ -261,15 +326,11 @@ namespace Lemegeton.Core
             if (flag == ConditionFlag.InCombat)
             {
                 _inCombat = value;
-                if (value == true)
-                {
-                    _runInstance++;
-                }
+                _runInstance++;
                 if (value == false && cfg.RemoveMarkersAfterCombatEnd == true)
                 {
                     Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
-                    AutomarkerPayload ap = new AutomarkerPayload() { Clear = true };
-                    ExecuteAutomarkers(ap, cfg.DefaultAutomarkerTiming);
+                    ClearAutoMarkers();
                 }
                 InvokeCombatChange(value);
             }
@@ -294,10 +355,21 @@ namespace Lemegeton.Core
             return false;
         }
 
+        internal void QueueInvocation(DeferredInvoke di)
+        {
+            lock (Invoqueue)
+            {
+                Invoqueue.Add(di);
+                Invoqueue.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
+                InvoqueueNew.Set();
+            }
+        }
+
         internal bool StartDrawing(out ImDrawListPtr drawList)
         {
             if (cfg.QuickToggleOverlays == false)
             {
+                drawList = null;
                 return false;
             }
             StackTrace stackTrace = new StackTrace();
@@ -575,24 +647,27 @@ namespace Lemegeton.Core
             }
         }
 
+        internal void ClearAutoMarkers()
+        {
+            Party pty = GetPartyMembers();
+            foreach (Party.PartyMember pm in pty.Members)
+            {
+                ClearMarkerOn(pm.GameObject);
+            }
+        }
+
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
-            if (ap.Clear == true)
-            {
-                Log(LogLevelEnum.Debug, null, "Clearing automarkers");
-                Party pty = GetPartyMembers();
-                foreach (Party.PartyMember pm in pty.Members)
-                {
-                    PerformMarking(0, pm.GameObject, AutomarkerSigns.SignEnum.None);
-                }
-                return;
-            }
             Task first = null, prev = null, tx = null;
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles", ap.assignments.Count);
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, GameObject> kp in ap.assignments)
             {
+                if (kp.Key == AutomarkerSigns.SignEnum.None)
+                {
+                    continue;
+                }
                 int delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
-                Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1} with {2}", delay, kp.Value, kp.Key);
+                Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1:X} with {2} on instance {3}", delay, kp.Value, kp.Key, _runInstance);
                 tx = new Task(() =>
                 {
                     ulong run = _runInstance;
@@ -612,36 +687,6 @@ namespace Lemegeton.Core
             if (first != null)
             {
                 first.Start();
-            }
-        }
-
-        public unsafe void SubmitCommand(string cmd)
-        {
-            if (_postCmdFuncptr == null)
-            {
-                return;
-            }
-            AtkUnitBase* ptr = (AtkUnitBase*)gg.GetAddonByName("ChatLog", 1);
-            if (ptr != null && ptr->IsVisible == true)
-            {
-                IntPtr uiModule = gg.GetUIModule();
-                if (uiModule != IntPtr.Zero)
-                {
-                    using (Command payload = new Command(cmd))
-                    {
-                        IntPtr p = Marshal.AllocHGlobal(32);
-                        try
-                        {
-                            Marshal.StructureToPtr(payload, p, false);
-                            Log(LogLevelEnum.Debug, null, "Executing command {0}", cmd);
-                            _postCmdFuncptr(uiModule, p, IntPtr.Zero, 0);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                        Marshal.FreeHGlobal(p);
-                    }
-                }
             }
         }
 
@@ -691,13 +736,6 @@ namespace Lemegeton.Core
             return 0;
         }
 
-        internal void ClearAllMarking()
-        {
-            AutomarkerPayload ap = new AutomarkerPayload();
-            ap.Clear = true;
-            ExecuteAutomarkers(ap, cfg.DefaultAutomarkerTiming);
-        }
-
         internal void AssignRandomSelections(Party pty, int numSelections)
         {
             numSelections = (int)Math.Min(pty.Members.Count, numSelections);
@@ -711,6 +749,100 @@ namespace Lemegeton.Core
             }
         }
 
+        internal void ClearMarkerOn(string name)
+        {
+            ClearMarkerOn(GetActorByName(name));
+        }
+
+        internal void ClearMarkerOn(uint actorId)
+        {
+            ClearMarkerOn(GetActorById(actorId));
+        }
+
+        internal void ClearMarkerOn(GameObject go)
+        {
+            if (go == null)
+            {
+                return;
+            }
+            if (cfg.AutomarkerSoft == true)
+            {
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                {
+                    if (kp.Value == go.ObjectId)
+                    {
+                        Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
+                        if (cfg.DebugOnlyLogAutomarkers == false)
+                        {
+                            SoftMarkers[kp.Key] = 0;
+                        }
+                    }
+                }
+                return;
+            }
+            bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
+            if (markfunc == true)
+            {
+                if (GetCurrentMarker(go.ObjectId, out AutomarkerSigns.SignEnum marker) == true)
+                {
+                    if (marker != AutomarkerSigns.SignEnum.None)
+                    {
+                        Log(LogLevelEnum.Debug, null, "Using function pointer to remove mark on actor {0} by reassigning {1}", go, marker);
+                        if (cfg.DebugOnlyLogAutomarkers == false)
+                        {
+                            DeferredInvoke di = new DeferredInvoke()
+                            {
+                                State = this,
+                                Function = _markingFuncPtr,
+                                Params = new object[] { _sigs["MarkingCtrl"], (byte)marker, go.ObjectId }
+                            };
+                            QueueInvocation(di);
+                        }
+                    }
+                    else
+                    {
+                        Log(LogLevelEnum.Debug, null, "Actor {0} is already unmarked", go);
+                    }
+                    return;
+                }
+                else
+                {
+                    if (_postCmdFuncptr != null)
+                    {
+                        Log(LogLevelEnum.Warning, null, "Couldn't determine marker on actor {0}, falling back to command", go);
+                    }
+                    else
+                    {
+                        Log(LogLevelEnum.Error, null, "Couldn't determine marker on actor {0}", go);
+                    }
+                }
+            }
+            if (_postCmdFuncptr != null)
+            {
+                int index = GetPartyMemberIndex(go.Name.ToString());
+                if (index > 0)
+                {
+                    string cmd = "/mk off <" + index + ">";
+                    Log(LogLevelEnum.Debug, null, "Using command to remove mark on actor {0} in party spot {1}", go, index);
+                    if (cfg.DebugOnlyLogAutomarkers == false)
+                    {
+                        DeferredInvoke di = new DeferredInvoke()
+                        {
+                            State = this,
+                            CommandText = cmd
+                        };
+                        QueueInvocation(di);
+                    }
+                    return;
+                }
+                else
+                {
+                    Log(LogLevelEnum.Warning, null, "Couldn't find actor {0} in party", go);
+                }
+            }
+            Log(LogLevelEnum.Error, null, "Couldn't clear marker on actor {0}", go);
+        }
+
         internal void PerformMarking(ulong run, string name, AutomarkerSigns.SignEnum sign)
         {
             PerformMarking(run, GetActorByName(name), sign);
@@ -718,9 +850,117 @@ namespace Lemegeton.Core
 
         internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign)
         {
+            PerformMarking(run, GetActorById(actorId), sign);
+        }
+
+        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign)
+        {
+            if (go == null)
+            {
+                return;
+            }
+            if (cfg.AutomarkerSoft == true)
+            {
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                {
+                    if (kp.Key != sign && kp.Value == go.ObjectId)
+                    {
+                        Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
+                        if (cfg.DebugOnlyLogAutomarkers == false)
+                        {
+                            SoftMarkers[kp.Key] = 0;
+                        }
+                    }
+                }
+                Log(LogLevelEnum.Debug, null, "Assigning soft mark {0} on actor {1}", sign, go);
+                SoftMarkers[sign] = go.ObjectId;
+                return;
+            }
+            bool cleared = false;
+            if (GetCurrentMarker(go.ObjectId, out AutomarkerSigns.SignEnum marker) == false)
+            {
+                Log(LogLevelEnum.Warning, null, "Couldn't determine marker on actor {0}, clearing marker first", go);
+                ClearMarkerOn(go);
+                marker = AutomarkerSigns.SignEnum.None;
+                cleared = true;
+            }
+            Log(LogLevelEnum.Debug, null, "Current marker on {0} is {1}, target is {2}", go, marker, sign);
+            if (marker == sign)
+            {
+                return;
+            }
+            bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
+            if (markfunc == true)
+            {
+                Log(LogLevelEnum.Debug, null, "Using function pointer to assign mark {0} on actor {1}", sign, go);
+                if (cfg.DebugOnlyLogAutomarkers == false)
+                {
+                    DeferredInvoke di = new DeferredInvoke()
+                    {
+                        State = this,
+                        Function = _markingFuncPtr,
+                        Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, go.ObjectId },
+                        FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
+                    };
+                    QueueInvocation(di);
+                }
+                return;
+            }
+            if (_postCmdFuncptr != null)
+            {
+                string cmd = "/mk ";
+                switch (sign)
+                {
+                    case AutomarkerSigns.SignEnum.Attack1: cmd += "attack1"; break;
+                    case AutomarkerSigns.SignEnum.Attack2: cmd += "attack2"; break;
+                    case AutomarkerSigns.SignEnum.Attack3: cmd += "attack3"; break;
+                    case AutomarkerSigns.SignEnum.Attack4: cmd += "attack4"; break;
+                    case AutomarkerSigns.SignEnum.Attack5: cmd += "attack5"; break;
+                    case AutomarkerSigns.SignEnum.Bind1: cmd += "bind1"; break;
+                    case AutomarkerSigns.SignEnum.Bind2: cmd += "bind2"; break;
+                    case AutomarkerSigns.SignEnum.Bind3: cmd += "bind3"; break;
+                    case AutomarkerSigns.SignEnum.Ignore1: cmd += "ignore1"; break;
+                    case AutomarkerSigns.SignEnum.Ignore2: cmd += "ignore2"; break;
+                    case AutomarkerSigns.SignEnum.Circle: cmd += "circle"; break;
+                    case AutomarkerSigns.SignEnum.Plus: cmd += "cross"; break;
+                    case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
+                    case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
+                }
+                int index = GetPartyMemberIndex(go.Name.ToString());
+                if (index > 0)
+                {
+                    Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", go, index, sign);
+                    cmd += " <" + index + ">";
+                    if (sign != AutomarkerSigns.SignEnum.None)
+                    {
+                        cfg.AutomarkersServed++;
+                    }
+                    if (cfg.DebugOnlyLogAutomarkers == false)
+                    {
+                        DeferredInvoke di = new DeferredInvoke()
+                        {
+                            State = this,
+                            CommandText = cmd,
+                            FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
+                        };
+                        QueueInvocation(di);
+                    }
+                    return;
+                }
+                else
+                {
+                    Log(LogLevelEnum.Warning, null, "Couldn't find actor {0} in party", go);
+                }
+            }
+            Log(LogLevelEnum.Error, null, "Couldn't mark actor {0} with {1}", go, sign);
+        }
+
+        /*
+        internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign)
+        {
             if (run > 0 && _runInstance != run)
             {
-                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", actorId, sign);
+                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1:X} expired, already on different run", sign, actorId);
                 return;
             }
             if (cfg.AutomarkerSoft == true)
@@ -732,7 +972,7 @@ namespace Lemegeton.Core
             {
                 bool removal = false;
                 AutomarkerSigns.SignEnum cursign = GetCurrentMarker(actorId);
-                Log(LogLevelEnum.Debug, null, "Current sign on actor {0} is {1}, target is {2}", actorId, cursign, sign);
+                Log(LogLevelEnum.Debug, null, "Current sign on actor {0:X} is {1}, target is {2}", actorId, cursign, sign);
                 if (sign == AutomarkerSigns.SignEnum.None)
                 {
                     sign = cursign;
@@ -740,14 +980,19 @@ namespace Lemegeton.Core
                 }
                 if (sign != AutomarkerSigns.SignEnum.None && (sign != cursign || removal == true))
                 {
-                    Log(LogLevelEnum.Debug, null, "Using function pointer to mark actor {0} with {1}", actorId, sign);
+                    Log(LogLevelEnum.Debug, null, "Using function pointer to mark actor {0:X} with {1}", actorId, sign);
                     if (removal == false)
                     {
                         cfg.AutomarkersServed++;
                     }
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
-                        _markingFuncPtr(_sigs["MarkingCtrl"], (byte)sign, actorId);
+                        DeferredInvoke di = new DeferredInvoke()
+                        {
+                            Function = _markingFuncPtr,
+                            Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, actorId }
+                        };
+                        QueueInvocation(di);
                     }
                 }
                 return;
@@ -763,7 +1008,7 @@ namespace Lemegeton.Core
             }
             if (run > 0 && _runInstance != run)
             {
-                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", go, sign);
+                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", sign, go);
                 return;
             }
             if (cfg.AutomarkerSoft == true)
@@ -795,11 +1040,10 @@ namespace Lemegeton.Core
                 case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
                 case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
             }
-            string name = go.Name.ToString();
-            int index = GetPartyMemberIndex(name);
+            int index = GetPartyMemberIndex(go.Name.ToString());
             if (index > 0)
             {
-                Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", name, index, sign);
+                Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", go, index, sign);
                 cmd += " <" + index + ">";
                 if (sign != AutomarkerSigns.SignEnum.None)
                 {
@@ -810,7 +1054,7 @@ namespace Lemegeton.Core
                     SubmitCommand(cmd);
                 }
             }
-        }
+        }*/
 
         internal void PerformSoftMarking(uint actorId, AutomarkerSigns.SignEnum sign)
         {
@@ -820,7 +1064,7 @@ namespace Lemegeton.Core
                 if (kp.Value == actorId)
                 {
                     prev = kp.Key;
-                    Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from actor {1}", kp.Key, kp.Value);
+                    Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from actor {1:X}", kp.Key, kp.Value);
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
                         SoftMarkers[kp.Key] = 0;
@@ -831,7 +1075,7 @@ namespace Lemegeton.Core
             {
                 return;
             }
-            Log(LogLevelEnum.Debug, null, "Using soft marking to mark actor {0} with {1}", actorId, sign);
+            Log(LogLevelEnum.Debug, null, "Using soft marking to mark actor {0:X} with {1}", actorId, sign);
             cfg.AutomarkersServed++;
             if (cfg.DebugOnlyLogAutomarkers == false)
             {
@@ -839,45 +1083,47 @@ namespace Lemegeton.Core
             }
         }
 
-        internal unsafe AutomarkerSigns.SignEnum GetCurrentMarker(uint actorId)
+        internal unsafe bool GetCurrentMarker(uint actorId, out AutomarkerSigns.SignEnum marker)
         {
             UIModule* ui = (UIModule*)gg.GetUIModule();
             if (ui == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get UIModule");
-                return AutomarkerSigns.SignEnum.None;
+                marker = AutomarkerSigns.SignEnum.None;
+                return false;
             }
             UI3DModule* ui3d = ui->GetUI3DModule();
             if (ui3d == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get UI3DModule");
-                return AutomarkerSigns.SignEnum.None;
+                marker = AutomarkerSigns.SignEnum.None;
+                return false;
             }
             AddonNamePlate* np = (AddonNamePlate*)gg.GetAddonByName("NamePlate", 1);
             if (ui3d == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get AddonNamePlate");
-                return AutomarkerSigns.SignEnum.None;
+                marker = AutomarkerSigns.SignEnum.None;
+                return false;
             }
             for (int i = 0; i < ui3d->NamePlateObjectInfoCount; i++)
             {
                 var o = ((UI3DModule.ObjectInfo**)ui3d->NamePlateObjectInfoPointerArray)[i];
                 if (o == null || o->GameObject == null || o->GameObject->ObjectID != actorId)
-                {
+                {                    
                     continue;
                 }
                 AddonNamePlate.NamePlateObject npo = np->NamePlateObjectArray[o->NamePlateIndex];
-                if (npo.IsPlayerCharacter == true)
+                foreach (AtkImageNode* ain in new AtkImageNode*[] { npo.ImageNode2, npo.ImageNode3, npo.ImageNode4, npo.ImageNode5, npo.IconImageNode })
                 {
-                    AtkImageNode* ain = npo.ImageNode2;
                     if (ain == null)
                     {
-                        return AutomarkerSigns.SignEnum.None;
+                        continue;
                     }
                     AtkUldPartsList* upl = ain->PartsList;
                     if (upl == null)
                     {
-                        return AutomarkerSigns.SignEnum.None;
+                        continue;
                     }
                     for (int j = 0; j < upl->PartCount; j++)
                     {
@@ -892,27 +1138,39 @@ namespace Lemegeton.Core
                         }
                         switch (p->UldAsset->AtkTexture.Resource->IconID)
                         {
-                            case 61301: return AutomarkerSigns.SignEnum.Attack1;
-                            case 61302: return AutomarkerSigns.SignEnum.Attack2;
-                            case 61303: return AutomarkerSigns.SignEnum.Attack3;
-                            case 61304: return AutomarkerSigns.SignEnum.Attack4;
-                            case 61305: return AutomarkerSigns.SignEnum.Attack5;
-                            case 61311: return AutomarkerSigns.SignEnum.Bind1;
-                            case 61312: return AutomarkerSigns.SignEnum.Bind2;
-                            case 61313: return AutomarkerSigns.SignEnum.Bind3;
-                            case 61321: return AutomarkerSigns.SignEnum.Ignore1;
-                            case 61322: return AutomarkerSigns.SignEnum.Ignore2;
-                            case 61331: return AutomarkerSigns.SignEnum.Square;
-                            case 61332: return AutomarkerSigns.SignEnum.Circle;
-                            case 61333: return AutomarkerSigns.SignEnum.Plus;
-                            case 61334: return AutomarkerSigns.SignEnum.Triangle;
+                            case 61301: marker = AutomarkerSigns.SignEnum.Attack1; return true;
+                            case 61302: marker = AutomarkerSigns.SignEnum.Attack2; return true;
+                            case 61303: marker = AutomarkerSigns.SignEnum.Attack3; return true;
+                            case 61304: marker = AutomarkerSigns.SignEnum.Attack4; return true;
+                            case 61305: marker = AutomarkerSigns.SignEnum.Attack5; return true;
+                            case 61311: marker = AutomarkerSigns.SignEnum.Bind1; return true;
+                            case 61312: marker = AutomarkerSigns.SignEnum.Bind2; return true;
+                            case 61313: marker = AutomarkerSigns.SignEnum.Bind3; return true;
+                            case 61321: marker = AutomarkerSigns.SignEnum.Ignore1; return true;
+                            case 61322: marker = AutomarkerSigns.SignEnum.Ignore2; return true;
+                            case 61331: marker = AutomarkerSigns.SignEnum.Square; return true;
+                            case 61332: marker = AutomarkerSigns.SignEnum.Circle; return true;
+                            case 61333: marker = AutomarkerSigns.SignEnum.Plus; return true;
+                            case 61334: marker = AutomarkerSigns.SignEnum.Triangle; return true;
                         }
                     }
-                    return AutomarkerSigns.SignEnum.None;
                 }
+                marker = AutomarkerSigns.SignEnum.None;
+                return true;
             }
-            Log(LogLevelEnum.Warning, null, "Couldn't find nameplate for actor {0}", actorId);
-            return AutomarkerSigns.SignEnum.None;
+            nint addr = _sigs["MarkingCtrl"] + 8;
+            foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
+            {
+                int temp = Marshal.ReadInt32(addr);
+                if (temp == actorId)
+                {
+                    marker = val;
+                    return true;
+                }
+                addr += 8;
+            }
+            marker = AutomarkerSigns.SignEnum.None;
+            return true;
         }
 
         internal void GetSignatures()
