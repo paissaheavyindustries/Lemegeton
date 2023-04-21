@@ -1,14 +1,8 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
-using ImGuiNET;
 using Lemegeton.Core;
-using Lemegeton.PacketHeaders;
 using System;
-using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
-using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
-using Vector3 = System.Numerics.Vector3;
 
 namespace Lemegeton.Content
 {

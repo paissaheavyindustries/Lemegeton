@@ -2254,7 +2254,7 @@ namespace Lemegeton
                 {
                     Process p = new Process();
                     p.StartInfo.UseShellExecute = true;
-                    p.StartInfo.FileName = @"https://github.com/paissaheavyindustries";
+                    p.StartInfo.FileName = @"https://github.com/paissaheavyindustries/Lemegeton";
                     p.Start();
                 });
                 tx.Start();

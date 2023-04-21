@@ -1,6 +1,5 @@
 ﻿using ImGuiNET;
 using Lemegeton.Core;
-using Lemegeton.PacketHeaders;
 using System;
 using System.Numerics;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;

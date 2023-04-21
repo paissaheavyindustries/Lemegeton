@@ -28,9 +28,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
-using System.Xml.Linq;
 
 namespace Lemegeton.Core
 {
@@ -649,6 +647,7 @@ namespace Lemegeton.Core
 
         internal void ClearAutoMarkers()
         {
+            Log(LogLevelEnum.Debug, null, "Clearing automarkers");
             Party pty = GetPartyMembers();
             foreach (Party.PartyMember pm in pty.Members)
             {

@@ -1,24 +1,10 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
-using ImGuiScene;
-using Lemegeton.ContentCategory;
 using Lemegeton.Core;
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlTypes;
-using System.IO;
-using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using static Lemegeton.Core.State;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 

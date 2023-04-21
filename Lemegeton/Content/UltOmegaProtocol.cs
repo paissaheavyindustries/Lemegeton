@@ -43,15 +43,7 @@ namespace Lemegeton.Content
         private const uint StatusMonitorLeft = 0xD7D;
         private const uint StatusMonitorRight = 0xD7C;
 
-        private const int HeadmarkerCircle = 416;
-        private const int HeadmarkerSquare = 418;
-        private const int HeadmarkerCross = 419;
-        private const int HeadmarkerTriangle = 417;
-        private const int HeadmarkerTarget = 244;
-
         private bool ZoneOk = false;
-        private bool _sawFirstHeadMarker = false;
-        private uint _firstHeadMarker = 0;
 
 #if !SANS_GOETIA
         private ChibiOmega _chibiOmega;
@@ -1729,7 +1721,7 @@ namespace Lemegeton.Content
                     }
                     break;
                 case PhaseEnum.P5_Delta:
-                    if (statusId == StatusDistantWorld || statusId == StatusNearWorld)
+                    if (gained == true && (statusId == StatusDistantWorld || statusId == StatusNearWorld))
                     {
                         _deltaAm.FeedStatus(dest, statusId);
                     }
@@ -1863,8 +1855,6 @@ namespace Lemegeton.Content
             if (inCombat == true)
             {
                 CurrentPhase = PhaseEnum.P1_Start;
-                _sawFirstHeadMarker = false;
-                _firstHeadMarker = 0;
                 SubscribeToEvents();
             }
             else

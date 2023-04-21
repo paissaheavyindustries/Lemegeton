@@ -10,9 +10,6 @@ using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
-using Lumina.Excel.GeneratedSheets;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
 namespace Lemegeton.Content
 {
