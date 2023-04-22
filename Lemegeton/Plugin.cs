@@ -52,8 +52,6 @@ namespace Lemegeton
     public sealed class Plugin : IDalamudPlugin
     {
 
-        public string VersionInfo => "v0.9";
-
 #if !SANS_GOETIA
         public string Name => "Lemegeton Goetia";
 #else
@@ -1785,7 +1783,7 @@ namespace Lemegeton
             ImGui.PushStyleColor(ImGuiCol.TabActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
             ImGui.PushStyleColor(ImGuiCol.TabHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
             bool open = true;
-            if (ImGui.Begin(Name + " (Beta)", ref open, ImGuiWindowFlags.NoCollapse) == false)
+            if (ImGui.Begin(Name, ref open, ImGuiWindowFlags.NoCollapse) == false)
             {
                 ImGui.End();
                 ImGui.PopStyleColor(3);
@@ -2230,7 +2228,7 @@ namespace Lemegeton
             Vector2 fp = ImGui.GetCursorPos();
             ImGui.SetCursorPosY(fp.Y + 2);
             ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui.Text(VersionInfo + " - " + _state.GameVersion);
+            ImGui.Text(_state.GameVersion);
             ImGui.PopStyleColor();
             ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));

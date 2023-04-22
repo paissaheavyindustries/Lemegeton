@@ -1303,7 +1303,15 @@ namespace Lemegeton.Content
             {
                 Enabled = false;
                 Signs = new AutomarkerSigns();
-                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Timing = new AutomarkerTiming()
+                {
+                    TimingType = AutomarkerTiming.TimingTypeEnum.Explicit,
+                    Parent = state.cfg.DefaultAutomarkerTiming,
+                    IniDelayMin = 28.0f,
+                    IniDelayMax = 32.0f,
+                    SubDelayMin = state.cfg.AutomarkerSubDelayMin,
+                    SubDelayMax = state.cfg.AutomarkerSubDelayMax
+                };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
                 Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
