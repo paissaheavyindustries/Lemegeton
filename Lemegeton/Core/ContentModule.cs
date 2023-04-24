@@ -19,6 +19,7 @@ namespace Lemegeton.Core
             Hack = 0x08,
             Automation = 0x10,
             #endif
+            Experimental = 0x80,
         }
 
         public abstract FeaturesEnum Features { get; }

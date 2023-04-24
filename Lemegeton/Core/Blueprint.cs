@@ -20,11 +20,20 @@ namespace Lemegeton.Core
 
             }
 
+            public class Warning
+            {
+
+                [XmlAttribute]
+                public string Text { get; set; }
+
+            }
+
             [XmlAttribute]
             public string Name { get; set; }
             [XmlAttribute]
             public string Version { get; set; }
 
+            public List<Warning> Warnings { get; set; } = new List<Warning>();
             public List<Opcode> Opcodes { get; set; } = new List<Opcode>();
             internal Dictionary<string, Opcode> OpcodeLookup = new Dictionary<string, Opcode>();
 

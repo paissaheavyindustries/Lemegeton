@@ -23,6 +23,7 @@
             //AddEntry("Status/StatusNetworkTrafficDownTrue", "Network traffic from servers seems to be fine");
             //AddEntry("Status/StatusNetworkTrafficDownFalse", "I haven't seen any network traffic from servers in the last minute!");
             //AddEntry("Status/WarnNoOpcodes", "Opcodes are unavailable, so it's not possible to read network traffic and see what's going on in the game. This means that quite a lot of functionality may be broken!");
+            //AddEntry("Status/WarnOpcodesVersion", "Opcode information is for a different game version ({0}) than currently running ({1}) - this is likely to happen right after a game update, and it'll need an update fo be fixed. Quite a lot of functionality may be broken!");
             //AddEntry("Status/WarnAutomarkersBroken", "Both marking methods are unavailable, so it's not possible to perform marking. This means that automarkers are broken!");
             //AddEntry("Status/WarnAutomarkersSemibroken", "While the primary marking method is unavailable, a secondary marking method still seems to be available. This means that automarkers should still work, but in case something weird happens, this might be why.");
             //AddEntry("Status/WarnCommandPostBroken", "While the primary marking method is available, the secondary marking method is not. This will have no impact on automarkers, but this is just for your information.");
@@ -80,6 +81,7 @@
             //AddEntry("Misc/HideAdvancedOptions", "Hide advanced options");
             //AddEntry("Misc/DragToReorderPrio", "Left-click and drag to reorder priority");
             //AddEntry("Misc/RiskyFeature", "This is a hack or a game-altering feature, that may modify game data/state beyond what is normally considered possible. The feature is generally safe to use, but streaming with it on is not recommended. Use at your own discretion!");
+            //AddEntry("Misc/ExperimentalFeature", "This is an experimental feature, and while it has been tested, there may still be some bugs that have not been found. If the feature doesn't work for you, or you notice anything strange, please report it on the Discord server so it can be fixed!");
             //AddEntry("Trinity/Tank", "Tank");
             //AddEntry("Trinity/Healer", "Healer");
             //AddEntry("Trinity/DPS", "DPS");
@@ -178,6 +180,7 @@
             //AddEntry("MainMenu/Settings/LogUnhandledOpcodes", "Log unhandled opcodes");
             //AddEntry("MainMenu/Settings/OpcodeUrl", "Opcode URL");
             //AddEntry("MainMenu/Settings/OpcodeRegion", "Opcode region");
+            //AddEntry("MainMenu/Settings/OpcodeReload", "Reload opcodes");
             //AddEntry("MainMenu/About", "About");
             //AddEntry("Content/missing", "Sorry, this type of content is not available at this time!");
             //AddEntry("Content/Debug", "Debugging and development tools");

@@ -9,6 +9,7 @@ using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -157,6 +158,24 @@ namespace Lemegeton.Core
             _tracker = new StatusTracker();
             _tracker.OnStatusGain += _tracker_OnStatusGain;
             _tracker.OnStatusLose += _tracker_OnStatusLose;
+        }
+
+        internal string GetOpcodeVersion()
+        {
+            if (_currentOpcodeRegion == null)
+            {
+                return null;
+            }
+            return _currentOpcodeRegion.Version;
+        }
+
+        internal List<Blueprint.Region.Warning> GetOpcodeWarnings()
+        {
+            if (_currentOpcodeRegion == null)
+            {
+                return null;
+            }
+            return _currentOpcodeRegion.Warnings;
         }
 
         internal ushort GetOpcodeForRegion(Blueprint.Region region, string id)

@@ -61,6 +61,7 @@ namespace Lemegeton
         private State _state = new State();
         private Thread _mainThread = null;
         private ManualResetEvent _stopEvent = new ManualResetEvent(false);
+        private AutoResetEvent _retryEvent = new AutoResetEvent(false);
         private float _adjusterX = 0.0f;
         private DateTime _loaded = DateTime.Now;
         private bool _aboutProg = false;
@@ -184,6 +185,9 @@ namespace Lemegeton
             {
                 _state.InvoqueueNew.Dispose();
             }
+            _mainThread.Join(1000);
+            _stopEvent.Dispose();
+            _retryEvent.Dispose();
         }
 
         internal TextureWrap GetJobIcon(uint jobId)
@@ -1538,6 +1542,14 @@ namespace Lemegeton
                                         ImGui.Separator();
                                     }
 #endif
+                                    if ((contentItem.Value.Features & ContentModule.FeaturesEnum.Experimental) != 0)
+                                    {
+                                        float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 1.0f, 0.0f, 1.0f));
+                                        ImGui.TextWrapped(I18n.Translate("Misc/ExperimentalFeature"));
+                                        ImGui.PopStyleColor();
+                                        ImGui.Separator();
+                                    }
                                     RenderProperties(path, contentItem.Value);
                                     ImGui.Unindent(30.0f);
                                     ImGui.PopID();
@@ -1783,6 +1795,7 @@ namespace Lemegeton
             ImGui.PushStyleColor(ImGuiCol.TabActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
             ImGui.PushStyleColor(ImGuiCol.TabHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
             bool open = true;
+            ImGui.SetNextWindowSize(new Vector2(500, 500), ImGuiCond.FirstUseEver);
             if (ImGui.Begin(Name, ref open, ImGuiWindowFlags.NoCollapse) == false)
             {
                 ImGui.End();
@@ -2000,6 +2013,11 @@ namespace Lemegeton
                     if (ops == null)
                     {
                         ImGui.EndDisabled();
+                    }
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/OpcodeReload")) == true)
+                    {
+                        Log(LogLevelEnum.Debug, "Triggering opcode reload");
+                        _retryEvent.Set();
                     }
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
@@ -2459,6 +2477,14 @@ namespace Lemegeton
                         {
                             complaints.Add(I18n.Translate("Status/WarnNoOpcodes"));
                         }
+                        else
+                        {
+                            string opcv = _state._dec.GetOpcodeVersion();
+                            if (opcv != null && _state.GameVersion != opcv)
+                            {
+                                complaints.Add(I18n.Translate("Status/WarnOpcodesVersion", opcv, _state.GameVersion));
+                            }
+                        }
                     }
                     {
                         tw = _state.StatusMarkingFuncAvailable == true ? _misc[5] : _misc[6];
@@ -2539,6 +2565,15 @@ namespace Lemegeton
             ImGui.CollapsingHeader("  " + I18n.Translate("Status/ImpactToFunctionality"), ImGuiTreeNodeFlags.Leaf);
             ImGui.EndDisabled();
             ImGui.BeginChildFrame(1, new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y));
+
+            List<Blueprint.Region.Warning> warns = _state._dec.GetOpcodeWarnings();
+            if (warns != null && warns.Count > 0)
+            {
+                foreach (Blueprint.Region.Warning w in warns)
+                {
+                    complaints.Add(w.Text);
+                }
+            }
 #if !SANS_GOETIA
             if (_state.NumFeaturesHack > 0 && _state.cfg.QuickToggleHacks == true && _state.cfg.NagAboutStreaming == true)
             {
@@ -2667,9 +2702,10 @@ namespace Lemegeton
         public void MainThreadProc(object o)
         {
             Plugin p = (Plugin)o;
-            WaitHandle[] wh = new WaitHandle[2];
+            WaitHandle[] wh = new WaitHandle[3];
             wh[0] = p._stopEvent;
             wh[1] = _state.InvoqueueNew;
+            wh[2] = p._retryEvent;
             int timeout = 0;
             int tries = 0;
             bool ready = false;
@@ -2683,6 +2719,13 @@ namespace Lemegeton
                             return;
                         case 1:
                             timeout = ProcessInvoqueue();
+                            break;
+                        case 2:
+                            Log(LogLevelEnum.Debug, "Going to reload opcodes");
+                            _state.UnprepareInternals();
+                            ready = false;
+                            tries = 0;
+                            timeout = 0;
                             break;
                         case WaitHandle.WaitTimeout:
                             if (ready == false)

@@ -339,6 +339,16 @@ namespace Lemegeton.Core
             cfg.Opened = true;
         }
 
+        internal void UnprepareInternals()
+        {
+            if (_listening == true)
+            {
+                gn.NetworkMessage += _dec.NetworkMessageReceived;
+                _listening = false;
+            }
+            StatusGotOpcodes = false;
+        }
+
         internal bool PrepareInternals(bool fallback)
         {
             if (_dec.GetOpcodes(fallback) == true)
@@ -953,107 +963,6 @@ namespace Lemegeton.Core
             }
             Log(LogLevelEnum.Error, null, "Couldn't mark actor {0} with {1}", go, sign);
         }
-
-        /*
-        internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign)
-        {
-            if (run > 0 && _runInstance != run)
-            {
-                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1:X} expired, already on different run", sign, actorId);
-                return;
-            }
-            if (cfg.AutomarkerSoft == true)
-            {
-                PerformSoftMarking(actorId, sign);
-                return;
-            }
-            if (_markingFuncPtr != null && cfg.AutomarkerCommands == false)
-            {
-                bool removal = false;
-                AutomarkerSigns.SignEnum cursign = GetCurrentMarker(actorId);
-                Log(LogLevelEnum.Debug, null, "Current sign on actor {0:X} is {1}, target is {2}", actorId, cursign, sign);
-                if (sign == AutomarkerSigns.SignEnum.None)
-                {
-                    sign = cursign;
-                    removal = true;
-                }
-                if (sign != AutomarkerSigns.SignEnum.None && (sign != cursign || removal == true))
-                {
-                    Log(LogLevelEnum.Debug, null, "Using function pointer to mark actor {0:X} with {1}", actorId, sign);
-                    if (removal == false)
-                    {
-                        cfg.AutomarkersServed++;
-                    }
-                    if (cfg.DebugOnlyLogAutomarkers == false)
-                    {
-                        DeferredInvoke di = new DeferredInvoke()
-                        {
-                            Function = _markingFuncPtr,
-                            Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, actorId }
-                        };
-                        QueueInvocation(di);
-                    }
-                }
-                return;
-            }
-            PerformMarking(run, GetActorById(actorId), sign);
-        }
-
-        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign)
-        {
-            if (go == null)
-            {
-                return;
-            }
-            if (run > 0 && _runInstance != run)
-            {
-                Log(LogLevelEnum.Debug, null, "Marker application of {0} to {1} expired, already on different run", sign, go);
-                return;
-            }
-            if (cfg.AutomarkerSoft == true)
-            {
-                PerformSoftMarking(go.ObjectId, sign);
-                return;
-            }
-            if (_markingFuncPtr != null && cfg.AutomarkerCommands == false)
-            {
-                PerformMarking(run, go.ObjectId, sign);
-                return;
-            }
-            string cmd = "/mk ";
-            switch (sign)
-            {
-                case AutomarkerSigns.SignEnum.None: cmd += "off"; break;
-                case AutomarkerSigns.SignEnum.Attack1: cmd += "attack1"; break;
-                case AutomarkerSigns.SignEnum.Attack2: cmd += "attack2"; break;
-                case AutomarkerSigns.SignEnum.Attack3: cmd += "attack3"; break;
-                case AutomarkerSigns.SignEnum.Attack4: cmd += "attack4"; break;
-                case AutomarkerSigns.SignEnum.Attack5: cmd += "attack5"; break;
-                case AutomarkerSigns.SignEnum.Bind1: cmd += "bind1"; break;
-                case AutomarkerSigns.SignEnum.Bind2: cmd += "bind2"; break;
-                case AutomarkerSigns.SignEnum.Bind3: cmd += "bind3"; break;
-                case AutomarkerSigns.SignEnum.Ignore1: cmd += "ignore1"; break;
-                case AutomarkerSigns.SignEnum.Ignore2: cmd += "ignore2"; break;
-                case AutomarkerSigns.SignEnum.Circle: cmd += "circle"; break;
-                case AutomarkerSigns.SignEnum.Plus: cmd += "cross"; break;
-                case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
-                case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
-            }
-            int index = GetPartyMemberIndex(go.Name.ToString());
-            if (index > 0)
-            {
-                Log(LogLevelEnum.Debug, null, "Using command to mark actor {0} in party spot {1} with {2}", go, index, sign);
-                cmd += " <" + index + ">";
-                if (sign != AutomarkerSigns.SignEnum.None)
-                {
-                    cfg.AutomarkersServed++;
-                }
-                if (cfg.DebugOnlyLogAutomarkers == false)
-                {
-                    SubmitCommand(cmd);
-                }
-            }
-        }*/
 
         internal void PerformSoftMarking(uint actorId, AutomarkerSigns.SignEnum sign)
         {
