@@ -264,27 +264,29 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Stack1_1"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["Stack1_2"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["Stack2_1"] = AutomarkerSigns.SignEnum.Ignore1;
-                pr["Stack2_2"] = AutomarkerSigns.SignEnum.Ignore2;
-                pr["Spread1"] = AutomarkerSigns.SignEnum.Attack4;
-                pr["Spread2"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["Spread3"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["Spread4"] = AutomarkerSigns.SignEnum.Attack1;
-                Signs.Presets["LPDU"] = pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Stack1_1"] = AutomarkerSigns.SignEnum.Ignore1;
-                pr["Stack1_2"] = AutomarkerSigns.SignEnum.Ignore2;
-                pr["Stack2_1"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["Stack2_2"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["Spread1"] = AutomarkerSigns.SignEnum.Attack4;
-                pr["Spread2"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["Spread3"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["Spread4"] = AutomarkerSigns.SignEnum.Attack1;
-                Signs.Presets["ElementalDC"] = pr;
+                AutomarkerSigns.Preset pr;
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "LPDU";
+                pr.Roles["Stack1_1"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["Stack1_2"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["Stack2_1"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["Stack2_2"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["Spread1"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["Spread2"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["Spread3"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["Spread4"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "ElementalDC";
+                pr.Roles["Stack1_1"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["Stack1_2"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["Stack2_1"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["Stack2_2"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["Spread1"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["Spread2"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["Spread3"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["Spread4"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.AddPreset(pr);
             }
 
             public override void Reset()

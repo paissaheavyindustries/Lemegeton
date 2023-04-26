@@ -824,37 +824,40 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
-                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
-                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
-                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
-                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
-                Signs.Presets["BPOG - GPOB"] = pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
-                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
-                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
-                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
-                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
-                Signs.Presets["BPOG - GOPB"] = pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
-                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack1;
-                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
-                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
-                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack4;
-                Signs2.Presets["BPOG - BPOG"] = pr;
+                AutomarkerSigns.Preset pr;
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "BPOG - GPOB";
+                pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr.Roles["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "BPOG - GOPB";
+                pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr.Roles["SquareR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "BPOG - BPOG";
+                pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr.Roles["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs2.AddPreset(pr);
             }
 
             public override void Reset()
@@ -1358,15 +1361,17 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                Signs.Presets["LPDU"] = pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
-                Signs.Presets["ElementalDC"] = pr;
+                AutomarkerSigns.Preset pr;
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "LPDU";
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "ElementalDC";
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                Signs.AddPreset(pr);
             }
 
             public override void Reset()
@@ -1440,27 +1445,29 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Arm1"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["Arm2"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack1;
-                pr["DistantCloseBait"] = AutomarkerSigns.SignEnum.Attack4;
-                pr["NearBait1"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["NearBait2"] = AutomarkerSigns.SignEnum.Attack3;
-                Signs.Presets["LPDU"] = pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Arm1"] = AutomarkerSigns.SignEnum.Attack1;
-                pr["Arm2"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
-                pr["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["DistantCloseBait"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["NearBait1"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["NearBait2"] = AutomarkerSigns.SignEnum.Bind3;
-                Signs.Presets["ElementalDC"] = pr;
+                AutomarkerSigns.Preset pr;
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "LPDU";
+                pr.Roles["Arm1"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["Arm2"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["DistantCloseBait"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["NearBait1"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["NearBait2"] = AutomarkerSigns.SignEnum.Attack3;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "ElementalDC";
+                pr.Roles["Arm1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["Arm2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["DistantCloseBait"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["NearBait1"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["NearBait2"] = AutomarkerSigns.SignEnum.Bind3;
+                Signs.AddPreset(pr);
             }
 
             public override void Reset()
@@ -1657,17 +1664,17 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                Dictionary<string, AutomarkerSigns.SignEnum> pr;
-                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
-                pr["Monitor1"] = AutomarkerSigns.SignEnum.Bind1;
-                pr["Monitor2"] = AutomarkerSigns.SignEnum.Bind2;
-                pr["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
-                pr["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                pr["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
-                pr["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
-                pr["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
-                pr["Bait4"] = AutomarkerSigns.SignEnum.Attack4;
-                Signs.Presets["LPDU"] = pr;
+                AutomarkerSigns.Preset pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "LPDU";
+                pr.Roles["Monitor1"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["Monitor2"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["Bait4"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs.AddPreset(pr);
             }
 
             public override void Reset()

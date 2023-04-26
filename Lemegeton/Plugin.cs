@@ -37,14 +37,6 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
-/*
- * 1.0.0.2
- * 
- * - added AM for P2 Party Synergy
- * - added model ID display to Object Monitor
- * - fixed several AM test buttons that didn't take priority into account
- * - fixed an error in Radar that caused errors on config save
- */
 namespace Lemegeton
 {
 
@@ -1322,7 +1314,7 @@ namespace Lemegeton
                     {
                         ams.ApplyPreset(null);
                     }
-                    foreach(KeyValuePair<string, Dictionary<string, AutomarkerSigns.SignEnum>> kp in ams.Presets)
+                    foreach(KeyValuePair<string, AutomarkerSigns.Preset> kp in ams.Presets)
                     {
                         proptr = I18n.Translate(path + "/" + pi.Name + "/Presets/" + kp.Key);
                         if (ImGui.Selectable(proptr, String.Compare(proptr, selname) == 0) == true)
@@ -1347,7 +1339,8 @@ namespace Lemegeton
             int x = 0, y = 0;
             foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in ams.Roles)
             {
-                proptr = I18n.Translate(path + "/" + pi.Name + "/" + kp.Key);
+                string proppath = path + "/" + pi.Name + "/" + kp.Key;
+                proptr = I18n.Translate(proppath);
                 string signtr = I18n.Translate("Signs/" + kp.Value);
                 ImGui.SetCursorPos(new Vector2(curPos.X + (220 * x), curPos.Y + (80 * y)));
                 ImGui.BeginGroup();
@@ -1369,7 +1362,7 @@ namespace Lemegeton
                     TextureWrap tw = _signs[AutomarkerSigns.SignEnum.Attack1];                    
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X);
                 }
-                if (ImGui.BeginCombo("##" + proptr, signtr) == true)
+                if (ImGui.BeginCombo("##" + proppath, signtr) == true)
                 {
                     foreach (string name in Enum.GetNames(typeof(AutomarkerSigns.SignEnum)))
                     {

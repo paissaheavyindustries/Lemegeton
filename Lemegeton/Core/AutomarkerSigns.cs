@@ -1,13 +1,24 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
+﻿using Dalamud.Interface;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Lemegeton.Core
 {
 
     public class AutomarkerSigns
     {
+
+        public class Preset
+        {
+
+            public string Name { get; set; } = "New preset";
+            public bool Builtin { get; set; } = true;
+            public Dictionary<string, SignEnum> Roles { get; set; } = new Dictionary<string, SignEnum>();
+
+        }
 
         public enum SignEnum
         {
@@ -19,14 +30,14 @@ namespace Lemegeton.Core
             AttackNext, BindNext, IgnoreNext,
         }
 
-        public Dictionary<string, Dictionary<string, SignEnum>> Presets { get; set; }
+        public Dictionary<string, Preset> Presets { get; set; }
         public Dictionary<string, SignEnum> Roles { get; set; }
         public string SelectedPreset { get; set; } = null;
         
         public AutomarkerSigns()
         {
             Roles = new Dictionary<string, SignEnum>();
-            Presets = new Dictionary<string, Dictionary<string, SignEnum>>();
+            Presets = new Dictionary<string, Preset>();
         }
 
         public void SetRole(string id, SignEnum sign, bool autoswap = true)
@@ -49,6 +60,18 @@ namespace Lemegeton.Core
             Roles[id] = sign;
         }
 
+        public void AddPreset(Preset preset)
+        {
+            if (Presets.ContainsKey(preset.Name) == true)
+            {
+                if (Presets[preset.Name].Builtin == true && preset.Builtin == false)
+                {
+                    return;
+                }
+            }
+            Presets[preset.Name] = preset;
+        }
+
         public void ApplyPreset(string id)
         {
             if (id == null || Presets.ContainsKey(id) == false)
@@ -57,8 +80,8 @@ namespace Lemegeton.Core
                 return;
             }
             SelectedPreset = id;
-            Dictionary<string, AutomarkerSigns.SignEnum> pr = Presets[id];
-            foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in pr)
+            Preset pr = Presets[id];
+            foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in pr.Roles)
             {
                 SetRole(kp.Key, kp.Value, false);
             }
@@ -72,6 +95,8 @@ namespace Lemegeton.Core
             {
                 temp.Add(string.Format("{0}={1}", kp.Key, kp.Value.ToString()));
             }
+            List<Preset> userpresets = (from ix in Presets.Values where ix.Builtin == false select ix).ToList();
+            // todo serialize user presets
             return string.Join(";", temp);
         }
 
@@ -79,6 +104,7 @@ namespace Lemegeton.Core
         {
             string[] items = data.Split(";");
             ApplyPreset(null);
+            // todo deserialize user presets
             foreach (string item in items)
             {
                 string[] kp = item.Split("=");
