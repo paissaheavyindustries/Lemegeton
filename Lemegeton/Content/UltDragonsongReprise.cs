@@ -24,16 +24,8 @@ namespace Lemegeton.Content
 
         #region MeteorAM
 
-        public class MeteorAM : Core.ContentItem
+        public class MeteorAM : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -67,7 +59,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("NonMeteor2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("NonMeteor3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("NonMeteor4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -138,15 +130,15 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_meteorsGo);
                 Prio.SortByPriority(_meteorRoleGo);
                 Prio.SortByPriority(_nonMeteorGo);
-                AutomarkerPayload ap = new AutomarkerPayload();
-                ap.assignments[Signs.Roles["Meteor1"]] = _meteorsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Meteor2"]] = _meteorsGo[1].GameObject;
-                ap.assignments[Signs.Roles["MeteorRole1"]] = _meteorRoleGo[0].GameObject;
-                ap.assignments[Signs.Roles["MeteorRole2"]] = _meteorRoleGo[1].GameObject;
-                ap.assignments[Signs.Roles["NonMeteor1"]] = _nonMeteorGo[0].GameObject;
-                ap.assignments[Signs.Roles["NonMeteor2"]] = _nonMeteorGo[1].GameObject;
-                ap.assignments[Signs.Roles["NonMeteor3"]] = _nonMeteorGo[2].GameObject;
-                ap.assignments[Signs.Roles["NonMeteor4"]] = _nonMeteorGo[3].GameObject;
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(Signs.Roles["Meteor1"], _meteorsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Meteor2"], _meteorsGo[1].GameObject);
+                ap.Assign(Signs.Roles["MeteorRole1"], _meteorRoleGo[0].GameObject);
+                ap.Assign(Signs.Roles["MeteorRole2"], _meteorRoleGo[1].GameObject);
+                ap.Assign(Signs.Roles["NonMeteor1"], _nonMeteorGo[0].GameObject);
+                ap.Assign(Signs.Roles["NonMeteor2"], _nonMeteorGo[1].GameObject);
+                ap.Assign(Signs.Roles["NonMeteor3"], _nonMeteorGo[2].GameObject);
+                ap.Assign(Signs.Roles["NonMeteor4"], _nonMeteorGo[3].GameObject);
                 _fired = true;
                 _state.ExecuteAutomarkers(ap, Timing);
             }
@@ -157,16 +149,8 @@ namespace Lemegeton.Content
 
         #region ChainLightningAm
 
-        public class ChainLightningAm : Core.ContentItem
+        public class ChainLightningAm : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -189,7 +173,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("Lightning1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Lightning2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -226,9 +210,9 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
                 );
-                AutomarkerPayload ap = new AutomarkerPayload();
-                ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(Signs.Roles["Lightning1"], _lightningsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Lightning2"], _lightningsGo[1].GameObject);
                 _fired = true;
                 _state.ExecuteAutomarkers(ap, Timing);
             }
@@ -239,16 +223,8 @@ namespace Lemegeton.Content
 
         #region WrothAM
 
-        public class WrothAM : Core.ContentItem
+        public class WrothAM : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -283,7 +259,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             private void SetupPresets()
@@ -362,15 +338,15 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_stacksGo);
                 Prio.SortByPriority(_spreadsGo);
                 Prio.SortByPriority(_unmarkedGo);
-                AutomarkerPayload ap = new AutomarkerPayload();
-                ap.assignments[Signs.Roles["Stack1_1"]] = _stacksGo[0].GameObject;
-                ap.assignments[Signs.Roles["Stack1_2"]] = _unmarkedGo[0].GameObject;
-                ap.assignments[Signs.Roles["Stack2_1"]] = _stacksGo[1].GameObject;
-                ap.assignments[Signs.Roles["Stack2_2"]] = _unmarkedGo[1].GameObject;
-                ap.assignments[Signs.Roles["Spread1"]] = _spreadsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Spread2"]] = _spreadsGo[1].GameObject;
-                ap.assignments[Signs.Roles["Spread3"]] = _spreadsGo[2].GameObject;
-                ap.assignments[Signs.Roles["Spread4"]] = _spreadsGo[3].GameObject;
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(Signs.Roles["Stack1_1"], _stacksGo[0].GameObject);
+                ap.Assign(Signs.Roles["Stack1_2"], _unmarkedGo[0].GameObject);
+                ap.Assign(Signs.Roles["Stack2_1"], _stacksGo[1].GameObject);
+                ap.Assign(Signs.Roles["Stack2_2"], _unmarkedGo[1].GameObject);
+                ap.Assign(Signs.Roles["Spread1"], _spreadsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Spread2"], _spreadsGo[1].GameObject);
+                ap.Assign(Signs.Roles["Spread3"], _spreadsGo[2].GameObject);
+                ap.Assign(Signs.Roles["Spread4"], _spreadsGo[3].GameObject);
                 _state.ExecuteAutomarkers(ap, Timing);
                 _fired = true;
             }

@@ -124,8 +124,13 @@
             AddEntry("Signs/Plus", "Plus");
             AddEntry("Signs/Square", "Square");
             AddEntry("Signs/Triangle", "Triangle");
+            AddEntry("Signs/AttackNext", "Next Attack");
+            AddEntry("Signs/BindNext", "Next Bind");
+            AddEntry("Signs/IgnoreNext", "Next Ignore");
             AddEntry("Automarker/ManualPreset", "Manual");
+            AddEntry("Automarker/PrioType/PartyMember", "Player");
             AddEntry("Automarker/PrioType/PartyListOrder", "Party list order");
+            AddEntry("Automarker/PrioType/PartyListCustom", "Custom party list priority");
             AddEntry("Automarker/PrioType/Alphabetic", "Alphabetic");
             AddEntry("Automarker/PrioType/Trinity", "By trinity");
             AddEntry("Automarker/PrioType/Role", "By role");
@@ -407,6 +412,7 @@
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/Enabled", "Enabled");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM", "(P7s) Inviolate Bonds/Purgation automarker");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Enabled", "Enabled");
+            AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs", "Marker configuration");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/ShareTarget", "Share target");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/Share1", "Share 1");
@@ -428,6 +434,7 @@
             AddEntry("Content/Ultimate/UltUcob/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm", "(P2) Chain Lightning automarker");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning1", "Lightning 1");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning2", "Lightning 2");
@@ -436,6 +443,7 @@
             AddEntry("Content/Ultimate/UltWeaponsRefrain/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM", "(P3) Titan gaol automarker");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol1", "Gaol 1");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol2", "Gaol 2");
@@ -446,6 +454,7 @@
             AddEntry("Content/Ultimate/UltDragonsongReprise/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM", "(P2) Meteor automarker");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor1", "Meteor 1");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor2", "Meteor 2");
@@ -459,12 +468,14 @@
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Test", "Test assignment (respecting priority)");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm", "(P5) Chain Lightning automarker");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning1", "Lightning 1");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning2", "Lightning 2");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Test", "Test assignment (respecting priority)");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM", "(P6) Wroth Flames automarker");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -488,6 +499,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/ChibiOmega/SizeP3", "P3 Final Omega scale:");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM", "(P1) Program Loop automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower1", "Next tower 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower2", "Next tower 2");
@@ -497,6 +509,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Test", "Test random assignment");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM", "(P1) Pantokrator automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam1", "Next beam 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam2", "Next beam 2");
@@ -512,6 +525,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/GlitchTether/Test", "Test random tether to a nearby combatant");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM", "(P3) Transition automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_1", "Stack 1 (marked)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_2", "Stack 1 (unmarked)");
@@ -525,6 +539,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Test", "Test random assignment");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM", "(P3) Monitor automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor1", "Monitor 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor2", "Monitor 2");
@@ -542,6 +557,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/HelloWorldDrawBossMonitor/Test", "Test overlay");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM", "(P5) Run: ****mi* (Delta Version) automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -554,6 +570,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaDrawBossMonitor/Test", "Test overlay");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM", "(P5) Run: ****mi* (Sigma Version) automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -565,9 +582,11 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/DistantCloseBait", "Distant Close Bait");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/NearBait1", "Near World Bait 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/NearBait2", "Near World Bait 2");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Prio", "Priority configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Test", "Test random assignment");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM", "(P5) Run: ****mi* (Omega Version) automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor1", "Monitor / Tether 1");
@@ -578,6 +597,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Bait2", "Bait 2");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Bait3", "Bait 3");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Bait4", "Bait 4");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Prio", "Priority configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Test", "Test random assignment");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor", "(P5) Run: ****mi* (Omega Version) highlight boss monitor");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Enabled", "Enabled");

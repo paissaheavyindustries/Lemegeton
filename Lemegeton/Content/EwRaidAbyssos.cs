@@ -27,16 +27,8 @@ namespace Lemegeton.Content
 
         #region InviolateAM
 
-        public class InviolateAM : Core.ContentItem
+        public class InviolateAM : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -75,7 +67,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -193,7 +185,7 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _spreadsGo;
                 Party pty = _state.GetPartyMembers();
                 pm = (from ix in pty.Members where ix.ObjectId == _share1 select ix).First();
-                ap = new AutomarkerPayload();
+                ap = new AutomarkerPayload(_state, SelfMarkOnly);
                 role = AutomarkerPrio.JobToArchetype(pm.Job);
                 _sharesGo = new List<Party.PartyMember>(
                                 from ix in pty.Members
@@ -205,14 +197,14 @@ namespace Lemegeton.Content
                                 select ix);
                 Prio.SortByPriority(_sharesGo);
                 Prio.SortByPriority(_spreadsGo);
-                ap.assignments[Signs.Roles["ShareTarget"]] = pm.GameObject;
-                ap.assignments[Signs.Roles["Share1"]] = _sharesGo[0].GameObject;
-                ap.assignments[Signs.Roles["Share2"]] = _sharesGo[1].GameObject;
-                ap.assignments[Signs.Roles["Share3"]] = _sharesGo[2].GameObject;
-                ap.assignments[Signs.Roles["Spread1"]] = _spreadsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Spread2"]] = _spreadsGo[1].GameObject;
-                ap.assignments[Signs.Roles["Spread3"]] = _spreadsGo[2].GameObject;
-                ap.assignments[Signs.Roles["Spread4"]] = _spreadsGo[3].GameObject;
+                ap.Assign(Signs.Roles["ShareTarget"], pm.GameObject);
+                ap.Assign(Signs.Roles["Share1"], _sharesGo[0].GameObject);
+                ap.Assign(Signs.Roles["Share2"], _sharesGo[1].GameObject);
+                ap.Assign(Signs.Roles["Share3"], _sharesGo[2].GameObject);
+                ap.Assign(Signs.Roles["Spread1"], _spreadsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Spread2"], _spreadsGo[1].GameObject);
+                ap.Assign(Signs.Roles["Spread3"], _spreadsGo[2].GameObject);
+                ap.Assign(Signs.Roles["Spread4"], _spreadsGo[3].GameObject);
                 payloads.Enqueue(ap);
             }
 

@@ -7,7 +7,38 @@ namespace Lemegeton.Core
     internal class AutomarkerPayload
     {
 
-        public Dictionary<AutomarkerSigns.SignEnum, GameObject> assignments = new Dictionary<AutomarkerSigns.SignEnum, GameObject>();
+        private State _st;
+        public bool markSelfOnly { get; set; } = false;
+        public Dictionary<AutomarkerSigns.SignEnum, List<GameObject>> assignments = new Dictionary<AutomarkerSigns.SignEnum, List<GameObject>>();
+
+        public AutomarkerPayload(State st, bool selfOnly)
+        {
+            _st = st;
+            markSelfOnly = selfOnly;
+        }
+
+        public void Assign(AutomarkerSigns.SignEnum sign, GameObject go)
+        {
+            if (markSelfOnly == true)
+            {
+                if (go.ObjectId != _st.cs.LocalPlayer.ObjectId)
+                {
+                    return;
+                }
+            }
+            if (sign != AutomarkerSigns.SignEnum.AttackNext && sign != AutomarkerSigns.SignEnum.BindNext && sign != AutomarkerSigns.SignEnum.IgnoreNext)
+            {
+                assignments[sign] = new List<GameObject>(new GameObject[] { go });
+            }
+            else
+            {
+                if (assignments.ContainsKey(sign) == false)
+                {
+                    assignments[sign] = new List<GameObject>();
+                }
+                assignments[sign].Add(go);
+            }
+        }
 
     }
 

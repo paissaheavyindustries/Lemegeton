@@ -27,24 +27,15 @@ using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Party;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using System.Text;
-using Dalamud;
 using System.ComponentModel;
 using System.Globalization;
-using FFXIVClientStructs.Havok;
 using Dalamud.Interface;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Xml.Serialization;
-using System.Buffers;
 using Dalamud.Configuration;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Dalamud.Hooking;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using System.Runtime.InteropServices;
-using Dalamud.Game.ClientState.Statuses;
-using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton
 {
@@ -204,7 +195,7 @@ namespace Lemegeton
         {
             Log(State.LogLevelEnum.Info, "Changing language to {0}", language);
             I18n.ChangeLanguage(language);
-            Log(State.LogLevelEnum.Info, "Language chandged to {0}", I18n.CurrentLanguage.LanguageName);            
+            Log(State.LogLevelEnum.Info, "Language changed to {0}", I18n.CurrentLanguage.LanguageName);            
         }
 
         internal void GenericExceptionHandler(Exception ex)
@@ -227,6 +218,14 @@ namespace Lemegeton
             _misc[6] = GetTexture(61552);
             _misc[7] = GetTexture(61555);
             _misc[8] = GetTexture(61553);
+            _misc[11] = GetTexture(66162);
+            _misc[12] = GetTexture(66163);
+            _misc[13] = GetTexture(66164);
+            _misc[14] = GetTexture(66165);
+            _misc[15] = GetTexture(66166);
+            _misc[16] = GetTexture(66167);
+            _misc[17] = GetTexture(66168);
+            _misc[18] = GetTexture(66169);
             _signs[AutomarkerSigns.SignEnum.Attack1] = GetTexture(61201);
             _signs[AutomarkerSigns.SignEnum.Attack2] = GetTexture(61202);
             _signs[AutomarkerSigns.SignEnum.Attack3] = GetTexture(61203);
@@ -241,6 +240,9 @@ namespace Lemegeton
             _signs[AutomarkerSigns.SignEnum.Circle] = GetTexture(61232);
             _signs[AutomarkerSigns.SignEnum.Plus] = GetTexture(61233);
             _signs[AutomarkerSigns.SignEnum.Triangle] = GetTexture(61234);
+            _signs[AutomarkerSigns.SignEnum.AttackNext] = _signs[AutomarkerSigns.SignEnum.Attack1];
+            _signs[AutomarkerSigns.SignEnum.BindNext] = _signs[AutomarkerSigns.SignEnum.Bind1];
+            _signs[AutomarkerSigns.SignEnum.IgnoreNext] = _signs[AutomarkerSigns.SignEnum.Ignore1];
             _trinity[AutomarkerPrio.PrioTrinityEnum.Tank] = GetTexture(62581);
             _trinity[AutomarkerPrio.PrioTrinityEnum.Healer] = GetTexture(62582);
             _trinity[AutomarkerPrio.PrioTrinityEnum.DPS] = GetTexture(62583);
@@ -845,6 +847,67 @@ namespace Lemegeton
             return temp;
         }
 
+        private void RenderAutomarkerPrioPlCustom(AutomarkerPrio amp)
+        {
+            Vector2 maxsize = ImGui.GetContentRegionAvail();
+            float x = 0.0f, y = 0.0f;
+            Vector2 curpos = ImGui.GetCursorPos();
+            ImGuiStylePtr style = ImGui.GetStyle();
+            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
+            int itemx = 0, itemy = 0;
+            bool moved = false;
+            Vector2 screenpos = ImGui.GetCursorScreenPos();
+            for (int i = 0; i < amp._prioByPlCustom.Count; i++)
+            {
+                int p = amp._prioByPlCustom[i];
+                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
+                ImGui.SetCursorPos(curItem);
+                ImGui.Selectable("##" + p, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
+                x += 160.0f + style.ItemSpacing.X;
+                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
+                    ImGui.EndTooltip();
+                }
+                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
+                {
+                    Vector2 mpos = ImGui.GetMousePos();
+                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);
+                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
+                    int ipos = (ypos * perRow) + xpos;
+                    if (i != ipos && ipos >= 0 && ipos < amp._prioByPlCustom.Count)
+                    {
+                        amp._prioByPlCustom[i] = amp._prioByPlCustom[ipos];
+                        amp._prioByPlCustom[ipos] = p;
+                        moved = true;
+                    }
+                }
+                itemx++;
+                if (x > maxsize.X - 160)
+                {
+                    x = 0.0f;
+                    y += 50.0f;
+                    itemy++;
+                    itemx = 1;
+                }
+                else if (i < amp._prioByPlCustom.Count - 1)
+                {
+                    ImGui.SameLine();
+                }
+                string tagtext = I18n.Translate("Automarker/PrioType/PartyMember");
+                Vector2 pt = ImGui.GetCursorPos();
+                ImGui.SetCursorPos(new Vector2(curItem.X + 120, curItem.Y + 5));
+                ImGui.Image(_misc[10 + p].ImGuiHandle, new Vector2(30, 30));
+                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
+                ImGui.Text((i + 1).ToString());
+                ImGui.SetCursorPos(new Vector2(curItem.X + 115 - ImGui.CalcTextSize(tagtext).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
+                ImGui.Text(tagtext);
+                ImGui.SetCursorPos(pt);
+
+            }
+        }
+
         private void RenderAutomarkerPrioTrinity(AutomarkerPrio amp)
         {
             Vector2 maxsize = ImGui.GetContentRegionAvail();
@@ -1118,6 +1181,10 @@ namespace Lemegeton
                             amp.Reversed = reverse;
                         }
                     }                    
+                    break;
+                case AutomarkerPrio.PrioTypeEnum.PartyListCustom:
+                    ImGui.Text(Environment.NewLine);
+                    RenderAutomarkerPrioPlCustom(amp);
                     break;
                 case AutomarkerPrio.PrioTypeEnum.Alphabetic:
                     {

@@ -274,7 +274,7 @@ namespace Lemegeton.Core
             cd.ConditionChange += Cd_ConditionChange;
             cm.AddHandler("/lemmy", new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open Lemegeton configuration"
+                HelpMessage = "Open Lemegeton configuration\n/lemmy clear → Force clear all markers",
             });
             cs.TerritoryChanged += Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
@@ -336,7 +336,14 @@ namespace Lemegeton.Core
 
         private void OnCommand(string command, string args)
         {
-            cfg.Opened = true;
+            if (args.Contains("clear") == true)
+            {
+                ClearAutoMarkers();
+            }
+            else
+            {
+                cfg.Opened = true;
+            }
         }
 
         internal void UnprepareInternals()
@@ -668,30 +675,34 @@ namespace Lemegeton.Core
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
             Task first = null, prev = null, tx = null;
-            Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles", ap.assignments.Count);
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, GameObject> kp in ap.assignments)
+            Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}", ap.assignments.Count, ap.markSelfOnly);
+            foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<GameObject>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
                 {
                     continue;
                 }
-                int delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
-                Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1:X} with {2} on instance {3}", delay, kp.Value, kp.Key, _runInstance);
-                tx = new Task(() =>
+                int delay;
+                foreach (GameObject go in kp.Value)
                 {
-                    ulong run = _runInstance;
-                    if (delay > 0)
+                    delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
+                    Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1:X} with {2} on instance {3}", delay,go, kp.Key, _runInstance);
+                    tx = new Task(() =>
                     {
-                        Thread.Sleep(delay);
+                        ulong run = _runInstance;
+                        if (delay > 0)
+                        {
+                            Thread.Sleep(delay);
+                        }
+                        PerformMarking(run, go, kp.Key);
+                    });
+                    if (first == null)
+                    {
+                        first = tx;
                     }
-                    PerformMarking(run, kp.Value, kp.Key);
-                });
-                if (first == null)
-                {
-                    first = tx;
+                    AttachTaskToTaskChain(prev, tx);
+                    prev = tx;
                 }
-                AttachTaskToTaskChain(prev, tx);
-                prev = tx;
             }
             if (first != null)
             {
@@ -862,6 +873,11 @@ namespace Lemegeton.Core
             PerformMarking(run, GetActorById(actorId), sign);
         }
 
+        internal bool IsSoftmarkSet(AutomarkerSigns.SignEnum sign)
+        {
+            return ((SoftMarkers.ContainsKey(sign) == false || SoftMarkers[sign] == 0) == false);
+        }
+
         internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign)
         {
             if (go == null)
@@ -870,19 +886,44 @@ namespace Lemegeton.Core
             }
             if (cfg.AutomarkerSoft == true)
             {
-                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                if (sign == AutomarkerSigns.SignEnum.AttackNext)
                 {
-                    if (kp.Key != sign && kp.Value == go.ObjectId)
+                    sign = AutomarkerSigns.SignEnum.None;
+                    if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack1) == false) sign = AutomarkerSigns.SignEnum.Attack1;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack2) == false) sign = AutomarkerSigns.SignEnum.Attack2;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack3) == false) sign = AutomarkerSigns.SignEnum.Attack3;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack4) == false) sign = AutomarkerSigns.SignEnum.Attack4;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack5) == false) sign = AutomarkerSigns.SignEnum.Attack5;
+                }
+                if (sign == AutomarkerSigns.SignEnum.BindNext)
+                {
+                    sign = AutomarkerSigns.SignEnum.None;
+                    if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Bind1) == false) sign = AutomarkerSigns.SignEnum.Bind1;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Bind2) == false) sign = AutomarkerSigns.SignEnum.Bind2;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Bind3) == false) sign = AutomarkerSigns.SignEnum.Bind3;
+                }
+                if (sign == AutomarkerSigns.SignEnum.IgnoreNext)
+                {
+                    sign = AutomarkerSigns.SignEnum.None;
+                    if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Ignore1) == false) sign = AutomarkerSigns.SignEnum.Ignore1;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Ignore2) == false) sign = AutomarkerSigns.SignEnum.Ignore2;
+                }
+                if (sign != AutomarkerSigns.SignEnum.None)
+                {
+                    foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
                     {
-                        Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
-                        if (cfg.DebugOnlyLogAutomarkers == false)
+                        if (kp.Key != sign && kp.Value == go.ObjectId)
                         {
-                            SoftMarkers[kp.Key] = 0;
+                            Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
+                            if (cfg.DebugOnlyLogAutomarkers == false)
+                            {
+                                SoftMarkers[kp.Key] = 0;
+                            }
                         }
                     }
+                    Log(LogLevelEnum.Debug, null, "Assigning soft mark {0} on actor {1}", sign, go);
+                    SoftMarkers[sign] = go.ObjectId;
                 }
-                Log(LogLevelEnum.Debug, null, "Assigning soft mark {0} on actor {1}", sign, go);
-                SoftMarkers[sign] = go.ObjectId;
                 return;
             }
             bool cleared = false;
@@ -898,22 +939,25 @@ namespace Lemegeton.Core
             {
                 return;
             }
-            bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
-            if (markfunc == true)
+            if (sign != AutomarkerSigns.SignEnum.AttackNext && sign != AutomarkerSigns.SignEnum.BindNext && sign != AutomarkerSigns.SignEnum.IgnoreNext)
             {
-                Log(LogLevelEnum.Debug, null, "Using function pointer to assign mark {0} on actor {1}", sign, go);
-                if (cfg.DebugOnlyLogAutomarkers == false)
+                bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
+                if (markfunc == true)
                 {
-                    DeferredInvoke di = new DeferredInvoke()
+                    Log(LogLevelEnum.Debug, null, "Using function pointer to assign mark {0} on actor {1}", sign, go);
+                    if (cfg.DebugOnlyLogAutomarkers == false)
                     {
-                        State = this,
-                        Function = _markingFuncPtr,
-                        Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, go.ObjectId },
-                        FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
-                    };
-                    QueueInvocation(di);
+                        DeferredInvoke di = new DeferredInvoke()
+                        {
+                            State = this,
+                            Function = _markingFuncPtr,
+                            Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, go.ObjectId },
+                            FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
+                        };
+                        QueueInvocation(di);
+                    }
+                    return;
                 }
-                return;
             }
             if (_postCmdFuncptr != null)
             {
@@ -934,6 +978,9 @@ namespace Lemegeton.Core
                     case AutomarkerSigns.SignEnum.Plus: cmd += "cross"; break;
                     case AutomarkerSigns.SignEnum.Square: cmd += "square"; break;
                     case AutomarkerSigns.SignEnum.Triangle: cmd += "triangle"; break;
+                    case AutomarkerSigns.SignEnum.AttackNext: cmd += "attack"; break;
+                    case AutomarkerSigns.SignEnum.BindNext: cmd += "bind"; break;
+                    case AutomarkerSigns.SignEnum.IgnoreNext: cmd += "ignore"; break;
                 }
                 int index = GetPartyMemberIndex(go.Name.ToString());
                 if (index > 0)
@@ -1069,6 +1116,10 @@ namespace Lemegeton.Core
             nint addr = _sigs["MarkingCtrl"] + 8;
             foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
             {
+                if (val == AutomarkerSigns.SignEnum.AttackNext || val == AutomarkerSigns.SignEnum.BindNext || val == AutomarkerSigns.SignEnum.IgnoreNext)
+                {
+                    continue;
+                }
                 int temp = Marshal.ReadInt32(addr);
                 if (temp == actorId)
                 {

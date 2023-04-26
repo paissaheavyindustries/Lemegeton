@@ -14,6 +14,7 @@ namespace Lemegeton.Core
         public enum PrioTypeEnum
         {
             PartyListOrder,
+            PartyListCustom,
             Trinity,
             Role,
             Job,
@@ -75,6 +76,7 @@ namespace Lemegeton.Core
         public List<PrioRoleEnum> _prioByRole = new List<PrioRoleEnum>();
         public List<PrioJobEnum> _prioByJob = new List<PrioJobEnum>();
         public List<string> _prioByPlayer = new List<string>();
+        public List<int> _prioByPlCustom = new List<int>();
 
         public AutomarkerPrio()
         {
@@ -93,6 +95,10 @@ namespace Lemegeton.Core
                 PrioJobEnum.BRD, PrioJobEnum.MCH, PrioJobEnum.DNC,
                 PrioJobEnum.BLM, PrioJobEnum.SMN, PrioJobEnum.RDM,
             } );
+            for (int i = 1; i <= 8; i++)
+            {
+                _prioByPlCustom.Add(i);
+            }
         }
 
         internal static PrioRoleEnum JobToRole(uint job)
@@ -147,6 +153,28 @@ namespace Lemegeton.Core
                             (a, b) => Reversed == false ? 
                             a.Index.CompareTo(b.Index) : 
                             b.Index.CompareTo(a.Index)
+                        );
+                        break;
+                    }
+                case PrioTypeEnum.PartyListCustom:
+                    {
+                        int i = 1;
+                        List<Tuple<int, int>> key = new List<Tuple<int, int>>(
+                            from ix in _prioByPlCustom
+                            let idx = i++
+                            select new Tuple<int, int>(idx, ix)
+                        );
+                        actors.Sort(
+                            (a, b) =>
+                            {
+                                int p1 = (from ix in key where ix.Item2 == a.Index select ix.Item1).FirstOrDefault();
+                                int p2 = (from ix in key where ix.Item2 == b.Index select ix.Item1).FirstOrDefault();
+                                if (p1 != p2)
+                                {
+                                    return p1.CompareTo(p2);
+                                }
+                                return a.Index.CompareTo(b.Index);
+                            }
                         );
                         break;
                     }
@@ -259,7 +287,7 @@ namespace Lemegeton.Core
                             }
                         );
                         break;
-                    }                    
+                    }
             }
         }
 
@@ -272,6 +300,7 @@ namespace Lemegeton.Core
             sb.Append(String.Format("Role={0};", String.Join(",", from ix in _prioByRole select ix.ToString())));
             sb.Append(String.Format("Job={0};", String.Join(",", from ix in _prioByJob select ix.ToString())));
             sb.Append(String.Format("Player={0};", String.Join(",", from ix in _prioByPlayer select Plugin.Base64Encode(ix))));
+            sb.Append(String.Format("PlCustom={0};", String.Join(",", from ix in _prioByPlCustom select ix.ToString())));
             return sb.ToString();
         }
 
@@ -323,6 +352,11 @@ namespace Lemegeton.Core
                             );
                             temp.AddRange(from ix in _prioByJob where temp.Contains(ix) == false select ix);
                             _prioByJob = temp;
+                        }
+                        break;
+                    case "PlCustom":
+                        {
+                            _prioByPlCustom = kp[1].Split(",", StringSplitOptions.RemoveEmptyEntries).Select(a => int.Parse(a)).ToList();
                         }
                         break;
                 }

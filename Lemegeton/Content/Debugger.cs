@@ -205,9 +205,14 @@ namespace Lemegeton.Content
                             case 3: // assign on full clear
                             case 5: // reassign/overwrite
                                 {
-                                    _amLastPayload = Signs.TestFunctionality(_state, null, _state.cfg.DefaultAutomarkerTiming);
+                                    _amLastPayload = Signs.TestFunctionality(_state, null, _state.cfg.DefaultAutomarkerTiming, false);
+                                    int sets = 0;
+                                    foreach (var ass in _amLastPayload.assignments)
+                                    {
+                                        sets += ass.Value.Count;
+                                    }
                                     double delay = _state.cfg.DefaultAutomarkerTiming.IniDelayMax + 0.5f
-                                        + (_state.cfg.DefaultAutomarkerTiming.SubDelayMax * (float)_amLastPayload.assignments.Count);
+                                        + (_state.cfg.DefaultAutomarkerTiming.SubDelayMax * (float)sets);
                                     _amTestCycleNext = DateTime.Now.AddSeconds(delay);
                                 }
                                 break;
@@ -230,23 +235,65 @@ namespace Lemegeton.Content
                     foreach (var kp in _amLastPayload.assignments)
                     {
                         AutomarkerSigns.SignEnum expectedSign = kp.Key;
-                        GameObject expectedActor = kp.Value;
-                        bool ret = _state.GetCurrentMarker(expectedActor.ObjectId, out AutomarkerSigns.SignEnum currentSign);
-                        if (ret == false)
+                        foreach (GameObject expectedActor in kp.Value)
                         {
-                            Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActor);
-                            AmFails++;
-                        }
-                        else
-                        {
-                            if (currentSign == expectedSign)
+                            bool ret = _state.GetCurrentMarker(expectedActor.ObjectId, out AutomarkerSigns.SignEnum currentSign);
+                            if (ret == false)
                             {
-                                Log(LogLevelEnum.Debug, null, "{0} has {1} as expected", expectedActor, expectedSign);
+                                Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActor);
+                                AmFails++;
                             }
                             else
                             {
-                                Log(LogLevelEnum.Error, null, "{0} has {1} instead of expected {2}", expectedActor, currentSign, expectedSign);
-                                AmFails++;
+                                if (
+                                    (
+                                        (expectedSign == AutomarkerSigns.SignEnum.AttackNext)
+                                        &&
+                                        (
+                                            currentSign == AutomarkerSigns.SignEnum.Attack1
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Attack2
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Attack3
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Attack4
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Attack5
+                                        )
+                                    )
+                                    ||
+                                    (
+                                        (expectedSign == AutomarkerSigns.SignEnum.BindNext)
+                                        &&
+                                        (
+                                            currentSign == AutomarkerSigns.SignEnum.Bind1
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Bind2
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Bind3
+                                        )
+                                    )
+                                    ||
+                                    (
+                                        (expectedSign == AutomarkerSigns.SignEnum.IgnoreNext)
+                                        &&
+                                        (
+                                            currentSign == AutomarkerSigns.SignEnum.Ignore1
+                                            ||
+                                            currentSign == AutomarkerSigns.SignEnum.Ignore2
+                                        )
+                                    )
+                                    ||
+                                    (currentSign == expectedSign)
+                                )
+                                {
+                                    Log(LogLevelEnum.Debug, null, "{0} has {1} as expected ({2})", expectedActor, currentSign, expectedSign);
+                                }
+                                else
+                                {
+                                    Log(LogLevelEnum.Error, null, "{0} has {1} instead of expected {2}", expectedActor, currentSign, expectedSign);
+                                    AmFails++;
+                                }
                             }
                         }
                     }

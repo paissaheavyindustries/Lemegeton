@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,7 +15,8 @@ namespace Lemegeton.Core
             Attack1, Attack2, Attack3, Attack4, Attack5,
             Bind1, Bind2, Bind3,
             Ignore1, Ignore2,
-            Square, Circle, Plus, Triangle
+            Square, Circle, Plus, Triangle,
+            AttackNext, BindNext, IgnoreNext,
         }
 
         public Dictionary<string, Dictionary<string, SignEnum>> Presets { get; set; }
@@ -29,7 +31,7 @@ namespace Lemegeton.Core
 
         public void SetRole(string id, SignEnum sign, bool autoswap = true)
         {
-            if (autoswap == true && sign != SignEnum.None)
+            if (autoswap == true && sign != SignEnum.None && sign != SignEnum.AttackNext && sign != SignEnum.BindNext && sign != SignEnum.IgnoreNext)
             {
                 var existing = (from ix in Roles where ix.Value == sign select ix.Key).FirstOrDefault();
                 if (existing != null)
@@ -96,7 +98,7 @@ namespace Lemegeton.Core
             }
         }
 
-        internal AutomarkerPayload TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at)
+        internal AutomarkerPayload TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at, bool selfOnly)
         {            
             Party pty = st.GetPartyMembers();
             if (amp != null)
@@ -113,14 +115,14 @@ namespace Lemegeton.Core
                 st.AssignRandomSelections(pty, Roles.Count);
             }
             int roleId = 1;
-            AutomarkerPayload ap = new AutomarkerPayload();
+            AutomarkerPayload ap = new AutomarkerPayload(st, selfOnly);
             foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in Roles)
             {
                 var player = (from px in pty.Members where px.Selection == roleId select px).FirstOrDefault();
                 if (player != null)
                 {
-                    st.Log(State.LogLevelEnum.Debug, null, "Assigning test role {0} to {1}", kp.Key, player.GameObject);
-                    ap.assignments[kp.Value] = player.GameObject;
+                    st.Log(State.LogLevelEnum.Debug, null, "Assigning test role {0} with sign {1} to {2}", kp.Key, kp.Value, player.GameObject);
+                    ap.Assign(kp.Value, player.GameObject);
                 }
                 roleId++;
             }            

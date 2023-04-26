@@ -21,16 +21,8 @@ namespace Lemegeton.Content
 
         #region GaolAM
 
-        public class GaolAM : Core.ContentItem
+        public class GaolAM : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -65,7 +57,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Gaol1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("Gaol2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Gaol3", AutomarkerSigns.SignEnum.Attack3, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -93,10 +85,10 @@ namespace Lemegeton.Content
                     from ix in pty.Members join jx in _gaols on ix.ObjectId equals jx select ix
                 );
                 Prio.SortByPriority(_gaolsGo);
-                AutomarkerPayload ap = new AutomarkerPayload();
-                ap.assignments[Signs.Roles["Gaol1"]] = _gaolsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Gaol2"]] = _gaolsGo[1].GameObject;
-                ap.assignments[Signs.Roles["Gaol3"]] = _gaolsGo[2].GameObject;
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(Signs.Roles["Gaol1"], _gaolsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Gaol2"], _gaolsGo[1].GameObject);
+                ap.Assign(Signs.Roles["Gaol3"], _gaolsGo[2].GameObject);
                 _fired = true;
                 _state.ExecuteAutomarkers(ap, Timing);
             }

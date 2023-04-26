@@ -1,5 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Lemegeton.Core
 {
@@ -51,6 +53,23 @@ namespace Lemegeton.Core
         }
 
         public List<PartyMember> Members { get; set; } = new List<PartyMember>();
+
+        public PartyMember GetByActorId(uint actorId)
+        {
+            foreach (PartyMember pm in Members)
+            {
+                if (pm.ObjectId == actorId)
+                {
+                    return pm;
+                }
+            }
+            return null;
+        }
+
+        public List<PartyMember> GetByActorIds(IEnumerable<uint> actorIds)
+        {
+            return (from ix in Members join jx in actorIds on ix.ObjectId equals jx select ix).ToList();
+        }
 
     }
 

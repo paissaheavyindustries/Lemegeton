@@ -20,16 +20,8 @@ namespace Lemegeton.Content
 
         #region ChainLightningAm
 
-        public class ChainLightningAm : Core.ContentItem
+        public class ChainLightningAm : Automarker
         {
-
-            public override FeaturesEnum Features
-            {
-                get
-                {
-                    return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
-                }
-            }
 
             [AttributeOrderNumber(1000)]
             public AutomarkerSigns Signs { get; set; }
@@ -52,7 +44,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("Lightning1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Lightning2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -79,9 +71,9 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
                 );
-                AutomarkerPayload ap = new AutomarkerPayload();
-                ap.assignments[Signs.Roles["Lightning1"]] = _lightningsGo[0].GameObject;
-                ap.assignments[Signs.Roles["Lightning2"]] = _lightningsGo[1].GameObject;
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(Signs.Roles["Lightning1"], _lightningsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Lightning2"], _lightningsGo[1].GameObject);
                 _fired = true;
                 _state.ExecuteAutomarkers(ap, Timing);
             }
