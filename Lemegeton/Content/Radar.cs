@@ -447,8 +447,17 @@ namespace Lemegeton.Content
 
                 public string Serialize()
                 {
-                    DateTimeOffset dto = new DateTimeOffset(LastSeen);
-                    return String.Format("Kind={0};IsRegex={1};Name={2};LastSeen={3}", Kind.ToString(), IsRegex, Plugin.Base64Encode(Name), dto.ToUnixTimeSeconds());
+                    long time;
+                    if (LastSeen == DateTime.MinValue)
+                    {
+                        time = 0;
+                    }
+                    else
+                    {
+                        DateTimeOffset dto = new DateTimeOffset(LastSeen);
+                        time = dto.ToUnixTimeSeconds();
+                    }
+                    return String.Format("Kind={0};IsRegex={1};Name={2};LastSeen={3}", Kind.ToString(), IsRegex, Plugin.Base64Encode(Name), time);
                 }
 
                 public void Deserialize(string data)
@@ -469,8 +478,12 @@ namespace Lemegeton.Content
                                 Name = Plugin.Base64Decode(item[1]);
                                 break;
                             case "LastSeen":
-                                DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(long.Parse(item[1]));
-                                LastSeen = dto.LocalDateTime;
+                                long time = long.Parse(item[1]);
+                                if (time > 0)
+                                {
+                                    DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(time);
+                                    LastSeen = dto.LocalDateTime;
+                                }
                                 break;
                         }
                         if (IsRegex == true)

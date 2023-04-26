@@ -8,6 +8,7 @@ using System.IO;
 using static Lemegeton.Core.State;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
 
@@ -127,7 +128,19 @@ namespace Lemegeton.Content
                         }
                     }                    
                     sb.AppendLine(String.Format("Position: {0},{1},{2}", go.Position.X, go.Position.Y, go.Position.Z));
-                    sb.AppendLine(String.Format("ObjectKind: {0}", go.ObjectKind));
+                    if (go is Character)
+                    {
+                        Character ch = (Character)go;
+                        unsafe
+                        {
+                            CharacterStruct* chs = (CharacterStruct*)ch.Address;
+                            sb.AppendLine(String.Format("ObjectKind: {0} ModelId: {1}", go.ObjectKind, chs->ModelCharaId));
+                        }
+                    }
+                    else
+                    {
+                        sb.AppendLine(String.Format("ObjectKind: {0}", go.ObjectKind));
+                    }
                     sb.AppendLine(String.Format("SubKind: {0} DataId: {0}", go.SubKind, go.DataId));
                     sb.AppendLine(String.Format("RenderFlags: {0} Targettable: {1}", renderFlags, targettable));
                     string text = sb.ToString();

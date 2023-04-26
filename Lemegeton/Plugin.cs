@@ -37,6 +37,14 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
+/*
+ * 1.0.0.2
+ * 
+ * - added AM for P2 Party Synergy
+ * - added model ID display to Object Monitor
+ * - fixed several AM test buttons that didn't take priority into account
+ * - fixed an error in Radar that caused errors on config save
+ */
 namespace Lemegeton
 {
 

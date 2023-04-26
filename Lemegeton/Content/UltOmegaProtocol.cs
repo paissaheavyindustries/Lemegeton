@@ -8,8 +8,6 @@ using ImGuiNET;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
-using System.Diagnostics;
-using System.Threading;
 
 namespace Lemegeton.Content
 {
@@ -45,7 +43,14 @@ namespace Lemegeton.Content
         private const uint StatusMonitorLeft = 0xD7D;
         private const uint StatusMonitorRight = 0xD7C;
 
+        private const int HeadmarkerCircle = 416;
+        private const int HeadmarkerSquare = 418;
+        private const int HeadmarkerCross = 419;
+        private const int HeadmarkerTriangle = 417;
+
         private bool ZoneOk = false;
+        private bool _sawFirstHeadMarker = false;
+        private uint _firstHeadMarker = 0;
 
 #if !SANS_GOETIA
         private ChibiOmega _chibiOmega;
@@ -57,6 +62,7 @@ namespace Lemegeton.Content
 
         private ProgramLoopAM _loopAm;
         private PantokratorAM _pantoAm;
+        private P2SynergyAM _p2synergyAm;
         private P3TransitionAM _p3transAm;
         private P3MonitorAM _p3moniAm;
         private DynamisDeltaAM _deltaAm;
@@ -267,7 +273,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Tower2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Tether1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Tether2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -773,6 +779,185 @@ namespace Lemegeton.Content
 
 #endif
 
+        #region P2SynergyAM
+
+        public class P2SynergyAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(1010)]
+            public AutomarkerSigns Signs2 { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private List<uint> _psCross = new List<uint>();
+            private List<uint> _psSquare = new List<uint>();
+            private List<uint> _psCircle = new List<uint>();
+            private List<uint> _psTriangle = new List<uint>();
+            private bool _fired = false;
+            private uint _statusId = 0;
+
+            public P2SynergyAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Signs2 = new AutomarkerSigns();
+                Prio = new AutomarkerPrio();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.PartyListOrder;
+                SetupPresets();
+                Signs.ApplyPreset("BPOG - GPOB");
+                Signs2.ApplyPreset("BPOG - BPOG");
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+            }
+
+            private void SetupPresets()
+            {
+                Dictionary<string, AutomarkerSigns.SignEnum> pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
+                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.Presets["BPOG - GPOB"] = pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
+                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
+                Signs.Presets["BPOG - GOPB"] = pr;
+                pr = new Dictionary<string, AutomarkerSigns.SignEnum>();
+                pr["CrossL"] = AutomarkerSigns.SignEnum.Plus;
+                pr["CrossR"] = AutomarkerSigns.SignEnum.Attack1;
+                pr["SquareL"] = AutomarkerSigns.SignEnum.Square;
+                pr["SquareR"] = AutomarkerSigns.SignEnum.Attack2;
+                pr["CircleL"] = AutomarkerSigns.SignEnum.Circle;
+                pr["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
+                pr["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
+                pr["TriangleR"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs2.Presets["BPOG - BPOG"] = pr;
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
+                _psCross.Clear();
+                _psSquare.Clear();
+                _psCircle.Clear();
+                _psTriangle.Clear();
+                _statusId = 0;
+            }
+
+            internal void FeedStatus(uint statusId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (_fired == true)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0}", statusId);
+                _statusId = statusId;
+                if (_psCross.Count != 2 || _psSquare.Count != 2 || _psCircle.Count != 2 || _psTriangle.Count != 2 || _statusId == 0)
+                {
+                    return;
+                }
+                ReadyForDecision();
+            }
+
+            internal void FeedHeadmarker(uint actorId, uint headMarkerId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (_fired == true)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
+                switch (headMarkerId)
+                {
+                    case HeadmarkerCross:
+                        _psCross.Add(actorId);
+                        break;
+                    case HeadmarkerSquare:
+                        _psSquare.Add(actorId);
+                        break;
+                    case HeadmarkerCircle:
+                        _psCircle.Add(actorId);
+                        break;
+                    case HeadmarkerTriangle:
+                        _psTriangle.Add(actorId);
+                        break;
+                }
+                if (_psCross.Count != 2 || _psSquare.Count != 2 || _psCircle.Count != 2 || _psTriangle.Count != 2 || _statusId == 0)
+                {
+                    return;
+                }
+                ReadyForDecision();
+            }
+
+            internal void ReadyForDecision()
+            {
+                AutomarkerSigns ams;
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                if (_statusId == StatusRemoteGlitch)
+                {
+                    ams = Signs;
+                }
+                else
+                {
+                    ams = Signs2;
+                }
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _psCrossGo = pty.GetByActorIds(_psCross);
+                List<Party.PartyMember> _psSquareGo = pty.GetByActorIds(_psSquare);
+                List<Party.PartyMember> _psCircleGo = pty.GetByActorIds(_psCircle);
+                List<Party.PartyMember> _psTriangleGo = pty.GetByActorIds(_psTriangle);
+                Prio.SortByPriority(_psCrossGo);
+                Prio.SortByPriority(_psSquareGo);
+                Prio.SortByPriority(_psCircleGo);
+                Prio.SortByPriority(_psTriangleGo);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap.Assign(ams.Roles["CrossL"], _psCrossGo[0].GameObject);
+                ap.Assign(ams.Roles["CrossR"], _psCrossGo[1].GameObject);
+                ap.Assign(ams.Roles["SquareL"], _psSquareGo[0].GameObject);
+                ap.Assign(ams.Roles["SquareR"], _psSquareGo[1].GameObject);
+                ap.Assign(ams.Roles["CircleL"], _psCircleGo[0].GameObject);
+                ap.Assign(ams.Roles["CircleR"], _psCircleGo[1].GameObject);
+                ap.Assign(ams.Roles["TriangleL"], _psTriangleGo[0].GameObject);
+                ap.Assign(ams.Roles["TriangleR"], _psTriangleGo[1].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+        }
+
+        #endregion
+
         #region P3TransitionAM
 
         public class P3TransitionAM : Automarker
@@ -811,7 +996,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -939,7 +1124,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("None3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("None4", AutomarkerSigns.SignEnum.Attack4, false);
                 Signs.SetRole("None5", AutomarkerSigns.SignEnum.Attack5, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
@@ -1635,16 +1820,35 @@ namespace Lemegeton.Content
             _state.OnAction += OnAction;
             _state.OnStatusChange += OnStatusChange;
             _state.OnTether += OnTether;
+            _state.OnHeadMarker += OnHeadMarker;
+        }
+
+        private void OnHeadMarker(uint dest, uint markerId)
+        {
+            if (_sawFirstHeadMarker == false)
+            {
+                _sawFirstHeadMarker = true;
+                _firstHeadMarker = markerId - 23;
+            }
+            uint realMarkerId = markerId - _firstHeadMarker;
+            if (CurrentPhase == PhaseEnum.P1_Pantokrator)
+            {
+                _p2synergyAm.FeedHeadmarker(dest, realMarkerId);
+            }
         }
 
         private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
-#if !SANS_GOETIA
             if (statusId == StatusMidGlitch || statusId == StatusRemoteGlitch)
             {
+#if !SANS_GOETIA
                 _glitchTether.FeedStatus(gained == false ? 0 : statusId);
-            }
 #endif
+                if (CurrentPhase == PhaseEnum.P1_Pantokrator && gained == true)
+                {
+                    _p2synergyAm.FeedStatus(statusId);
+                }
+            }
             if (statusId == StatusStackSniper || statusId == StatusSpreadSniper)
             {
                 _p3transAm.FeedStatus(dest, statusId, gained);
@@ -1796,6 +2000,8 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
+            _state.OnHeadMarker -= OnHeadMarker;
+            _state.OnTether -= OnTether;
             _state.OnStatusChange -= OnStatusChange;
             _state.OnAction -= OnAction;
             _state.OnCastBegin -= OnCastBegin;
@@ -1832,6 +2038,7 @@ namespace Lemegeton.Content
 #endif
                 _loopAm = (ProgramLoopAM)Items["ProgramLoopAM"];
                 _pantoAm = (PantokratorAM)Items["PantokratorAM"];
+                _p2synergyAm = (P2SynergyAM)Items["P2SynergyAM"];
                 _p3transAm = (P3TransitionAM)Items["P3TransitionAM"];
                 _p3moniAm = (P3MonitorAM)Items["P3MonitorAM"];
                 _deltaAm = (DynamisDeltaAM)Items["DynamisDeltaAM"];

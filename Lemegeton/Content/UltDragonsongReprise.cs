@@ -59,7 +59,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("NonMeteor2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("NonMeteor3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("NonMeteor4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
             }
 
             public override void Reset()
