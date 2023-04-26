@@ -1798,7 +1798,7 @@ namespace Lemegeton.Content
                 ap2.Assign(Signs.Roles["Bait2"], theRest2Go[1].GameObject);
                 ap2.Assign(Signs.Roles["Bait3"], theRest2Go[2].GameObject);
                 ap2.Assign(Signs.Roles["Bait4"], theRest2Go[3].GameObject);
-                Log(State.LogLevelEnum.Debug, null, "SET 1 -- m1 {0:X} m2 {1:X} distant {2:X} near {3:X} spreads {4:X} {5:X} {6:X} {7:X}",
+                Log(State.LogLevelEnum.Debug, null, "SET 2 -- m1 {0:X} m2 {1:X} distant {2:X} near {3:X} spreads {4:X} {5:X} {6:X} {7:X}",
                     threeStacks[0], threeStacks[1], distant2nd, near2nd, theRest2[0], theRest2[1], theRest2[2], theRest2[3]
                 );
                 SecondPayload = ap2;
@@ -1984,13 +1984,24 @@ namespace Lemegeton.Content
                     }
                     break;
                 case AbilityHelloDistantWorldBig:
-                    if (CurrentPhase == PhaseEnum.P5_Delta || CurrentPhase == PhaseEnum.P5_Sigma || CurrentPhase == PhaseEnum.P5_Omega2nd)
+                    if (CurrentPhase == PhaseEnum.P5_Delta && _deltaAm.Active == true)
+                    {
+                        _state.ClearAutoMarkers();
+                    }
+                    if (CurrentPhase == PhaseEnum.P5_Sigma && _sigmaAm.Active == true)
+                    {
+                        _state.ClearAutoMarkers();
+                    }
+                    if (CurrentPhase == PhaseEnum.P5_Omega2nd && _omegaAm.Active == true)
                     {
                         _state.ClearAutoMarkers();
                     }
                     if (CurrentPhase == PhaseEnum.P5_Omega)
                     {
-                        _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
+                        if (_omegaAm.Active == true)
+                        {
+                            _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
+                        }
                         CurrentPhase = PhaseEnum.P5_Omega2nd;
                     }
                     break;
