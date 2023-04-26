@@ -1510,14 +1510,16 @@ namespace Lemegeton.Content
                                     where ix.Value == 1
                                     && ix.Key != distant
                                     && ix.Key != near
-                                    select ix.Key).Take(3).ToList();
+                                    select ix.Key).ToList();
                 List<Party.PartyMember> pplWithStackGo = pty.GetByActorIds(pplWithStack);
                 Prio.SortByPriority(pplWithStackGo);
                 ap.Assign(Signs.Roles["Arm1"], pplWithStackGo[0].GameObject);
                 ap.Assign(Signs.Roles["Arm2"], pplWithStackGo[1].GameObject);
                 ap.Assign(Signs.Roles["DistantFarBait"], pplWithStackGo[2].GameObject);
                 var theRest = (from ix in pty.Members
-                               where pplWithStack.Contains(ix.ObjectId) == false
+                               where ix.ObjectId != pplWithStackGo[0].ObjectId
+                               && ix.ObjectId != pplWithStackGo[1].ObjectId
+                               && ix.ObjectId != pplWithStackGo[2].ObjectId
                                && ix.ObjectId != distant
                                && ix.ObjectId != near
                                select ix).Take(3).ToList();
