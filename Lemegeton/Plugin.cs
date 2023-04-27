@@ -36,6 +36,7 @@ using Dalamud.Configuration;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using static Lemegeton.Core.AutomarkerPrio;
 
 namespace Lemegeton
 {
@@ -73,6 +74,11 @@ namespace Lemegeton
         private DateTime _lemmyShortcutPopped;
         private Rectangle _lastSeen = new Rectangle();
         private List<string> _contribs = new List<string>();
+
+        private object _dragObject = null;
+        private bool _isDragging = false;
+        private int _dragStartItem = 0;
+        private int _dragEndItem = 0;
 
         private string[] _aboutScroller = new string[] {
 #if !SANS_GOETIA
@@ -161,6 +167,7 @@ namespace Lemegeton
                     _drawingCallback = false;
                 }
             }
+            SaveConfig();
         }
 
         public void Dispose()
@@ -656,8 +663,11 @@ namespace Lemegeton
         public void SaveConfig()
         {
             Log(State.LogLevelEnum.Info, "Saving configuration");
-            _state.cfg.PropertyBlob = SerializeProperties();
-            _state.pi.SavePluginConfig(_state.cfg);
+            lock (this)
+            {
+                _state.cfg.PropertyBlob = SerializeProperties();
+                _state.pi.SavePluginConfig(_state.cfg);
+            }
             Log(State.LogLevelEnum.Info, "Configuration saved");
         }
 
@@ -847,245 +857,241 @@ namespace Lemegeton
             return temp;
         }
 
-        private void RenderAutomarkerPrioPlCustom(AutomarkerPrio amp)
+
+        private string TranslateOrderableItem<T>(T item)
+        {
+            if (item is PrioRoleEnum)
+            {
+                PrioRoleEnum tmp = (PrioRoleEnum)Convert.ChangeType(item, typeof(PrioRoleEnum));
+                return I18n.Translate("Role/" + tmp.ToString());
+            }
+            if (item is PrioTrinityEnum)
+            {
+                PrioTrinityEnum tmp = (PrioTrinityEnum)Convert.ChangeType(item, typeof(PrioTrinityEnum));
+                return I18n.Translate("Trinity/" + tmp.ToString());
+            }
+            if (item is PrioJobEnum)
+            {
+                PrioJobEnum tmp = (PrioJobEnum)Convert.ChangeType(item, typeof(PrioJobEnum));
+                return I18n.Translate("Job/" + tmp.ToString());
+            }
+            if (item is int)
+            {
+                return I18n.Translate("Automarker/PrioType/PartyMember");
+            }
+            if (item is string)
+            {
+                return item.ToString();
+            }
+            return "???";
+        }
+
+        private TextureWrap? RetrieveOrderableIcon<T>(T item)
+        {
+            if (item is PrioRoleEnum)
+            {
+                PrioRoleEnum tmp = (PrioRoleEnum)Convert.ChangeType(item, typeof(PrioRoleEnum));
+                return _roles[tmp];
+            }
+            if (item is PrioTrinityEnum)
+            {
+                PrioTrinityEnum tmp = (PrioTrinityEnum)Convert.ChangeType(item, typeof(PrioTrinityEnum));
+                return _trinity[tmp];
+            }
+            if (item is PrioJobEnum)
+            {
+                PrioJobEnum tmp = (PrioJobEnum)Convert.ChangeType(item, typeof(PrioJobEnum));
+                return _jobs[tmp];
+            }
+            if (item is int)
+            {
+                int tmp = (int)Convert.ChangeType(item, typeof(int));
+                return _misc[10 + tmp];
+            }
+            if (item is string)
+            {
+                return null;
+            }
+            return null;
+        }
+
+        private void RenderOrderableItem<T>(T item, int index, float x, float y)
+        {
+            Vector2 btnsize = new Vector2(160, 50);
+            Vector2 icosize = new Vector2(30, 30);
+            Vector2 pt = ImGui.GetCursorPos();
+            string text = TranslateOrderableItem(item);
+            TextureWrap? icon = RetrieveOrderableIcon(item);
+            float icospace = 0.0f;
+            if (icon != null)
+            {
+                ImGui.SetCursorPos(new Vector2(x + (btnsize.X - icosize.X) - 5.0f, y + (btnsize.Y / 2.0f) - (icosize.Y / 2.0f)));
+                ImGui.Image(icon.ImGuiHandle, icosize);
+                icospace = icosize.X;
+            }
+            ImGui.SetCursorPos(new Vector2(x + 5.0f, y + (btnsize.Y / 2.0f) - ImGui.GetFontSize() / 2.0f));
+            ImGui.Text((index + 1).ToString());
+            ImGui.SetCursorPos(new Vector2(x + (btnsize.X - icospace - 10.0f) - ImGui.CalcTextSize(text).X, y + (btnsize.Y / 2.0f) - (ImGui.GetFontSize() / 2.0f)));
+            ImGui.Text(text);
+            ImGui.SetCursorPos(pt);
+        }
+
+        private void RenderOrderableList<T>(string path, List<T> items)
         {
             Vector2 maxsize = ImGui.GetContentRegionAvail();
+            Vector2 btnsize = new Vector2(160, 50);
+            Vector2 margin = new Vector2(10, 10);
+            Vector2 icosize = new Vector2(30, 30);
             float x = 0.0f, y = 0.0f;
             Vector2 curpos = ImGui.GetCursorPos();
             ImGuiStylePtr style = ImGui.GetStyle();
-            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
-            int itemx = 0, itemy = 0;
-            bool moved = false;
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
+            int perRow = (int)Math.Floor(maxsize.X / (btnsize.X + margin.X));
+            perRow = Math.Clamp(perRow, 1, items.Count);
+            int itemx = 1, itemy = 1;
+            bool isStillDragging = false;
             Vector2 screenpos = ImGui.GetCursorScreenPos();
-            for (int i = 0; i < amp._prioByPlCustom.Count; i++)
+            float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 300.0);
+            Vector4 hilite = new Vector4(1.0f, 1.0f, 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)));
+            for (int i = 0; i < items.Count; i++)
             {
-                int p = amp._prioByPlCustom[i];
+                T p = items[i];
+                string temp = "##" + path + "_" + i;
                 Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
                 ImGui.SetCursorPos(curItem);
-                ImGui.Selectable("##" + p, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
-                x += 160.0f + style.ItemSpacing.X;
+                ImGui.Selectable(temp, true, ImGuiSelectableFlags.None, btnsize);
+                x += btnsize.X + margin.X;
                 if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
                 {
                     ImGui.BeginTooltip();
                     ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
                     ImGui.EndTooltip();
                 }
-                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
+                if (ImGui.IsItemActive() == true)
                 {
-                    Vector2 mpos = ImGui.GetMousePos();
-                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);
-                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
-                    int ipos = (ypos * perRow) + xpos;
-                    if (i != ipos && ipos >= 0 && ipos < amp._prioByPlCustom.Count)
+                    isStillDragging = true;
+                    if (_isDragging == false)
                     {
-                        amp._prioByPlCustom[i] = amp._prioByPlCustom[ipos];
-                        amp._prioByPlCustom[ipos] = p;
-                        moved = true;
+                        _isDragging = true;
+                        _dragObject = items;
+                        _dragStartItem = i;
+                    }
+                    ImDrawListPtr dl = ImGui.GetWindowDrawList();
+                    if (ImGui.IsItemHovered() == false)
+                    {
+                        Vector2 mpos = ImGui.GetMousePos();
+                        int xpos = (int)Math.Floor((mpos.X - screenpos.X) / (btnsize.X + margin.X));
+                        int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / (btnsize.Y + margin.Y));
+                        xpos = Math.Clamp(xpos, 0, perRow - 1);
+                        ypos = Math.Clamp(ypos, 0, (int)Math.Ceiling((float)items.Count / perRow) - 1);
+                        int xtpos = (int)Math.Floor((mpos.X - screenpos.X + (btnsize.X / 2.0f)) / (btnsize.X + margin.X));
+                        int jpos, ipos = (ypos * perRow) + xpos;
+                        ipos = Math.Clamp(ipos, 0, items.Count);
+                        int lim = perRow * (int)Math.Floor((float)ipos / perRow);
+                        lim = items.Count - lim;
+                        xpos = Math.Clamp(xpos, 0, lim - 1);
+                        ipos = (ypos * perRow) + xpos;
+                        if (i != ipos)
+                        {
+                            jpos = (xtpos > xpos) ? 1 : -1;
+                            float cpx = (xpos * (btnsize.X + margin.X) + screenpos.X);
+                            float cpy = (ypos * (btnsize.Y + margin.Y) + screenpos.Y);
+                            if (jpos < 0)
+                            {
+                                dl.AddLine(new Vector2(cpx, cpy), new Vector2(cpx, cpy + btnsize.Y), ImGui.GetColorU32(hilite), 3.0f);
+                                dl.AddTriangleFilled(
+                                    new Vector2(cpx, cpy),
+                                    new Vector2(cpx + 10.0f, cpy),
+                                    new Vector2(cpx, cpy + 10.0f),
+                                    ImGui.GetColorU32(hilite)
+                                );
+                                dl.AddTriangleFilled(
+                                    new Vector2(cpx, cpy + btnsize.Y),
+                                    new Vector2(cpx + 10.0f, cpy + btnsize.Y),
+                                    new Vector2(cpx, cpy + btnsize.Y - 10.0f),
+                                    ImGui.GetColorU32(hilite)
+                                );
+                                _dragEndItem = ipos;
+                            }
+                            else
+                            {
+                                dl.AddLine(new Vector2(cpx + btnsize.X, cpy), new Vector2(cpx + btnsize.X, cpy + btnsize.Y), ImGui.GetColorU32(hilite), 3.0f);
+                                dl.AddTriangleFilled(
+                                    new Vector2(cpx + btnsize.X, cpy),
+                                    new Vector2(cpx + btnsize.X - 10.0f, cpy),
+                                    new Vector2(cpx + btnsize.X, cpy + 10.0f),
+                                    ImGui.GetColorU32(hilite)
+                                );
+                                dl.AddTriangleFilled(
+                                    new Vector2(cpx + btnsize.X, cpy + btnsize.Y),
+                                    new Vector2(cpx + btnsize.X - 10.0f, cpy + btnsize.Y),
+                                    new Vector2(cpx + btnsize.X, cpy + btnsize.Y - 10.0f),
+                                    ImGui.GetColorU32(hilite)
+                                );
+                                _dragEndItem = ipos + 1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _dragEndItem = _dragStartItem;
+                    }
+                    {
+                        Vector2 cpos = Vector2.Add(ImGui.GetWindowPos(), curItem);
+                        cpos = Vector2.Subtract(cpos, new Vector2(ImGui.GetScrollX(), ImGui.GetScrollY()));
+                        dl.AddRect(cpos, new Vector2(cpos.X + btnsize.X, cpos.Y + btnsize.Y), ImGui.GetColorU32(hilite), 0.0f, ImDrawFlags.None, 2.0f);
                     }
                 }
                 itemx++;
-                if (x > maxsize.X - 160)
+                if (itemx > perRow)
                 {
                     x = 0.0f;
-                    y += 50.0f;
+                    y += btnsize.Y + margin.Y;
                     itemy++;
                     itemx = 1;
                 }
-                else if (i < amp._prioByPlCustom.Count - 1)
+                else if (i < items.Count - 1)
                 {
                     ImGui.SameLine();
                 }
-                string tagtext = I18n.Translate("Automarker/PrioType/PartyMember");
-                Vector2 pt = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(curItem.X + 120, curItem.Y + 5));
-                ImGui.Image(_misc[10 + p].ImGuiHandle, new Vector2(30, 30));
-                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text((i + 1).ToString());
-                ImGui.SetCursorPos(new Vector2(curItem.X + 115 - ImGui.CalcTextSize(tagtext).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text(tagtext);
-                ImGui.SetCursorPos(pt);
-
+                RenderOrderableItem(p, i, curItem.X, curItem.Y);
             }
+            ImGui.PopStyleVar();
+            if (isStillDragging == false && _dragObject == items)
+            {
+                _dragEndItem = Math.Clamp(_dragEndItem, 0, items.Count);
+                _isDragging = false;
+                if (_dragStartItem != _dragEndItem)
+                {
+                    var tmp = items[_dragStartItem];
+                    items.Remove(tmp);
+                    items.Insert(_dragEndItem >= _dragStartItem ? _dragEndItem - 1 : _dragEndItem, tmp);
+                }
+                _dragStartItem = 0;
+                _dragEndItem = 0;
+                _dragObject = null;
+            }
+        }
+
+        // todo
+        private void RenderAutomarkerPrioPlCustom(AutomarkerPrio amp)
+        {
+            RenderOrderableList<int>("miu mau", amp._prioByPlCustom);
         }
 
         private void RenderAutomarkerPrioTrinity(AutomarkerPrio amp)
         {
-            Vector2 maxsize = ImGui.GetContentRegionAvail();
-            float x = 0.0f, y = 0.0f;
-            Vector2 curpos = ImGui.GetCursorPos();
-            ImGuiStylePtr style = ImGui.GetStyle();
-            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
-            int itemx = 0, itemy = 0;
-            bool moved = false;
-            Vector2 screenpos = ImGui.GetCursorScreenPos();
-            for (int i = 0; i < amp._prioByTrinity.Count; i++)
-            {
-                AutomarkerPrio.PrioTrinityEnum p = amp._prioByTrinity[i];
-                string temp = I18n.Translate("Trinity/" + p.ToString());
-                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
-                ImGui.SetCursorPos(curItem);
-                ImGui.Selectable("##" + temp, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
-                x += 160.0f + style.ItemSpacing.X;
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
-                    ImGui.EndTooltip();
-                }
-                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
-                {
-                    Vector2 mpos = ImGui.GetMousePos();
-                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);
-                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
-                    int ipos = (ypos * perRow) + xpos;
-                    if (i != ipos && ipos >= 0 && ipos < amp._prioByTrinity.Count)
-                    {
-                        amp._prioByTrinity[i] = amp._prioByTrinity[ipos];
-                        amp._prioByTrinity[ipos] = p;
-                        moved = true;
-                    }
-                }
-                itemx++;
-                if (x > maxsize.X - 160)
-                {
-                    x = 0.0f;
-                    y += 50.0f;
-                    itemy++;
-                    itemx = 1;
-                }
-                else if (i < amp._prioByTrinity.Count - 1)
-                {
-                    ImGui.SameLine();
-                }
-                Vector2 pt = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(curItem.X + 120, curItem.Y + 5));
-                ImGui.Image(_trinity[p].ImGuiHandle, new Vector2(30, 30));
-                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text((i + 1).ToString());
-                ImGui.SetCursorPos(new Vector2(curItem.X + 115 - ImGui.CalcTextSize(temp).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text(temp);
-                ImGui.SetCursorPos(pt);
-            }
+            RenderOrderableList<PrioTrinityEnum>("miu mau", amp._prioByTrinity);
         }
 
         private void RenderAutomarkerPrioRole(AutomarkerPrio amp)
         {
-            Vector2 maxsize = ImGui.GetContentRegionAvail();
-            float x = 0.0f, y = 0.0f;
-            Vector2 curpos = ImGui.GetCursorPos();
-            ImGuiStylePtr style = ImGui.GetStyle();
-            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
-            int itemx = 0, itemy = 0;
-            bool moved = false;
-            Vector2 screenpos = ImGui.GetCursorScreenPos();
-            for (int i = 0; i < amp._prioByRole.Count; i++)
-            {
-                AutomarkerPrio.PrioRoleEnum p = amp._prioByRole[i];
-                string temp = I18n.Translate("Role/" + p.ToString());
-                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
-                ImGui.SetCursorPos(curItem);
-                ImGui.Selectable("##" + temp, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
-                x += 160.0f + style.ItemSpacing.X;
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
-                    ImGui.EndTooltip();
-                }
-                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
-                {
-                    Vector2 mpos = ImGui.GetMousePos();
-                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);
-                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
-                    int ipos = (ypos * perRow) + xpos;
-                    if (i != ipos && ipos >= 0 && ipos < amp._prioByRole.Count)
-                    {
-                        amp._prioByRole[i] = amp._prioByRole[ipos];
-                        amp._prioByRole[ipos] = p;
-                        moved = true;
-                    }
-                }
-                itemx++;
-                if (x > maxsize.X - 160)
-                {
-                    x = 0.0f;
-                    y += 50.0f;
-                    itemy++;
-                    itemx = 1;
-                }
-                else if (i < amp._prioByRole.Count - 1)
-                {
-                    ImGui.SameLine();
-                }
-                Vector2 pt = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(curItem.X + 120, curItem.Y + 5));
-                ImGui.Image(_roles[p].ImGuiHandle, new Vector2(30, 30));
-                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text((i + 1).ToString());
-                ImGui.SetCursorPos(new Vector2(curItem.X + 115 - ImGui.CalcTextSize(temp).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text(temp);
-                ImGui.SetCursorPos(pt);
-            }
+            RenderOrderableList<PrioRoleEnum>("miu mau", amp._prioByRole);
         }
 
         private void RenderAutomarkerPrioJob(AutomarkerPrio amp)
         {
-            Vector2 maxsize = ImGui.GetContentRegionAvail();
-            float x = 0.0f, y = 0.0f;
-            Vector2 curpos = ImGui.GetCursorPos();
-            ImGuiStylePtr style = ImGui.GetStyle();
-            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
-            int itemx = 0, itemy = 0;
-            bool moved = false;
-            Vector2 screenpos = ImGui.GetCursorScreenPos();
-            for (int i = 0; i < amp._prioByJob.Count; i++)
-            {
-                AutomarkerPrio.PrioJobEnum p = amp._prioByJob[i];
-                string temp = I18n.Translate("Job/" + p.ToString());
-                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
-                ImGui.SetCursorPos(curItem);
-                ImGui.Selectable("##" + temp, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
-                x += 160.0f + style.ItemSpacing.X;
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
-                    ImGui.EndTooltip();
-                }
-                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
-                {
-                    Vector2 mpos = ImGui.GetMousePos();
-                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);                    
-                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
-                    int ipos = (ypos * perRow) + xpos;
-                    if (i != ipos && ipos >= 0 && ipos < amp._prioByJob.Count)
-                    {
-                        amp._prioByJob[i] = amp._prioByJob[ipos];
-                        amp._prioByJob[ipos] = p;
-                        moved = true;
-                    }
-                }
-                itemx++;
-                if (x > maxsize.X -  160)
-                {
-                    x = 0.0f;
-                    y += 50.0f;
-                    itemy++;
-                    itemx = 1;
-                }
-                else if (i < amp._prioByJob.Count - 1)
-                {
-                    ImGui.SameLine();
-                }
-                Vector2 pt = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(curItem.X + 120, curItem.Y + 5));
-                ImGui.Image(_jobs[p].ImGuiHandle, new Vector2(30, 30));
-                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text((i + 1).ToString());
-                ImGui.SetCursorPos(new Vector2(curItem.X + 115 - ImGui.CalcTextSize(temp).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text(temp);
-                ImGui.SetCursorPos(pt);
-            }
+            RenderOrderableList<PrioJobEnum>("miu mau", amp._prioByJob);
         }
 
         private void RenderAutomarkerPrioPlayer(AutomarkerPrio amp)
@@ -1096,59 +1102,7 @@ namespace Lemegeton
                 amp._prioByPlayer.Clear();
                 amp._prioByPlayer.AddRange(from ix in pty.Members orderby ix.Index ascending select ix.Name);
             }
-            Vector2 maxsize = ImGui.GetContentRegionAvail();
-            float x = 0.0f, y = 0.0f;
-            Vector2 curpos = ImGui.GetCursorPos();
-            ImGuiStylePtr style = ImGui.GetStyle();
-            int perRow = (int)Math.Floor((maxsize.X - 5.0f) / 160.0f);
-            int itemx = 0, itemy = 0;
-            bool moved = false;
-            Vector2 screenpos = ImGui.GetCursorScreenPos();
-            for (int i = 0; i < amp._prioByPlayer.Count; i++)
-            {
-                string p = amp._prioByPlayer[i];
-                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
-                ImGui.SetCursorPos(curItem);
-                ImGui.Selectable("##" + p, true, ImGuiSelectableFlags.None, new Vector2(150, 40));
-                x += 160.0f + style.ItemSpacing.X;
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
-                    ImGui.EndTooltip();
-                }
-                if (ImGui.IsItemActive() == true && ImGui.IsItemHovered() == false && moved == false)
-                {
-                    Vector2 mpos = ImGui.GetMousePos();
-                    int xpos = (int)Math.Floor((mpos.X - screenpos.X) / 160.0f);
-                    int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / 50.0f);
-                    int ipos = (ypos * perRow) + xpos;
-                    if (i != ipos && ipos >= 0 && ipos < amp._prioByPlayer.Count)
-                    {
-                        amp._prioByPlayer[i] = amp._prioByPlayer[ipos];
-                        amp._prioByPlayer[ipos] = p;
-                        moved = true;
-                    }
-                }
-                itemx++;
-                if (x > maxsize.X - 160)
-                {
-                    x = 0.0f;
-                    y += 50.0f;
-                    itemy++;
-                    itemx = 1;
-                }
-                else if (i < amp._prioByPlayer.Count - 1)
-                {
-                    ImGui.SameLine();
-                }
-                Vector2 pt = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(curItem.X + 3, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text((i + 1).ToString());
-                ImGui.SetCursorPos(new Vector2(curItem.X + 145 - ImGui.CalcTextSize(p).X, curItem.Y + 20.0f - ImGui.GetFontSize() / 2.0f));
-                ImGui.Text(p);
-                ImGui.SetCursorPos(pt);
-            }
+            RenderOrderableList<string>("miu mau", amp._prioByPlayer);
         }
 
         private void RenderAutomarkerPrio(string path, PropertyInfo pi, object o)
@@ -1873,6 +1827,7 @@ namespace Lemegeton
             if (open == false)
             {
                 _state.cfg.Opened = false;
+                SaveConfig();
                 ImGui.End();
                 ImGui.PopStyleColor(3);
                 return;
