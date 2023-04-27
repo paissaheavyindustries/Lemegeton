@@ -8,7 +8,7 @@
         {
             get
             {
-                return _state.cfg.AutomarkerSoft == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
+                return _state.cfg.AutomarkerSoft == false && AsSoftmarker == false ? FeaturesEnum.Automarker : FeaturesEnum.Drawing;
             }
         }
 
@@ -16,6 +16,9 @@
         [AttributeOrderNumber(500)]
         public bool SelfMarkOnly { get; set; }
 
+        [DebugOption]
+        [AttributeOrderNumber(501)]
+        public bool AsSoftmarker { get; set; }
 
         public Automarker(State state) : base(state)
         {

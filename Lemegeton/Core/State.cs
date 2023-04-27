@@ -675,7 +675,7 @@ namespace Lemegeton.Core
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
             Task first = null, prev = null, tx = null;
-            Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}", ap.assignments.Count, ap.markSelfOnly);
+            Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<GameObject>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
@@ -694,7 +694,7 @@ namespace Lemegeton.Core
                         {
                             Thread.Sleep(delay);
                         }
-                        PerformMarking(run, go, kp.Key);
+                        PerformMarking(run, go, kp.Key, ap.softMarker);
                     });
                     if (first == null)
                     {
@@ -785,20 +785,16 @@ namespace Lemegeton.Core
             {
                 return;
             }
-            if (cfg.AutomarkerSoft == true)
+            foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
             {
-                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                if (kp.Value == go.ObjectId)
                 {
-                    if (kp.Value == go.ObjectId)
+                    Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
+                    if (cfg.DebugOnlyLogAutomarkers == false)
                     {
-                        Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
-                        if (cfg.DebugOnlyLogAutomarkers == false)
-                        {
-                            SoftMarkers[kp.Key] = 0;
-                        }
+                        SoftMarkers[kp.Key] = 0;
                     }
                 }
-                return;
             }
             bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
             if (markfunc == true)
@@ -863,14 +859,14 @@ namespace Lemegeton.Core
             Log(LogLevelEnum.Error, null, "Couldn't clear marker on actor {0}", go);
         }
 
-        internal void PerformMarking(ulong run, string name, AutomarkerSigns.SignEnum sign)
+        internal void PerformMarking(ulong run, string name, AutomarkerSigns.SignEnum sign, bool soft)
         {
-            PerformMarking(run, GetActorByName(name), sign);
+            PerformMarking(run, GetActorByName(name), sign, soft);
         }
 
-        internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign)
+        internal void PerformMarking(ulong run, uint actorId, AutomarkerSigns.SignEnum sign, bool soft)
         {
-            PerformMarking(run, GetActorById(actorId), sign);
+            PerformMarking(run, GetActorById(actorId), sign, soft);
         }
 
         internal bool IsSoftmarkSet(AutomarkerSigns.SignEnum sign)
@@ -878,13 +874,13 @@ namespace Lemegeton.Core
             return ((SoftMarkers.ContainsKey(sign) == false || SoftMarkers[sign] == 0) == false);
         }
 
-        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign)
+        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign, bool soft)
         {
             if (go == null)
             {
                 return;
             }
-            if (cfg.AutomarkerSoft == true)
+            if (soft == true)
             {
                 if (sign == AutomarkerSigns.SignEnum.AttackNext)
                 {

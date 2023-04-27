@@ -44,7 +44,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("Lightning1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Lightning2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -71,7 +71,7 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
                 );
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Lightning1"], _lightningsGo[0].GameObject);
                 ap.Assign(Signs.Roles["Lightning2"], _lightningsGo[1].GameObject);
                 _fired = true;

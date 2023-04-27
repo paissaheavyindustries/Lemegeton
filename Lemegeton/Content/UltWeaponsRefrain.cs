@@ -57,7 +57,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Gaol1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("Gaol2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Gaol3", AutomarkerSigns.SignEnum.Attack3, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -85,7 +85,7 @@ namespace Lemegeton.Content
                     from ix in pty.Members join jx in _gaols on ix.ObjectId equals jx select ix
                 );
                 Prio.SortByPriority(_gaolsGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Gaol1"], _gaolsGo[0].GameObject);
                 ap.Assign(Signs.Roles["Gaol2"], _gaolsGo[1].GameObject);
                 ap.Assign(Signs.Roles["Gaol3"], _gaolsGo[2].GameObject);

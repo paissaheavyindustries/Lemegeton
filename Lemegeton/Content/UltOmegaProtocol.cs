@@ -273,7 +273,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Tower2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Tether1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Tether2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -315,7 +315,7 @@ namespace Lemegeton.Content
                 {
                     case 1:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Tether1"], _thirdGo[0].GameObject);
                             ap.Assign(Signs.Roles["Tether2"], _thirdGo[1].GameObject);
                             ap.Assign(Signs.Roles["Tower1"], _firstGo[0].GameObject);
@@ -325,7 +325,7 @@ namespace Lemegeton.Content
                         break;
                     case 2:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Tether1"], _fourthGo[0].GameObject);
                             ap.Assign(Signs.Roles["Tether2"], _fourthGo[1].GameObject);
                             ap.Assign(Signs.Roles["Tower1"], _secondGo[0].GameObject);
@@ -335,7 +335,7 @@ namespace Lemegeton.Content
                         break;
                     case 3:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Tether1"], _firstGo[0].GameObject);
                             ap.Assign(Signs.Roles["Tether2"], _firstGo[1].GameObject);
                             ap.Assign(Signs.Roles["Tower1"], _thirdGo[0].GameObject);
@@ -345,7 +345,7 @@ namespace Lemegeton.Content
                         break;
                     case 4:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Tether1"], _secondGo[0].GameObject);
                             ap.Assign(Signs.Roles["Tether2"], _secondGo[1].GameObject);
                             ap.Assign(Signs.Roles["Tower1"], _fourthGo[0].GameObject);
@@ -455,7 +455,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Beam2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Missile1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Missile2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -493,7 +493,7 @@ namespace Lemegeton.Content
                 {
                     case 1:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Beam1"], _thirdGo[0].GameObject);
                             ap.Assign(Signs.Roles["Beam2"], _thirdGo[1].GameObject);
                             ap.Assign(Signs.Roles["Missile1"], _firstGo[0].GameObject);
@@ -503,7 +503,7 @@ namespace Lemegeton.Content
                         break;
                     case 2:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Beam1"], _fourthGo[0].GameObject);
                             ap.Assign(Signs.Roles["Beam2"], _fourthGo[1].GameObject);
                             ap.Assign(Signs.Roles["Missile1"], _secondGo[0].GameObject);
@@ -513,7 +513,7 @@ namespace Lemegeton.Content
                         break;
                     case 3:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Beam1"], _firstGo[0].GameObject);
                             ap.Assign(Signs.Roles["Beam2"], _firstGo[1].GameObject);
                             ap.Assign(Signs.Roles["Missile1"], _thirdGo[0].GameObject);
@@ -523,7 +523,7 @@ namespace Lemegeton.Content
                         break;
                     case 4:
                         {
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Beam1"], _secondGo[0].GameObject);
                             ap.Assign(Signs.Roles["Beam2"], _secondGo[1].GameObject);
                             ap.Assign(Signs.Roles["Missile1"], _fourthGo[0].GameObject);
@@ -819,7 +819,7 @@ namespace Lemegeton.Content
                 SetupPresets();
                 Signs.ApplyPreset("BPOG - GPOB");
                 Signs2.ApplyPreset("BPOG - BPOG");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -944,7 +944,7 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_psSquareGo);
                 Prio.SortByPriority(_psCircleGo);
                 Prio.SortByPriority(_psTriangleGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(ams.Roles["CrossL"], _psCrossGo[0].GameObject);
                 ap.Assign(ams.Roles["CrossR"], _psCrossGo[1].GameObject);
                 ap.Assign(ams.Roles["SquareL"], _psSquareGo[0].GameObject);
@@ -999,7 +999,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -1055,7 +1055,7 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_stacksGo);
                 Prio.SortByPriority(_spreadsGo);
                 Prio.SortByPriority(_unmarkedGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Stack1_1"], _stacksGo[0].GameObject);
                 ap.Assign(Signs.Roles["Stack1_2"], _unmarkedGo[0].GameObject);
                 ap.Assign(Signs.Roles["Stack2_1"], _stacksGo[1].GameObject);
@@ -1127,7 +1127,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("None3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("None4", AutomarkerSigns.SignEnum.Attack4, false);
                 Signs.SetRole("None5", AutomarkerSigns.SignEnum.Attack5, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -1172,7 +1172,7 @@ namespace Lemegeton.Content
                 );
                 Prio.SortByPriority(_monitorsGo);
                 Prio.SortByPriority(_unmarkedGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Monitor1"], _monitorsGo[0].GameObject);
                 ap.Assign(Signs.Roles["Monitor2"], _monitorsGo[1].GameObject);
                 ap.Assign(Signs.Roles["Monitor3"], _monitorsGo[2].GameObject);
@@ -1356,7 +1356,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -1391,7 +1391,7 @@ namespace Lemegeton.Content
                 if (_debuffs.Count == 2)
                 {
                     Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
-                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                     ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
                     ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
                     _state.ExecuteAutomarkers(ap, Timing);
@@ -1440,7 +1440,7 @@ namespace Lemegeton.Content
                 };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -1500,7 +1500,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 Party pty = _state.GetPartyMembers();
                 uint distant = _debuffs[StatusDistantWorld];
                 uint near = _debuffs[StatusNearWorld];
@@ -1661,7 +1661,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -1750,7 +1750,7 @@ namespace Lemegeton.Content
                     );
                 }
                 Party pty = _state.GetPartyMembers();
-                AutomarkerPayload ap1 = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap1 = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 List<Party.PartyMember> firstMonitorsSelectionGo = pty.GetByActorIds(firstMonitorsSelection);
                 Prio.SortByPriority(firstMonitorsSelectionGo);
                 ap1.Assign(Signs.Roles["Monitor1"], firstMonitorsSelectionGo[0].GameObject);
@@ -1774,7 +1774,7 @@ namespace Lemegeton.Content
                 _dynamisStacks[theRest1[1]] = _dynamisStacks[theRest1[1]] + 1;
                 _dynamisStacks[theRest1[2]] = _dynamisStacks[theRest1[2]] + 1;
                 _dynamisStacks[theRest1[3]] = _dynamisStacks[theRest1[3]] + 1;
-                AutomarkerPayload ap2 = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap2 = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 var threeStacks = (from ix in _dynamisStacks
                                    where ix.Value == 3
                                    select ix.Key).Take(2).ToList();

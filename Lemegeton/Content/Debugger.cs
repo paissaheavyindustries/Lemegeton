@@ -218,7 +218,7 @@ namespace Lemegeton.Content
                             case 3: // assign on full clear
                             case 5: // reassign/overwrite
                                 {
-                                    _amLastPayload = Signs.TestFunctionality(_state, null, _state.cfg.DefaultAutomarkerTiming, false);
+                                    _amLastPayload = Signs.TestFunctionality(_state, null, _state.cfg.DefaultAutomarkerTiming, false, false);
                                     int sets = 0;
                                     foreach (var ass in _amLastPayload.assignments)
                                     {

@@ -413,6 +413,7 @@
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM", "(P7s) Inviolate Bonds/Purgation automarker");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Enabled", "Enabled");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs", "Marker configuration");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/ShareTarget", "Share target");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/Share1", "Share 1");
@@ -435,6 +436,7 @@
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm", "(P2) Chain Lightning automarker");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning1", "Lightning 1");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning2", "Lightning 2");
@@ -444,6 +446,7 @@
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM", "(P3) Titan gaol automarker");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol1", "Gaol 1");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol2", "Gaol 2");
@@ -455,6 +458,7 @@
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM", "(P2) Meteor automarker");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor1", "Meteor 1");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor2", "Meteor 2");
@@ -469,6 +473,7 @@
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm", "(P5) Chain Lightning automarker");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning1", "Lightning 1");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning2", "Lightning 2");
@@ -476,6 +481,7 @@
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM", "(P6) Wroth Flames automarker");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/LPDU", "LPDU");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -500,6 +506,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM", "(P1) Program Loop automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower1", "Next tower 1");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower2", "Next tower 2");
@@ -510,6 +517,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM", "(P1) Pantokrator automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam1", "Next beam 1");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam2", "Next beam 2");
@@ -526,6 +534,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM", "(P2) Party Synergy automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs", "Marker configuration for Remote Glitch");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GPOB", "BPOG - GPOB");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GOPB", "BPOG - GOPB");
@@ -552,6 +561,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM", "(P3) Transition automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_1", "Stack 1 (marked)");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_2", "Stack 1 (unmarked)");
@@ -566,6 +576,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM", "(P3) Monitor automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor1", "Monitor 1");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor2", "Monitor 2");
@@ -584,6 +595,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM", "(P5) Run: ****mi* (Delta Version) automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -597,6 +609,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM", "(P5) Run: ****mi* (Sigma Version) automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -613,6 +626,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM", "(P5) Run: ****mi* (Omega Version) automarker");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Enabled", "Enabled");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs", "Marker configuration");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor1", "Monitor / Tether 1");

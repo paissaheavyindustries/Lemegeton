@@ -9,12 +9,15 @@ namespace Lemegeton.Core
 
         private State _st;
         public bool markSelfOnly { get; set; } = false;
+        public bool softMarker { get; set; } = false;
+
         public Dictionary<AutomarkerSigns.SignEnum, List<GameObject>> assignments = new Dictionary<AutomarkerSigns.SignEnum, List<GameObject>>();
 
-        public AutomarkerPayload(State st, bool selfOnly)
+        public AutomarkerPayload(State st, bool selfOnly, bool soft)
         {
             _st = st;
             markSelfOnly = selfOnly;
+            softMarker = (_st.cfg.AutomarkerSoft == true || soft == true);
         }
 
         public void Assign(AutomarkerSigns.SignEnum sign, GameObject go)

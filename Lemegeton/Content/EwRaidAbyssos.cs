@@ -67,7 +67,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -185,7 +185,7 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _spreadsGo;
                 Party pty = _state.GetPartyMembers();
                 pm = (from ix in pty.Members where ix.ObjectId == _share1 select ix).First();
-                ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 role = AutomarkerPrio.JobToArchetype(pm.Job);
                 _sharesGo = new List<Party.PartyMember>(
                                 from ix in pty.Members

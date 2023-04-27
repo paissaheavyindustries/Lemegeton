@@ -411,8 +411,9 @@
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos", "万魔殿パンデモニウム零式：煉獄編 (6.2)");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/Enabled", "有効");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM", "(P7s) Inviolate Bonds/Purgation automarker");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Enabled", "Enabled");
+            AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Enabled", "有効");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs", "Marker configuration");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/ShareTarget", "Share target");
             //AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Signs/Share1", "Share 1");
@@ -435,6 +436,7 @@
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm", "(P2) チェインライトニングオートマーカー");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning1", "ライトニング1");
             AddEntry("Content/Ultimate/UltUcob/ChainLightningAm/Signs/Lightning2", "ライトニング2");
@@ -444,6 +446,7 @@
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM", "(P3) タイタンジェイルオートマーカー");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol1", "ジェイル 1");
             AddEntry("Content/Ultimate/UltWeaponsRefrain/GaolAM/Signs/Gaol2", "ジェイル 2");
@@ -455,6 +458,7 @@
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM", "(P2) メテオオートマーカー");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor1", "メテオ 1");
             AddEntry("Content/Ultimate/UltDragonsongReprise/MeteorAM/Signs/Meteor2", "メテオ 2");
@@ -469,6 +473,7 @@
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm", "(P5) チェインライトニングオートマーカー");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning1", "ライトニング 1");
             AddEntry("Content/Ultimate/UltDragonsongReprise/ChainLightningAm/Signs/Lightning2", "ライトニング 2");
@@ -476,6 +481,7 @@
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM", "(P6)邪念の炎オートマーカー");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltDragonsongReprise/WrothAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -506,6 +512,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM", "(P1) サークルプログラムオートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower1", "次の塔踏み 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/ProgramLoopAM/Signs/Tower2", "次の塔踏み 2");
@@ -516,6 +523,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM", "(P1) パントクラトルオートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam1", "次の頭割りビーム 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/PantokratorAM/Signs/Beam2", "次の頭割りビーム 2");
@@ -526,6 +534,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM", "(P2) Party Synergy automarker");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/AsSoftmarker", "Show as client-side soft markers");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs", "Marker configuration for Remote Glitch");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GPOB", "BPOG - GPOB");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GOPB", "BPOG - GOPB");
@@ -552,6 +561,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM", "(P3) フェーズ移行オートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_1", "頭割り 1 (デバフ有り)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3TransitionAM/Signs/Stack1_2", "頭割り 1 (デバフ無し)");
@@ -566,6 +576,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM", "(P3) 検知オートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor1", "検知対象 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P3MonitorAM/Signs/Monitor2", "検知対象 2");
@@ -584,6 +595,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM", "(P5) コード：＊＊＊ミ＊【デルタ】オートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -597,6 +609,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM", "(P5) コード：＊＊＊ミ＊【シグマ】オートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/ElementalDC", "Elemental DC");
@@ -613,6 +626,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM", "(P5) コード：＊＊＊ミ＊【オメガ】オートマーカー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Enabled", "有効");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs", "マーカー設定");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor1", "検知対象 / 線取り 1");

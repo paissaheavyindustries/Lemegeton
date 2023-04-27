@@ -124,7 +124,7 @@ namespace Lemegeton.Core
             }
         }
 
-        internal AutomarkerPayload TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at, bool selfOnly)
+        internal AutomarkerPayload TestFunctionality(State st, AutomarkerPrio amp, AutomarkerTiming at, bool selfOnly, bool soft)
         {            
             Party pty = st.GetPartyMembers();
             if (amp != null)
@@ -141,7 +141,7 @@ namespace Lemegeton.Core
                 st.AssignRandomSelections(pty, Roles.Count);
             }
             int roleId = 1;
-            AutomarkerPayload ap = new AutomarkerPayload(st, selfOnly);
+            AutomarkerPayload ap = new AutomarkerPayload(st, selfOnly, soft);
             foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in Roles)
             {
                 var player = (from px in pty.Members where px.Selection == roleId select px).FirstOrDefault();

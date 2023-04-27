@@ -59,7 +59,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("NonMeteor2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("NonMeteor3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("NonMeteor4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -130,7 +130,7 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_meteorsGo);
                 Prio.SortByPriority(_meteorRoleGo);
                 Prio.SortByPriority(_nonMeteorGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Meteor1"], _meteorsGo[0].GameObject);
                 ap.Assign(Signs.Roles["Meteor2"], _meteorsGo[1].GameObject);
                 ap.Assign(Signs.Roles["MeteorRole1"], _meteorRoleGo[0].GameObject);
@@ -173,7 +173,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("Lightning1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Lightning2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -210,7 +210,7 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _lightningsGo = new List<Party.PartyMember>(
                     from ix in pty.Members join jx in _lightnings on ix.ObjectId equals jx select ix
                 );
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Lightning1"], _lightningsGo[0].GameObject);
                 ap.Assign(Signs.Roles["Lightning2"], _lightningsGo[1].GameObject);
                 _fired = true;
@@ -259,7 +259,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly));
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -340,7 +340,7 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_stacksGo);
                 Prio.SortByPriority(_spreadsGo);
                 Prio.SortByPriority(_unmarkedGo);
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["Stack1_1"], _stacksGo[0].GameObject);
                 ap.Assign(Signs.Roles["Stack1_2"], _unmarkedGo[0].GameObject);
                 ap.Assign(Signs.Roles["Stack2_1"], _stacksGo[1].GameObject);
