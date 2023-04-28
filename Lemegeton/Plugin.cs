@@ -950,7 +950,7 @@ namespace Lemegeton
             ImGuiStylePtr style = ImGui.GetStyle();
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
             int perRow = (int)Math.Floor(maxsize.X / (btnsize.X + margin.X));
-            perRow = Math.Clamp(perRow, 1, items.Count);
+            perRow = Math.Clamp(perRow, 1, items.Count > 0 ? items.Count : 1);
             int itemx = 1, itemy = 1;
             bool isStillDragging = false;
             Vector2 screenpos = ImGui.GetCursorScreenPos();
