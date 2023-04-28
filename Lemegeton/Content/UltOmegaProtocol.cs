@@ -2000,7 +2000,7 @@ namespace Lemegeton.Content
                     {
                         if (_omegaAm.Active == true)
                         {
-                            _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _omegaAm.Timing);
+                            _state.ExecuteAutomarkers(_omegaAm.SecondPayload, _state.cfg.DefaultAutomarkerTiming);
                         }
                         CurrentPhase = PhaseEnum.P5_Omega2nd;
                     }

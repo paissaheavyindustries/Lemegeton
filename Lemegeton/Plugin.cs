@@ -37,6 +37,8 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using static Lemegeton.Core.AutomarkerPrio;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using System.Xml.Linq;
 
 namespace Lemegeton
 {
@@ -74,6 +76,7 @@ namespace Lemegeton
         private DateTime _lemmyShortcutPopped;
         private Rectangle _lastSeen = new Rectangle();
         private List<string> _contribs = new List<string>();
+        private string _newPresetName = "";
 
         private object _dragObject = null;
         private bool _isDragging = false;
@@ -1247,7 +1250,9 @@ namespace Lemegeton
             string proptr = I18n.Translate(path + "/" + pi.Name);
             ImGui.Text(proptr + Environment.NewLine + Environment.NewLine);
             bool manualSetting = true;
-            if (ams.Presets.Count > 0)
+            bool customPreset = false;
+            ContentModule cm = (ContentModule)o;
+            if (ams.Presets.Count > 0 || cm._debugDisplayToggled == true)
             {
                 string manualpr = I18n.Translate("Automarker/ManualPreset");
                 string prval = ams.SelectedPreset;
@@ -1255,7 +1260,19 @@ namespace Lemegeton
                 manualSetting = (ams.SelectedPreset == null);
                 if (prval != null)
                 {
-                    selname = I18n.Translate(path + "/" + pi.Name + "/Presets/" + prval);
+                    AutomarkerSigns.Preset preset = null;
+                    if (ams.SelectedPreset != null)
+                    {
+                        ams.Presets.TryGetValue(ams.SelectedPreset, out preset);
+                    }
+                    if (preset != null && preset.Builtin == false)
+                    {
+                        selname = preset.Name;
+                    }
+                    else
+                    {
+                        selname = I18n.Translate(path + "/" + pi.Name + "/Presets/" + prval);
+                    }
                 }
                 else
                 {
@@ -1268,9 +1285,23 @@ namespace Lemegeton
                     {
                         ams.ApplyPreset(null);
                     }
+                    bool firstCustom = true;
                     foreach(KeyValuePair<string, AutomarkerSigns.Preset> kp in ams.Presets)
                     {
-                        proptr = I18n.Translate(path + "/" + pi.Name + "/Presets/" + kp.Key);
+                        if (kp.Value.Builtin == true)
+                        {
+                            proptr = I18n.Translate(path + "/" + pi.Name + "/Presets/" + kp.Key);
+                        }
+                        else
+                        {
+                            proptr = kp.Key;
+                            if (firstCustom == true)
+                            {
+                                ImGui.Separator();
+                                ImGui.Separator();
+                                firstCustom = false;
+                            }
+                        }
                         if (ImGui.Selectable(proptr, String.Compare(proptr, selname) == 0) == true)
                         {
                             ams.ApplyPreset(kp.Key);
@@ -1278,10 +1309,117 @@ namespace Lemegeton
                     }
                     ImGui.EndCombo();
                 }
-                ImGui.PopItemWidth();
+                ImGui.PopItemWidth();                
+                if (cm._debugDisplayToggled == true)
+                {
+                    AutomarkerSigns.Preset preset = null;
+                    if (ams.SelectedPreset != null)
+                    {
+                        ams.Presets.TryGetValue(ams.SelectedPreset, out preset);
+                    }
+                    bool saveEnabled = preset == null || preset.Builtin == false;
+                    bool trashEnabled = preset != null && preset.Builtin == false;
+                    customPreset = saveEnabled;
+                    ImGui.SameLine();
+                    string ico;
+                    if (saveEnabled == false)
+                    {
+                        ImGui.BeginDisabled();
+                    }
+                    ImGui.PushFont(UiBuilder.IconFont);
+                    ico = FontAwesomeIcon.Save.ToIconString();
+                    string popupname = path + "/" + pi.Name + "/SavePresetPopup";
+                    if (ImGui.Button(ico) == true)
+                    {
+                        if (preset != null)
+                        {
+                            Log(LogLevelEnum.Debug, "Saving old preset {0} for {1}", preset.Name, path);
+                            ams.SavePreset(preset.Name);
+                        }
+                        else
+                        {
+                            _newPresetName = "";
+                            ImGui.OpenPopup(popupname);
+                        }
+                    }
+                    ImGui.PopFont();
+                    if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text(I18n.Translate("Misc/SavePreset"));
+                        ImGui.EndTooltip();
+                    }
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2.0f);
+                    ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                    if (ImGui.BeginPopup(popupname) == true)
+                    {                        
+                        ImGui.Text(I18n.Translate("Misc/SaveNewPresetAs"));
+                        string prename = _newPresetName;
+                        if (ImGui.InputText("##Pn" + popupname, ref prename, 256) == true)
+                        {
+                            _newPresetName = prename;
+                        }
+                        ImGui.SameLine();
+                        bool goodname = _newPresetName.Trim().Length > 0;
+                        ImGui.PushFont(UiBuilder.IconFont);
+                        ico = FontAwesomeIcon.Save.ToIconString();
+                        if (goodname == false)
+                        {
+                            ImGui.BeginDisabled();
+                        }
+                        if (ImGui.Button(ico) == true)
+                        {
+                            string prname = _newPresetName.Trim();
+                            Log(LogLevelEnum.Debug, "Saving new preset {0} for {1}", prname, path);
+                            ams.SavePreset(prname);
+                            ImGui.CloseCurrentPopup();
+                        }
+                        if (goodname == false)
+                        {
+                            ImGui.EndDisabled();
+                        }
+                        ImGui.PopFont();
+                        if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                        {
+                            ImGui.BeginTooltip();
+                            ImGui.Text(I18n.Translate("Misc/SavePreset"));
+                            ImGui.EndTooltip();
+                        }
+                        ImGui.EndPopup();
+                    }
+                    ImGui.PopStyleColor();
+                    ImGui.PopStyleVar();
+                    if (saveEnabled == false)
+                    {
+                        ImGui.EndDisabled();
+                    }
+                    ImGui.SameLine();
+                    if (trashEnabled == false)
+                    {
+                        ImGui.BeginDisabled();
+                    }
+                    ImGui.PushFont(UiBuilder.IconFont);
+                    ico = FontAwesomeIcon.Trash.ToIconString();
+                    if (ImGui.Button(ico) == true)
+                    {
+                        Log(LogLevelEnum.Debug, "Deleting preset {0} from {1}", ams.SelectedPreset, path);
+                        ams.DeletePreset(ams.SelectedPreset);
+                    }
+                    ImGui.PopFont();
+                    if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text(I18n.Translate("Misc/DeletePreset"));
+                        ImGui.EndTooltip();
+                    }
+                    if (trashEnabled == false)
+                    {
+                        ImGui.EndDisabled();
+                    }
+                }
                 ImGui.Text(Environment.NewLine);
             }
-            if (manualSetting == false)
+            if (manualSetting == false && customPreset == false)
             {
                 ImGui.BeginDisabled();
             }
@@ -1334,7 +1472,7 @@ namespace Lemegeton
             ImGui.PopItemWidth();
             ImGui.EndGroup();
             ImGui.SetCursorPos(new Vector2(curPos.X, ImGui.GetCursorPosY() + style.ItemSpacing.Y));
-            if (manualSetting == false)
+            if (manualSetting == false && customPreset == false)
             {
                 ImGui.EndDisabled();
             }

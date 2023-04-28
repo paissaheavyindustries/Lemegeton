@@ -1,9 +1,6 @@
-﻿using Dalamud.Interface;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Lemegeton.Core
 {
@@ -17,6 +14,43 @@ namespace Lemegeton.Core
             public string Name { get; set; } = "New preset";
             public bool Builtin { get; set; } = true;
             public Dictionary<string, SignEnum> Roles { get; set; } = new Dictionary<string, SignEnum>();
+
+            public string Serialize()
+            {
+                List<string> temp = new List<string>();
+                temp.Add(string.Format("Name={0}", Plugin.Base64Encode(Name)));
+                temp.Add(string.Format("Builtin={0}", Builtin));
+                foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in Roles)
+                {
+                    temp.Add(string.Format("{0}={1}", kp.Key, kp.Value.ToString()));
+                }
+                return string.Join(";", temp);
+            }
+
+            public void Deserialize(string data)
+            {
+                string[] temp = data.Split(";");
+                foreach (string t in temp)
+                {
+                    string[] item = t.Split("=", 2);
+                    switch (item[0])
+                    {
+                        case "Name":
+                            Name = Plugin.Base64Decode(item[1]);
+                            break;
+                        case "Builtin":
+                            Builtin = bool.Parse(item[1]);
+                            break;
+                        default:
+                            if (Roles.ContainsKey(item[0]) == true)
+                            {
+                                AutomarkerSigns.SignEnum sign = (AutomarkerSigns.SignEnum)Enum.Parse(typeof(AutomarkerSigns.SignEnum), item[1]);
+                                Roles[item[0]] = sign;
+                            }
+                            break;
+                    }
+                }
+            }
 
         }
 
@@ -87,6 +121,34 @@ namespace Lemegeton.Core
             }
         }
 
+        public void SavePreset(string id)
+        {
+            Preset pr = new Preset() { Builtin = false, Name = id };
+            foreach (KeyValuePair<string, SignEnum> kp in Roles)
+            {
+                pr.Roles[kp.Key] = kp.Value;
+            }
+            AddPreset(pr);
+        }
+
+        public void DeletePreset(string id)
+        {
+            if (Presets.ContainsKey(id) == false)
+            {
+                return;
+            }
+            Preset pr = Presets[id];
+            if (pr.Builtin == true)
+            {
+                return;
+            }
+            if (SelectedPreset == id)
+            {
+                ApplyPreset(null);
+            }
+            Presets.Remove(id);
+        }
+
         public string Serialize()
         {
             List<string> temp = new List<string>();
@@ -96,7 +158,15 @@ namespace Lemegeton.Core
                 temp.Add(string.Format("{0}={1}", kp.Key, kp.Value.ToString()));
             }
             List<Preset> userpresets = (from ix in Presets.Values where ix.Builtin == false select ix).ToList();
-            // todo serialize user presets
+            List<string> prser = new List<string>();
+            foreach (Preset pr in userpresets)
+            {
+                prser.Add(pr.Serialize());
+            }
+            if (prser.Count > 0)
+            {
+                temp.Add(string.Format("UserPresets={0}", Plugin.Base64Encode(string.Join("|", prser))));
+            }
             return string.Join(";", temp);
         }
 
@@ -104,14 +174,18 @@ namespace Lemegeton.Core
         {
             string[] items = data.Split(";");
             ApplyPreset(null);
-            // todo deserialize user presets
+            string applyPreset = null;
+            string userPresetBlob = null;
             foreach (string item in items)
             {
-                string[] kp = item.Split("=");
+                string[] kp = item.Split("=", 2);
                 if (kp[0] == "SelectedPreset" && kp[1] != "")
                 {
-                    ApplyPreset(kp[1]);
-                    return;
+                    applyPreset = kp[1];
+                }
+                else if (kp[0] == "UserPresets" && kp[1] != "")
+                {
+                    userPresetBlob = kp[1];
                 }
                 else
                 {
@@ -121,6 +195,25 @@ namespace Lemegeton.Core
                         SetRole(kp[0], sign, false);                        
                     }
                 }
+            }
+            if (userPresetBlob != null)
+            {
+                string prser = Plugin.Base64Decode(userPresetBlob);
+                string[] prs = prser.Split("|");
+                foreach (string pr in prs)
+                {
+                    Preset preset = new Preset();
+                    foreach (KeyValuePair<string, AutomarkerSigns.SignEnum> kp in Roles)
+                    {
+                        preset.Roles[kp.Key] = SignEnum.None;
+                    }
+                    preset.Deserialize(pr);
+                    AddPreset(preset);
+                }
+            }
+            if (applyPreset != null)
+            {
+                ApplyPreset(applyPreset);
             }
         }
 

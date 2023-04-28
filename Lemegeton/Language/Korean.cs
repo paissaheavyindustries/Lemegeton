@@ -76,6 +76,9 @@
             //AddEntry("ObjectKind/Ornament", "Ornament");
             //AddEntry("Misc/None", "(none)");
             //AddEntry("Misc/HQ", "HQ");
+            //AddEntry("Misc/SavePreset", "Save preset");
+            //AddEntry("Misc/SaveNewPresetAs", "Save new preset as..");
+            //AddEntry("Misc/DeletePreset", "Delete preset");
             //AddEntry("Misc/OpenShortcut", "Open Lemegeton");
             //AddEntry("Misc/ShowAdvancedOptions", "Show advanced options");
             //AddEntry("Misc/HideAdvancedOptions", "Hide advanced options");

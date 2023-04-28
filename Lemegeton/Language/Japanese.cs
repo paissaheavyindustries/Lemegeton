@@ -76,6 +76,9 @@
             AddEntry("ObjectKind/Ornament", "オーナメント");
             AddEntry("Misc/None", "(none)");
             AddEntry("Misc/HQ", "HQ");
+            //AddEntry("Misc/SavePreset", "Save preset");
+            //AddEntry("Misc/SaveNewPresetAs", "Save new preset as..");
+            //AddEntry("Misc/DeletePreset", "Delete preset");
             AddEntry("Misc/OpenShortcut", "レメゲトンを開く");
             AddEntry("Misc/ShowAdvancedOptions", "詳細なオプションを表示する");
             AddEntry("Misc/HideAdvancedOptions", "詳細なオプションを非表示にする");
