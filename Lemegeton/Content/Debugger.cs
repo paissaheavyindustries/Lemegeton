@@ -250,7 +250,24 @@ namespace Lemegeton.Content
                         AutomarkerSigns.SignEnum expectedSign = kp.Key;
                         foreach (GameObject expectedActor in kp.Value)
                         {
-                            bool ret = _state.GetCurrentMarker(expectedActor.ObjectId, out AutomarkerSigns.SignEnum currentSign);
+                            bool ret;
+                            AutomarkerSigns.SignEnum currentSign;
+                            if (_state.cfg.AutomarkerSoft == true)
+                            {
+                                ret = true;
+                                currentSign = AutomarkerSigns.SignEnum.None;
+                                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp2 in _state.SoftMarkers)
+                                {
+                                    if (kp2.Value == expectedActor.ObjectId)
+                                    {
+                                        currentSign = kp2.Key;
+                                    }
+                                }
+                            }
+                            else
+                            { 
+                                ret = _state.GetCurrentMarker(expectedActor.ObjectId, out currentSign);
+                            }
                             if (ret == false)
                             {
                                 Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActor);

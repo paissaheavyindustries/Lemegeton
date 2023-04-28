@@ -675,6 +675,11 @@ namespace Lemegeton.Core
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
             Task first = null, prev = null, tx = null;
+            if (cfg.QuickToggleAutomarkers == false)
+            {
+                Log(LogLevelEnum.Debug, null, "Automarkers disabled globally");
+                return;
+            }
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<GameObject>> kp in ap.assignments)
             {
@@ -781,7 +786,7 @@ namespace Lemegeton.Core
 
         internal void ClearMarkerOn(GameObject go)
         {
-            if (go == null)
+            if (go == null || cfg.QuickToggleAutomarkers == false)
             {
                 return;
             }
@@ -876,7 +881,7 @@ namespace Lemegeton.Core
 
         internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign, bool soft)
         {
-            if (go == null)
+            if (go == null || cfg.QuickToggleAutomarkers == false)
             {
                 return;
             }
@@ -918,7 +923,11 @@ namespace Lemegeton.Core
                         }
                     }
                     Log(LogLevelEnum.Debug, null, "Assigning soft mark {0} on actor {1}", sign, go);
-                    SoftMarkers[sign] = go.ObjectId;
+                    cfg.AutomarkersServed++;
+                    if (cfg.DebugOnlyLogAutomarkers == false)
+                    {
+                        SoftMarkers[sign] = go.ObjectId;
+                    }
                 }
                 return;
             }
@@ -941,6 +950,7 @@ namespace Lemegeton.Core
                 if (markfunc == true)
                 {
                     Log(LogLevelEnum.Debug, null, "Using function pointer to assign mark {0} on actor {1}", sign, go);
+                    cfg.AutomarkersServed++;
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
                         DeferredInvoke di = new DeferredInvoke()
@@ -1005,33 +1015,6 @@ namespace Lemegeton.Core
                 }
             }
             Log(LogLevelEnum.Error, null, "Couldn't mark actor {0} with {1}", go, sign);
-        }
-
-        internal void PerformSoftMarking(uint actorId, AutomarkerSigns.SignEnum sign)
-        {
-            AutomarkerSigns.SignEnum prev = AutomarkerSigns.SignEnum.None;
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
-            {
-                if (kp.Value == actorId)
-                {
-                    prev = kp.Key;
-                    Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from actor {1:X}", kp.Key, kp.Value);
-                    if (cfg.DebugOnlyLogAutomarkers == false)
-                    {
-                        SoftMarkers[kp.Key] = 0;
-                    }
-                }
-            }
-            if (sign == AutomarkerSigns.SignEnum.None || sign == prev)
-            {
-                return;
-            }
-            Log(LogLevelEnum.Debug, null, "Using soft marking to mark actor {0:X} with {1}", actorId, sign);
-            cfg.AutomarkersServed++;
-            if (cfg.DebugOnlyLogAutomarkers == false)
-            {
-                SoftMarkers[sign] = actorId;
-            }
         }
 
         internal unsafe bool GetCurrentMarker(uint actorId, out AutomarkerSigns.SignEnum marker)
