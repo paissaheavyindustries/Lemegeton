@@ -184,6 +184,14 @@
             AddEntry("MainMenu/Settings/AutomarkersInitialApplicationDelay", "マーカー初期付与までの遅延時間(指定範囲内でランダム)");
             AddEntry("MainMenu/Settings/AutomarkersSubsequentApplicationDelay", "マーカーの付与間隔(指定範囲内のランダムな間隔)");
             AddEntry("MainMenu/Settings/AutomarkerSeconds", "秒");
+            //AddEntry("MainMenu/Settings/SoftmarkerSettings", "Softmarker customization");
+            //AddEntry("MainMenu/Settings/SoftmarkerPreviewActive", "While this menu is open, a softmarker preview that rotates through some of the possible markers will be displayed on your character. No other softmarkers will be displayed at this time.");
+            //AddEntry("MainMenu/Settings/SoftmarkerTint", "Marker tint");
+            //AddEntry("MainMenu/Settings/SoftmarkerBounce", "Bouncing markers");
+            //AddEntry("MainMenu/Settings/SoftmarkerBlink", "Blinking markers");
+            //AddEntry("MainMenu/Settings/SoftmarkerScaling", "Marker scaling factor");
+            //AddEntry("MainMenu/Settings/SoftmarkerOffsetWorld", "Marker offset in world coordinates");
+            //AddEntry("MainMenu/Settings/SoftmarkerOffsetScreen", "Marker offset in screen coordinates");
             AddEntry("MainMenu/Settings/OpcodeSettings", "オペコードの設定");
             AddEntry("MainMenu/Settings/LogUnhandledOpcodes", "未処理のオペコードをログに記録する");
             AddEntry("MainMenu/Settings/OpcodeUrl", "オペコードURL");

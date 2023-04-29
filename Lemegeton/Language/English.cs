@@ -184,6 +184,14 @@
             AddEntry("MainMenu/Settings/AutomarkersInitialApplicationDelay", "Delay to initial marker application (random within specified range)");
             AddEntry("MainMenu/Settings/AutomarkersSubsequentApplicationDelay", "Delay between subsequent marker applications (random within specified range)");
             AddEntry("MainMenu/Settings/AutomarkerSeconds", "second(s)");
+            AddEntry("MainMenu/Settings/SoftmarkerSettings", "Softmarker customization");
+            AddEntry("MainMenu/Settings/SoftmarkerPreviewActive", "While this menu is open, a softmarker preview that rotates through some of the possible markers will be displayed on your character. No other softmarkers will be displayed at this time.");
+            AddEntry("MainMenu/Settings/SoftmarkerTint", "Marker tint");
+            AddEntry("MainMenu/Settings/SoftmarkerBounce", "Bouncing markers");
+            AddEntry("MainMenu/Settings/SoftmarkerBlink", "Blinking markers");
+            AddEntry("MainMenu/Settings/SoftmarkerScaling", "Marker scaling factor");
+            AddEntry("MainMenu/Settings/SoftmarkerOffsetWorld", "Marker offset in world coordinates");
+            AddEntry("MainMenu/Settings/SoftmarkerOffsetScreen", "Marker offset in screen coordinates");
             AddEntry("MainMenu/Settings/OpcodeSettings", "Opcode settings");
             AddEntry("MainMenu/Settings/LogUnhandledOpcodes", "Log unhandled opcodes");
             AddEntry("MainMenu/Settings/OpcodeUrl", "Opcode URL");

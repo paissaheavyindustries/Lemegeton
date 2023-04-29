@@ -118,6 +118,7 @@ namespace Lemegeton.Core
         internal Framework fw { get; init; }
         internal SigScanner ss { get; init; }
         internal PartyList pl { get; init; }
+        internal TargetManager tm { get; init; }
 
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
@@ -272,9 +273,18 @@ namespace Lemegeton.Core
             _sig = new SigLocator(this);
             _dec = new NetworkDecoder(this);
             cd.ConditionChange += Cd_ConditionChange;
+            List<string> halp = new List<string>();
+            halp.Add("Open Lemegeton configuration");
+            halp.Add("/lemmy clear → Force clear all markers");
+            halp.Add("/lemmy mark <sign> <target> → Places a softmarker; follows the same arguments as the ingame /mk command");
+#if !SANS_GOETIA
+            halp.Add("/lemmy <feature> <on|off> → Turn feature on/off, where feature can be: automarkers, drawing, sound, hacks, automation, softmarkers");
+#else
+            halp.Add("/lemmy <feature> <on|off> → Turn feature on/off, where feature can be: automarkers, drawing, sound, softmarkers");
+#endif
             cm.AddHandler("/lemmy", new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open Lemegeton configuration\n/lemmy clear → Force clear all markers",
+                HelpMessage = string.Join("\n", halp),
             });
             cs.TerritoryChanged += Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
@@ -336,9 +346,110 @@ namespace Lemegeton.Core
 
         private void OnCommand(string command, string args)
         {
-            if (args.Contains("clear") == true)
+            string[] argsa = args.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (argsa.Count() > 0)
             {
-                ClearAutoMarkers();
+                if (String.Compare(argsa[0], "clear", true) == 0)
+                {
+                    ClearAutoMarkers();
+                }
+                else if (String.Compare(argsa[0], "automarkers", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.QuickToggleAutomarkers = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.QuickToggleAutomarkers = false;
+                        }
+                    }
+                }
+                else if (String.Compare(argsa[0], "drawing", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.QuickToggleOverlays = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.QuickToggleOverlays = false;
+                        }
+                    }
+                }
+                else if (String.Compare(argsa[0], "sound", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.QuickToggleSound = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.QuickToggleSound = false;
+                        }
+                    }
+                }
+                else if (String.Compare(argsa[0], "mark", true) == 0)
+                {
+                    if (argsa.Count() > 2)
+                    {
+                        PerformMarkingThroughCommand(argsa[1], argsa[2]);
+                    }
+                    else if (argsa.Count() > 1)
+                    {
+                        PerformMarkingThroughCommand(argsa[1], "<t>");
+                    }
+                }
+#if !SANS_GOETIA
+                else if (String.Compare(argsa[0], "hacks", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.QuickToggleHacks = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.QuickToggleHacks = false;
+                        }
+                    }
+                }
+                else if (String.Compare(argsa[0], "automation", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.QuickToggleAutomarkers = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.QuickToggleAutomarkers = false;
+                        }
+                    }
+                }
+#endif
+                else if (String.Compare(argsa[0], "softmarkers", true) == 0)
+                {
+                    if (argsa.Count() > 1)
+                    {
+                        if (String.Compare(argsa[1], "on", true) == 0)
+                        {
+                            cfg.AutomarkerSoft = true;
+                        }
+                        else if (String.Compare(argsa[1], "off", true) == 0)
+                        {
+                            cfg.AutomarkerSoft = false;
+                        }
+                    }
+                }
             }
             else
             {
@@ -668,16 +779,21 @@ namespace Lemegeton.Core
             Party pty = GetPartyMembers();
             foreach (Party.PartyMember pm in pty.Members)
             {
-                ClearMarkerOn(pm.GameObject);
+                ClearMarkerOn(pm.GameObject, true, true);
             }
         }
 
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
             Task first = null, prev = null, tx = null;
-            if (cfg.QuickToggleAutomarkers == false)
+            if (cfg.QuickToggleAutomarkers == false && ap.softMarker == false)
             {
-                Log(LogLevelEnum.Debug, null, "Automarkers disabled globally");
+                Log(LogLevelEnum.Debug, null, "Hard automarkers disabled");
+                return;
+            }
+            if (cfg.QuickToggleOverlays == false && ap.softMarker == true)
+            {
+                Log(LogLevelEnum.Debug, null, "Soft automarkers disabled");
                 return;
             }
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
@@ -713,6 +829,95 @@ namespace Lemegeton.Core
             {
                 first.Start();
             }
+        }
+
+        internal GameObject ParsePlaceholder(string target)
+        {
+            switch (target.ToLower())
+            {
+                case "<0>":
+                case "<me>": { return cs.LocalPlayer; }
+                case "<1>": { Party pty = GetPartyMembers(); return pty.GetByIndex(1)?.GameObject; }
+                case "<2>": { Party pty = GetPartyMembers(); return pty.GetByIndex(2)?.GameObject; }
+                case "<3>": { Party pty = GetPartyMembers(); return pty.GetByIndex(3)?.GameObject; }
+                case "<4>": { Party pty = GetPartyMembers(); return pty.GetByIndex(4)?.GameObject; }
+                case "<5>": { Party pty = GetPartyMembers(); return pty.GetByIndex(5)?.GameObject; }
+                case "<6>": { Party pty = GetPartyMembers(); return pty.GetByIndex(6)?.GameObject; }
+                case "<7>": { Party pty = GetPartyMembers(); return pty.GetByIndex(7)?.GameObject; }
+                case "<8>": { Party pty = GetPartyMembers(); return pty.GetByIndex(8)?.GameObject; }
+                case "<target>":
+                case "<t>": { return cs.LocalPlayer.TargetObject; }
+                case "<tt>":
+                case "<t2t>": { return cs.LocalPlayer.TargetObject?.TargetObject; }
+                case "<attack1>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack1);  }
+                case "<attack2>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack2); }
+                case "<attack3>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack3); }
+                case "<attack4>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack4); }
+                case "<attack5>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack5); }
+                case "<bind1>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Bind1); }
+                case "<bind2>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Bind2); }
+                case "<bind3>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Bind3); }
+                case "<stop1>":
+                case "<ignore1>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Ignore1); }
+                case "<stop2>":
+                case "<ignore2>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Ignore2); }
+                case "<circle>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Circle); }
+                case "<square>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Square); }
+                case "<plus>":
+                case "<cross>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Plus); }
+                case "<triangle>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Triangle); }
+                case "<mo>":
+                case "<mouse>": { return tm.MouseOverTarget; }
+                case "<f>":
+                case "<focus>": { return tm.FocusTarget; }
+            }
+            return null;
+        }
+
+        internal void PerformMarkingThroughCommand(string mark, string target)
+        {
+            AutomarkerSigns.SignEnum sign = AutomarkerSigns.SignEnum.None;
+            switch (mark.ToLower())
+            {
+                case "attack1": sign = AutomarkerSigns.SignEnum.Attack1; break;
+                case "attack2": sign = AutomarkerSigns.SignEnum.Attack2; break;
+                case "attack3": sign = AutomarkerSigns.SignEnum.Attack3; break;
+                case "attack4": sign = AutomarkerSigns.SignEnum.Attack4; break;
+                case "attack5": sign = AutomarkerSigns.SignEnum.Attack5; break;
+                case "bind1": sign = AutomarkerSigns.SignEnum.Bind1; break;
+                case "bind2": sign = AutomarkerSigns.SignEnum.Bind2; break;
+                case "bind3": sign = AutomarkerSigns.SignEnum.Bind3; break;
+                case "stop1":
+                case "stop2":
+                case "ignore1": sign = AutomarkerSigns.SignEnum.Ignore1; break;
+                case "ignore2": sign = AutomarkerSigns.SignEnum.Ignore2; break;
+                case "attack": sign = AutomarkerSigns.SignEnum.AttackNext; break;
+                case "bind": sign = AutomarkerSigns.SignEnum.BindNext; break;
+                case "stop":
+                case "ignore": sign = AutomarkerSigns.SignEnum.IgnoreNext; break;
+                case "circle": sign = AutomarkerSigns.SignEnum.Circle; break;
+                case "plus":
+                case "cross": sign = AutomarkerSigns.SignEnum.Plus; break;
+                case "square": sign = AutomarkerSigns.SignEnum.Square; break;
+                case "triangle": sign = AutomarkerSigns.SignEnum.Triangle; break;
+                case "off":
+                case "clear":
+                    GameObject goc = ParsePlaceholder(target);
+                    if (goc != null)
+                    {
+                        ClearMarkerOn(goc, false, true);
+                    }
+                    break;
+            }
+            if (sign == AutomarkerSigns.SignEnum.None)
+            {
+                return;
+            }
+            GameObject go = ParsePlaceholder(target);
+            if (go != null)
+            {
+                PerformMarking(0, go, sign, true);
+            }            
         }
 
         internal unsafe Party GetPartyMembers()
@@ -774,32 +979,39 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void ClearMarkerOn(string name)
+        internal void ClearMarkerOn(string name, bool hard, bool soft)
         {
-            ClearMarkerOn(GetActorByName(name));
+            ClearMarkerOn(GetActorByName(name), hard, soft);
         }
 
-        internal void ClearMarkerOn(uint actorId)
+        internal void ClearMarkerOn(uint actorId, bool hard, bool soft)
         {
-            ClearMarkerOn(GetActorById(actorId));
+            ClearMarkerOn(GetActorById(actorId), hard, soft);
         }
 
-        internal void ClearMarkerOn(GameObject go)
+        internal void ClearMarkerOn(GameObject go, bool hard, bool soft)
         {
-            if (go == null || cfg.QuickToggleAutomarkers == false)
+            if (go == null)
             {
                 return;
             }
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+            if (soft == true)
             {
-                if (kp.Value == go.ObjectId)
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
                 {
-                    Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
-                    if (cfg.DebugOnlyLogAutomarkers == false)
+                    if (kp.Value == go.ObjectId)
                     {
-                        SoftMarkers[kp.Key] = 0;
+                        Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
+                        if (cfg.DebugOnlyLogAutomarkers == false)
+                        {
+                            SoftMarkers[kp.Key] = 0;
+                        }
                     }
                 }
+            }
+            if (hard == false || cfg.QuickToggleAutomarkers == false)
+            {
+                return;
             }
             bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
             if (markfunc == true)
@@ -879,9 +1091,18 @@ namespace Lemegeton.Core
             return ((SoftMarkers.ContainsKey(sign) == false || SoftMarkers[sign] == 0) == false);
         }
 
+        internal GameObject GetSoftmarkHolder(AutomarkerSigns.SignEnum sign)
+        {
+            if (SoftMarkers.TryGetValue(sign, out uint actorId) == false)
+            {
+                return null;
+            }
+            return actorId > 0 ? GetActorById(actorId) : null;
+        }
+
         internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign, bool soft)
         {
-            if (go == null || cfg.QuickToggleAutomarkers == false)
+            if (go == null || (cfg.QuickToggleAutomarkers == false && soft == false) || (cfg.QuickToggleOverlays == false && soft == true))
             {
                 return;
             }
@@ -935,7 +1156,7 @@ namespace Lemegeton.Core
             if (GetCurrentMarker(go.ObjectId, out AutomarkerSigns.SignEnum marker) == false)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't determine marker on actor {0}, clearing marker first", go);
-                ClearMarkerOn(go);
+                ClearMarkerOn(go, true, false);
                 marker = AutomarkerSigns.SignEnum.None;
                 cleared = true;
             }

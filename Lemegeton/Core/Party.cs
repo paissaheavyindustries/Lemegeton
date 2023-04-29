@@ -54,6 +54,18 @@ namespace Lemegeton.Core
 
         public List<PartyMember> Members { get; set; } = new List<PartyMember>();
 
+        public PartyMember GetByIndex(int index)
+        {
+            foreach (PartyMember pm in Members)
+            {
+                if (pm.Index == index)
+                {
+                    return pm;
+                }
+            }
+            return null;
+        }
+
         public PartyMember GetByActorId(uint actorId)
         {
             foreach (PartyMember pm in Members)

@@ -1,4 +1,5 @@
 ﻿using Dalamud.Configuration;
+using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace Lemegeton.Core
 {
@@ -32,6 +33,16 @@ namespace Lemegeton.Core
         public int AutomarkersServed { get; set; } = 0;
         public bool RemoveMarkersAfterCombatEnd { get; set; } = true;
         public bool RemoveMarkersAfterWipe { get; set; } = true;
+
+        public Vector4 SoftmarkerTint { get; set; } = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+        public bool SoftmarkerBounce { get; set; } = true;
+        public bool SoftmarkerBlink { get; set; } = false;
+        public float SoftmarkerScale { get; set; } = 1.0f;
+        public float SoftmarkerOffsetWorldX { get; set; } = 0.0f;
+        public float SoftmarkerOffsetWorldY { get; set; } = 2.0f;
+        public float SoftmarkerOffsetWorldZ { get; set; } = 0.0f;
+        public float SoftmarkerOffsetScreenX { get; set; } = 0.0f;
+        public float SoftmarkerOffsetScreenY { get; set; } = 0.0f;
 
         public bool DebugOnlyLogAutomarkers { get; set; } = false;
 

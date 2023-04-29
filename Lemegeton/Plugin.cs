@@ -37,8 +37,6 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using static Lemegeton.Core.AutomarkerPrio;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using System.Xml.Linq;
 
 namespace Lemegeton
 {
@@ -51,6 +49,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
+        public string Version = "v1.0.0.11";
 
         private State _state = new State();
         private Thread _mainThread = null;
@@ -59,6 +58,7 @@ namespace Lemegeton
         private float _adjusterX = 0.0f;
         private DateTime _loaded = DateTime.Now;
         private bool _aboutProg = false;
+        private bool _softMarkerPreview = false;
         private DateTime _aboutOpened;
         private Dictionary<Delegate, string[]> _delDebugInput = new Dictionary<Delegate, string[]>();
 
@@ -111,7 +111,8 @@ namespace Lemegeton
             [RequiredVersion("1.0")] Condition condition,
             [RequiredVersion("1.0")] Framework framework,
             [RequiredVersion("1.0")] SigScanner sigScanner,
-            [RequiredVersion("1.0")] PartyList partylist
+            [RequiredVersion("1.0")] PartyList partylist,
+            [RequiredVersion("1.0")] TargetManager targetManager
         )
         {
             _state = new State()
@@ -128,8 +129,9 @@ namespace Lemegeton
                 fw = framework,
                 ss = sigScanner,
                 pl = partylist,
+                tm = targetManager,
                 plug = this
-            };
+            };            
             LoadConfig();
             InitializeContent();
             _state.Initialize();
@@ -1764,6 +1766,7 @@ namespace Lemegeton
         private void DrawUI()
         {
             _state.TrackObjects();
+            _softMarkerPreview = false;
             DrawConfig();
             DrawContent();
             DrawSoftmarkers();
@@ -1792,35 +1795,87 @@ namespace Lemegeton
             }
         }
 
+        private void DrawSoftmarkerOn(AutomarkerSigns.SignEnum sign, uint actorId)
+        {
+            if (actorId == 0 || sign == AutomarkerSigns.SignEnum.None)
+            {
+                return;
+            }
+            GameObject go = _state.GetActorById(actorId);
+            if (go == null)
+            {
+                return;
+            }
+            if (_state.StartDrawing(out ImDrawListPtr draw) == false)
+            {
+                return;
+            }
+            float mul = (float)Math.Abs(Math.Cos(DateTime.Now.Millisecond / 1000.0f * Math.PI));
+            Vector3 temp = TranslateToScreen(
+                go.Position.X + _state.cfg.SoftmarkerOffsetWorldX, 
+                go.Position.Y + _state.cfg.SoftmarkerOffsetWorldY + (_state.cfg.SoftmarkerBounce == true ? (0.5f * mul * _state.cfg.SoftmarkerScale) : 0.0f), 
+                go.Position.Z + _state.cfg.SoftmarkerOffsetWorldZ
+            );
+            Vector2 pt = new Vector2(
+                temp.X + _state.cfg.SoftmarkerOffsetScreenX, 
+                temp.Y + _state.cfg.SoftmarkerOffsetScreenY
+            );
+            TextureWrap tw = _signs[sign];
+            float calcWidth = tw.Width * 2.0f * _state.cfg.SoftmarkerScale;
+            float calcHeight = tw.Height * 2.0f * _state.cfg.SoftmarkerScale;
+            pt.X -= calcWidth / 2.0f;
+            pt.Y -= calcHeight;
+            ImGui.SetCursorPos(pt);
+            draw.AddImage(
+                tw.ImGuiHandle, 
+                new Vector2(pt.X, pt.Y), 
+                new Vector2(pt.X + calcWidth, pt.Y + calcHeight),
+                new Vector2(0.0f, 0.0f),
+                new Vector2(1.0f, 1.0f),
+                ImGui.GetColorU32(new Vector4(
+                    _state.cfg.SoftmarkerTint.X,
+                    _state.cfg.SoftmarkerTint.Y,
+                    _state.cfg.SoftmarkerTint.Z,
+                    _state.cfg.SoftmarkerTint.W * (_state.cfg.SoftmarkerBlink == true ? (1.0f * mul) : 1.0f)
+                ))
+            );
+        }
+
         private void DrawSoftmarkers()
         {
-            ImDrawListPtr draw;
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in _state.SoftMarkers)
+            if (_state.cfg.QuickToggleOverlays == false)
             {
-                if (kp.Value == 0)
+                return;
+            }
+            if (_softMarkerPreview == true)
+            {
+                AutomarkerSigns.SignEnum sign;
+                int num = (int)Math.Ceiling((DateTime.Now - _loaded).TotalSeconds % 8);
+                if (num >= 0 && num <= 2)
                 {
-                    continue;
+                    sign = AutomarkerSigns.SignEnum.Attack1;
                 }
-                GameObject go = _state.GetActorById(kp.Value);
-                if (go == null)
+                else if (num > 2 && num <= 4)
                 {
-                    continue;
+                    sign = AutomarkerSigns.SignEnum.Ignore1;
                 }
-                if (_state.StartDrawing(out draw) == false)
+                else if (num > 4 && num <= 6)
                 {
-                    return;
+                    sign = AutomarkerSigns.SignEnum.Bind1;
                 }
-                Vector3 temp = TranslateToScreen(go.Position.X, go.Position.Y + 2.0f, go.Position.Z);
-                Vector2 pt = new Vector2(temp.X, temp.Y);
-                TextureWrap tw = _signs[kp.Key];
-                float mul = (float)Math.Abs(Math.Cos(DateTime.Now.Millisecond / 1000.0f * Math.PI));
-                float calcWidth = tw.Width * 2.0f;
-                float calcHeight = tw.Height * 2.0f;
-                pt.X -= calcWidth / 2.0f;
-                pt.Y -= (calcHeight + (calcHeight * mul)) / 2.0f;
-                ImGui.SetCursorPos(pt);
-                draw.AddImage(tw.ImGuiHandle, new Vector2(pt.X, pt.Y), new Vector2(pt.X + calcWidth, pt.Y + calcHeight));
-            }            
+                else 
+                {
+                    sign = AutomarkerSigns.SignEnum.Plus;
+                }
+                DrawSoftmarkerOn(sign, _state.cs.LocalPlayer.ObjectId);
+            }
+            else
+            {
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in _state.SoftMarkers)
+                {
+                    DrawSoftmarkerOn(kp.Key, kp.Value);
+                }
+            }
         }
 
         private bool _movingShortcut = false;
@@ -2132,6 +2187,65 @@ namespace Lemegeton
                     {
                         _state.cfg.AutomarkerSoft = autoSoft;
                     }
+                    if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/SoftmarkerSettings")) == true)
+                    {
+                        _softMarkerPreview = true;
+                        ImGui.PushID("SoftmarkerSettings");
+                        ImGui.Indent(30.0f);
+                        ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/SoftmarkerPreviewActive") + Environment.NewLine + Environment.NewLine);
+                        Vector4 smcolor = _state.cfg.SoftmarkerTint;
+                        if (ImGui.ColorEdit4(I18n.Translate("MainMenu/Settings/SoftmarkerTint"), ref smcolor, ImGuiColorEditFlags.NoInputs) == true)
+                        {
+                            _state.cfg.SoftmarkerTint = smcolor;
+                        }
+                        bool smbounce = _state.cfg.SoftmarkerBounce;
+                        if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBounce"), ref smbounce) == true)
+                        {
+                            _state.cfg.SoftmarkerBounce = smbounce;
+                        }
+                        bool smblink = _state.cfg.SoftmarkerBlink;
+                        if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBlink"), ref smblink) == true)
+                        {
+                            _state.cfg.SoftmarkerBlink = smblink;
+                        }
+                        ImGui.PushItemWidth(200.0f);
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerScaling"));
+                        float smscale = _state.cfg.SoftmarkerScale * 100.0f;
+                        if (ImGui.DragFloat("%##SmTint", ref smscale, 1.0f, 50.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerScale = smscale / 100.0f;
+                        }
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetWorld"));
+                        float smofsworldx = _state.cfg.SoftmarkerOffsetWorldX;
+                        if (ImGui.DragFloat("X##SmWorldX", ref smofsworldx, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerOffsetWorldX = smofsworldx;
+                        }
+                        float smofsworldy = _state.cfg.SoftmarkerOffsetWorldY;
+                        if (ImGui.DragFloat("Y##SmWorldY", ref smofsworldy, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerOffsetWorldY = smofsworldy;
+                        }
+                        float smofsworldz = _state.cfg.SoftmarkerOffsetWorldZ;
+                        if (ImGui.DragFloat("Z##SmWorldZ", ref smofsworldz, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerOffsetWorldZ = smofsworldz;
+                        }
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetScreen"));
+                        float smofsscreenx = _state.cfg.SoftmarkerOffsetScreenX;
+                        if (ImGui.DragFloat("X##SmScreenX", ref smofsscreenx, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerOffsetScreenX = smofsscreenx;
+                        }
+                        float smofsscreeny = _state.cfg.SoftmarkerOffsetScreenY;
+                        if (ImGui.DragFloat("Y##SmScreenY", ref smofsscreeny, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _state.cfg.SoftmarkerOffsetScreenY = smofsscreeny;
+                        }
+                        ImGui.PopItemWidth();
+                        ImGui.Unindent(30.0f);
+                        ImGui.PopID();
+                    }
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
                 }
@@ -2407,7 +2521,7 @@ namespace Lemegeton
             Vector2 fp = ImGui.GetCursorPos();
             ImGui.SetCursorPosY(fp.Y + 2);
             ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui.Text(_state.GameVersion);
+            ImGui.Text(Version + " - " + _state.GameVersion);
             ImGui.PopStyleColor();
             ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));

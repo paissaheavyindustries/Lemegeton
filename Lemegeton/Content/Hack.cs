@@ -19,7 +19,7 @@ namespace Lemegeton.Content
         public class Teleporter : Core.ContentItem
         {
 
-            public override FeaturesEnum Features => FeaturesEnum.Drawing | FeaturesEnum.Hack;
+            public override FeaturesEnum Features => FeaturesEnum.Hack;
 
             [AttributeOrderNumber(1000)]
             public Action GetCurrent { get; set; }
@@ -53,10 +53,6 @@ namespace Lemegeton.Content
             protected override bool ExecutionImplementation()
             {
                 ImDrawListPtr draw;
-                if (_state.StartDrawing(out draw) == false)
-                {
-                    return false;
-                }
                 uint myid = _state.cs.LocalPlayer.ObjectId;
                 int plys = 0;
                 foreach (GameObject go in _state.ot)
@@ -67,6 +63,10 @@ namespace Lemegeton.Content
                     }
                 }
                 PlayersNearby = plys;
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
                 Vector3 v1, v2, temp = new Vector3(X, Y, Z);
                 float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 200.0);
                 float bla = (float)Math.Abs(Math.Cos(time));
