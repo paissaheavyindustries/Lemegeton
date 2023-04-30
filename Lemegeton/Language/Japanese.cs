@@ -142,6 +142,8 @@
             AddEntry("Automarker/PrioType/CongaY", "北-南 整列");
             AddEntry("Automarker/PrioType/Player", "プレイヤー");
             AddEntry("Automarker/PrioType/Player/FillFromPartyList", "現在のパーティから");
+            //AddEntry("Automarker/PrioType/Player/FillFromCongaLine", "Fill from west-east conga line");
+            //AddEntry("Automarker/PrioType/PlCustom/FillFromCongaLine", "Fill from west-east conga line");
             AddEntry("Automarker/PrioType/PartyListOrder/Reversed", "上から下へではなく、下から上へ並べ替える");
             AddEntry("Automarker/PrioType/Alphabetic/Reversed", "昇順ではなく、降順で並べ替える");
             AddEntry("Automarker/PrioType/CongaX/Reversed", "西-東ではなく、東-西で並べ替える。");
@@ -162,6 +164,7 @@
             AddEntry("MainMenu/Settings/Language", "言語");
             AddEntry("MainMenu/Settings/AdvancedOptions", "コンテンツアイテムに常に詳細オプションを表示する");
             AddEntry("MainMenu/Settings/DebugSettings", "デバッグ設定");
+            //AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "Queue tasks on framework thread");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "イベント発生テスト距離");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "デバッグ用設定");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "設定をロードする");
@@ -177,6 +180,7 @@
             AddEntry("MainMenu/Settings/AutomarkerSettings", "オートマーカーの設定");
             AddEntry("MainMenu/Settings/AutomarkersSoftDesc", "ソフトオートマーカーは、クライアントサイドのマーカーで、サーバーに送信されないため、他のプレイヤーからも見えません。表示方法は若干異なりますが、マーカー自体はインゲームの標識と同じものです。");
             AddEntry("MainMenu/Settings/AutomarkersSoft", "ソフトオートマーカーを使う");
+            //AddEntry("MainMenu/Settings/AutomarkersSoftPermsMissing", "Soft automarkers need permission to draw as they are drawn on your screen as separate markers. Please allow drawing by enabling '{0}' from under '{1}' in '{2}'.");
             AddEntry("MainMenu/Settings/RemoveAutomarkers", "すべてのマークを強制的に除去");
             AddEntry("MainMenu/Settings/RemoveMarkersAfterCombatEnd", "戦闘終了後、すべてのマークを除去する");
             AddEntry("MainMenu/Settings/RemoveMarkersAfterWipe", "ワイプ後、すべてのマークを除去する");
@@ -259,6 +263,7 @@
             AddEntry("Content/Debug/Debugger/StressTest", "ストレステスト");
             AddEntry("Content/Debug/Debugger/StressTest/Enabled", "有効");
             AddEntry("Content/Debug/Debugger/StressTest/TestAutomarkers", "オートマーカーのテスト");
+            //AddEntry("Content/Debug/Debugger/StressTest/TestAutomarkerRapidfire", "Test automarker rapid set/clear");
             AddEntry("Content/Debug/Debugger/StressTest/AmFails", "オートマーカーのエラー");
             AddEntry("Content/Miscellaneous", "その他");
             AddEntry("Content/Miscellaneous/Enabled", "有効");
@@ -608,7 +613,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/SelfMarkOnly", "Self-marking only");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "マーカー設定");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/DistantWorld", "ハローワールド:ファー");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/NearWorld", "ハローワールド:ニアー");
@@ -622,7 +627,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/SelfMarkOnly", "Self-marking only");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs", "マーカー設定");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/ElementalDC", "Elemental DC");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Arm1", "アーム誘導 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Arm2", "アーム誘導 2");
@@ -639,7 +644,7 @@
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/SelfMarkOnly", "Self-marking only");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs", "マーカー設定");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor1", "検知対象 / 線取り 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor2", "検知対象 / 線取り 2");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/DistantWorld", "ハローワールド:ファー");

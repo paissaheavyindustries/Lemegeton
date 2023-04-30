@@ -187,6 +187,8 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(1001)]
             public int AmFails { get; private set; } = 0;
 
+            [AttributeOrderNumber(1100)]
+            public bool TestAutomarkerRapidfire { get; set; } = true;
 
             private int _amTestCycle = 0;
             private DateTime _amTestCycleNext = DateTime.MinValue;
@@ -234,6 +236,32 @@ namespace Lemegeton.Content
                             case 6: // check result
                                 CheckAmResult();
                                 _amTestCycleNext = DateTime.Now.AddSeconds(2);
+                                break;
+                        }
+                    }
+                }
+                else if (TestAutomarkerRapidfire == true)
+                {
+                    if (DateTime.Now > _amTestCycleNext)
+                    {
+                        _amTestCycle++;
+                        switch (_amTestCycle % 2)
+                        {
+                            case 0: // full clear
+                                {
+                                    _state.ClearAutoMarkers();
+                                    _amTestCycleNext = DateTime.Now.AddSeconds(0.5f);
+                                }
+                                break;
+                            case 1:
+                                {
+                                    AutomarkerTiming timing = new AutomarkerTiming() { 
+                                        IniDelayMin = 0.0f, IniDelayMax = 0.0f, SubDelayMin = 0.0f, SubDelayMax = 0.0f,
+                                        TimingType = AutomarkerTiming.TimingTypeEnum.Explicit, Parent = _state.cfg.DefaultAutomarkerTiming
+                                    };
+                                    Signs.TestFunctionality(_state, null, timing, false, false);
+                                    _amTestCycleNext = DateTime.Now.AddSeconds(0.5f);
+                                }
                                 break;
                         }
                     }

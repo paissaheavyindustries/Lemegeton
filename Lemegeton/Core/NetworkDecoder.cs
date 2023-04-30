@@ -52,66 +52,75 @@ namespace Lemegeton.Core
 
             private void ApplyStatus(Entry e)
             {
-                Dictionary<uint, Entry> actor;
-                Entry exentry;
-                e.runNumber = runNumber;
-                if (entries.TryGetValue(e.actorId, out actor) == false)
+                lock (this)
                 {
-                    actor = new Dictionary<uint, Entry>();
-                    entries[e.actorId] = actor;
-                }
-                if (actor.TryGetValue(e.statusId, out exentry) == false)
-                {
-                    actor[e.statusId] = e;
-                    OnStatusGain?.Invoke(e.srcActorId, e.actorId, e.statusId, e.duration, e.stacks);
-                }
-                else
-                {
-                    if (e.stacks != exentry.stacks || e.duration > exentry.duration)
+                    Dictionary<uint, Entry> actor;
+                    Entry exentry;
+                    e.runNumber = runNumber;
+                    if (entries.TryGetValue(e.actorId, out actor) == false)
+                    {
+                        actor = new Dictionary<uint, Entry>();
+                        entries[e.actorId] = actor;
+                    }
+                    if (actor.TryGetValue(e.statusId, out exentry) == false)
                     {
                         actor[e.statusId] = e;
                         OnStatusGain?.Invoke(e.srcActorId, e.actorId, e.statusId, e.duration, e.stacks);
                     }
                     else
                     {
-                        actor[e.statusId] = e;
+                        if (e.stacks != exentry.stacks || e.duration > exentry.duration)
+                        {
+                            actor[e.statusId] = e;
+                            OnStatusGain?.Invoke(e.srcActorId, e.actorId, e.statusId, e.duration, e.stacks);
+                        }
+                        else
+                        {
+                            actor[e.statusId] = e;
+                        }
                     }
                 }
             }
 
             public void ApplyStatus(IEnumerable<Entry> newEntries)
             {
-                foreach (Entry e in newEntries)
+                lock (this)
                 {
-                    ApplyStatus(e);
+                    foreach (Entry e in newEntries)
+                    {
+                        ApplyStatus(e);
+                    }
                 }
             }
 
             public void ReplaceStatusForActor(uint actorId, IEnumerable<Entry> newEntries)
             {
-                Dictionary<uint, Entry> actor;
-                if (newEntries == null)
+                lock (this)
                 {
-                    if (entries.TryGetValue(actorId, out actor) == true)
+                    Dictionary<uint, Entry> actor;
+                    if (newEntries == null)
                     {
-                        foreach (KeyValuePair<uint, Entry> kp in actor)
-                        {                            
-                            OnStatusLose?.Invoke(actorId, kp.Value.statusId);
-                        }
-                        entries.Remove(actorId);
-                    }
-                }
-                else
-                {
-                    runNumber++;
-                    ApplyStatus(newEntries);
-                    if (entries.TryGetValue(actorId, out actor) == true)
-                    {
-                        List<Entry> toRem = (from ix in actor.Values where ix.runNumber != runNumber select ix).ToList();
-                        foreach (Entry e in toRem)
+                        if (entries.TryGetValue(actorId, out actor) == true)
                         {
-                            actor.Remove(e.statusId);
-                            OnStatusLose?.Invoke(actorId, e.statusId);
+                            foreach (KeyValuePair<uint, Entry> kp in actor)
+                            {
+                                OnStatusLose?.Invoke(actorId, kp.Value.statusId);
+                            }
+                            entries.Remove(actorId);
+                        }
+                    }
+                    else
+                    {
+                        runNumber++;
+                        ApplyStatus(newEntries);
+                        if (entries.TryGetValue(actorId, out actor) == true)
+                        {
+                            List<Entry> toRem = (from ix in actor.Values where ix.runNumber != runNumber select ix).ToList();
+                            foreach (Entry e in toRem)
+                            {
+                                actor.Remove(e.statusId);
+                                OnStatusLose?.Invoke(actorId, e.statusId);
+                            }
                         }
                     }
                 }
@@ -145,8 +154,6 @@ namespace Lemegeton.Core
         internal State _st;
         internal StatusTracker _tracker;
 
-        //private Dictionary<string, Dictionary<string, ushort>> _opcodes = new Dictionary<string, Dictionary<string, ushort>>();
-        //private Dictionary<string, ushort> _nextOpcodeSource = null;
         private List<string> _opcodeRegions = null;
         private Blueprint.Region _nextOpcodeRegion = null;
         private Blueprint.Region _currentOpcodeRegion = null;

@@ -153,8 +153,9 @@ namespace Lemegeton.Core
         public bool _inCombat = false;
         private ulong _runObject = 0;
         internal ulong _runInstance = 1;
-        internal List<DeferredInvoke> Invoqueue = new List<DeferredInvoke>();
-        internal AutoResetEvent InvoqueueNew = new AutoResetEvent(false);
+        internal List<DeferredInvoke> InvoqThread = new List<DeferredInvoke>();
+        internal List<DeferredInvoke> InvoqFramework = new List<DeferredInvoke>();
+        internal AutoResetEvent InvoqThreadNew = new AutoResetEvent(false);
 
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
         private Dictionary<nint, uint> _objectsToActors = new Dictionary<nint, uint>();
@@ -272,6 +273,7 @@ namespace Lemegeton.Core
             GetGameVersion();
             _sig = new SigLocator(this);
             _dec = new NetworkDecoder(this);
+            fw.Update += FrameworkUpdate;
             cd.ConditionChange += Cd_ConditionChange;
             List<string> halp = new List<string>();
             halp.Add("Open Lemegeton configuration");
@@ -322,6 +324,12 @@ namespace Lemegeton.Core
             pi.UiBuilder.OpenConfigUi -= UiBuilder_OpenConfigUi;
             cm.RemoveHandler("/lemmy");
             cd.ConditionChange -= Cd_ConditionChange;
+            fw.Update -= FrameworkUpdate;
+        }
+
+        private void FrameworkUpdate(Framework framework)
+        {
+            ProcessInvocations(InvoqFramework);            
         }
 
         private void Cs_TerritoryChanged(object sender, ushort e)
@@ -481,13 +489,41 @@ namespace Lemegeton.Core
             return false;
         }
 
+        internal int ProcessInvocations(List<DeferredInvoke> queue)
+        {
+            DeferredInvoke di = null;
+            lock (queue)
+            {
+                if (queue.Count > 0)
+                {
+                    di = queue[0];
+                    if (di.CanInvoke() == false)
+                    {
+                        return (int)(di.FireAt - DateTime.Now).TotalMilliseconds;
+                    }
+                    queue.RemoveAt(0);
+                }
+                else
+                {
+                    return Timeout.Infinite;
+                }
+            }
+            di.Invoke();
+            return 0;
+        }
+
         internal void QueueInvocation(DeferredInvoke di)
         {
-            lock (Invoqueue)
+            List<DeferredInvoke> queue = cfg.QueueFramework == true ? InvoqFramework : InvoqThread;
+            AutoResetEvent ev = cfg.QueueFramework == true ? null : InvoqThreadNew;
+            lock (queue)
             {
-                Invoqueue.Add(di);
-                Invoqueue.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
-                InvoqueueNew.Set();
+                queue.Add(di);
+                queue.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
+                if (ev != null)
+                {
+                    ev.Set();
+                }
             }
         }
 

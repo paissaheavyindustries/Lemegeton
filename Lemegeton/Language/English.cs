@@ -142,6 +142,8 @@
             AddEntry("Automarker/PrioType/CongaY", "North-south conga line");
             AddEntry("Automarker/PrioType/Player", "By player");
             AddEntry("Automarker/PrioType/Player/FillFromPartyList", "Fill from current party");
+            AddEntry("Automarker/PrioType/Player/FillFromCongaLine", "Fill from west-east conga line");
+            AddEntry("Automarker/PrioType/PlCustom/FillFromCongaLine", "Fill from west-east conga line");
             AddEntry("Automarker/PrioType/PartyListOrder/Reversed", "Sort bottom-to-top instead of top-to-bottom");
             AddEntry("Automarker/PrioType/Alphabetic/Reversed", "Sort in descending order instead of ascending");
             AddEntry("Automarker/PrioType/CongaX/Reversed", "Do a east-west conga line instead of west-east");
@@ -162,6 +164,7 @@
             AddEntry("MainMenu/Settings/Language", "Language");
             AddEntry("MainMenu/Settings/AdvancedOptions", "Always show advanced options on content items");
             AddEntry("MainMenu/Settings/DebugSettings", "Debug settings");
+            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "Queue tasks on framework thread");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "Event firing test range");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "Configuration debug");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "Reload configuration from disk");
@@ -177,6 +180,7 @@
             AddEntry("MainMenu/Settings/AutomarkerSettings", "Automarker settings");
             AddEntry("MainMenu/Settings/AutomarkersSoftDesc", "Soft automarkers are client-side markers that will not be sent to the server, and therefore will also not be visible to other players. The markers themselves are visually the same signs as the ingame signs, although displayed slightly differently.");
             AddEntry("MainMenu/Settings/AutomarkersSoft", "Use soft automarkers");
+            AddEntry("MainMenu/Settings/AutomarkersSoftPermsMissing", "Soft automarkers need permission to draw as they are drawn on your screen as separate markers. Please allow drawing by enabling '{0}' from under '{1}' in '{2}'.");
             AddEntry("MainMenu/Settings/RemoveAutomarkers", "Force remove all marks");
             AddEntry("MainMenu/Settings/RemoveMarkersAfterCombatEnd", "Remove all marks after combat ends");
             AddEntry("MainMenu/Settings/RemoveMarkersAfterWipe", "Remove all marks after a wipe");
@@ -259,6 +263,7 @@
             AddEntry("Content/Debug/Debugger/StressTest", "Stress test");
             AddEntry("Content/Debug/Debugger/StressTest/Enabled", "Enabled");
             AddEntry("Content/Debug/Debugger/StressTest/TestAutomarkers", "Test automarkers");
+            AddEntry("Content/Debug/Debugger/StressTest/TestAutomarkerRapidfire", "Test automarker rapid set/clear");
             AddEntry("Content/Debug/Debugger/StressTest/AmFails", "Automarker errors");
             AddEntry("Content/Miscellaneous", "Miscellaneous");
             AddEntry("Content/Miscellaneous/Enabled", "Enabled");
@@ -608,7 +613,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "Marker configuration");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/DistantWorld", "Distant World");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/NearWorld", "Near World");
@@ -622,7 +627,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs", "Marker configuration");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Presets/ElementalDC", "Elemental DC");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Arm1", "Arm Bait 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisSigmaAM/Signs/Arm2", "Arm Bait 2");
@@ -639,7 +644,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs", "Marker configuration");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor1", "Monitor / Tether 1");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/Monitor2", "Monitor / Tether 2");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaAM/Signs/DistantWorld", "Distant World");

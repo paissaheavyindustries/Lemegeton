@@ -49,7 +49,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "v1.0.0.11";
+        public string Version = "v1.0.0.12";
 
         private State _state = new State();
         private Thread _mainThread = null;
@@ -143,7 +143,7 @@ namespace Lemegeton
             _mainThread.Name = "Lemegeton main thread";
             _mainThread.Start(this);
             _state.cs.Login += Cs_Login;
-            _state.cs.Logout += Cs_Logout;
+            _state.cs.Logout += Cs_Logout;            
             if (_state.cs.IsLoggedIn == true)
             {
                 Cs_Login(null, null);
@@ -184,9 +184,9 @@ namespace Lemegeton
             _stopEvent.Set();            
             UnloadTextures();
             SaveConfig();
-            if (_state.InvoqueueNew != null)
+            if (_state.InvoqThreadNew != null)
             {
-                _state.InvoqueueNew.Dispose();
+                _state.InvoqThreadNew.Dispose();
             }
             _mainThread.Join(1000);
             _stopEvent.Dispose();
@@ -941,7 +941,7 @@ namespace Lemegeton
             ImGui.SetCursorPos(pt);
         }
 
-        private void RenderOrderableList<T>(string path, List<T> items)
+        private void RenderOrderableList<T>(List<T> items)
         {
             Vector2 maxsize = ImGui.GetContentRegionAvail();
             Vector2 btnsize = new Vector2(160, 50);
@@ -961,7 +961,7 @@ namespace Lemegeton
             for (int i = 0; i < items.Count; i++)
             {
                 T p = items[i];
-                string temp = "##" + path + "_" + i;
+                string temp = "##OrderableList_" + i;
                 Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
                 ImGui.SetCursorPos(curItem);
                 ImGui.Selectable(temp, true, ImGuiSelectableFlags.None, btnsize);
@@ -1078,25 +1078,41 @@ namespace Lemegeton
             }
         }
 
-        // todo
         private void RenderAutomarkerPrioPlCustom(AutomarkerPrio amp)
         {
-            RenderOrderableList<int>("miu mau", amp._prioByPlCustom);
+            if (ImGui.Button(I18n.Translate("Automarker/PrioType/PlCustom/FillFromCongaLine")) == true)
+            {
+                Party pty = _state.GetPartyMembers();
+                AutomarkerPrio prio = new AutomarkerPrio() { Priority = PrioTypeEnum.CongaX };
+                prio.SortByPriority(pty.Members);
+                amp._prioByPlCustom.Clear();
+                List<int> prios = new List<int>();
+                prios.AddRange(from ix in pty.Members select ix.Index);
+                for (int i = 1; i <= 8; i++)
+                {
+                    if (prios.Contains(i) == false)
+                    {
+                        prios.Add(i);
+                    }
+                }
+                amp._prioByPlCustom.AddRange(prios);
+            }
+            RenderOrderableList<int>(amp._prioByPlCustom);
         }
 
         private void RenderAutomarkerPrioTrinity(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioTrinityEnum>("miu mau", amp._prioByTrinity);
+            RenderOrderableList<PrioTrinityEnum>(amp._prioByTrinity);
         }
 
         private void RenderAutomarkerPrioRole(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioRoleEnum>("miu mau", amp._prioByRole);
+            RenderOrderableList<PrioRoleEnum>(amp._prioByRole);
         }
 
         private void RenderAutomarkerPrioJob(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioJobEnum>("miu mau", amp._prioByJob);
+            RenderOrderableList<PrioJobEnum>(amp._prioByJob);
         }
 
         private void RenderAutomarkerPrioPlayer(AutomarkerPrio amp)
@@ -1107,7 +1123,16 @@ namespace Lemegeton
                 amp._prioByPlayer.Clear();
                 amp._prioByPlayer.AddRange(from ix in pty.Members orderby ix.Index ascending select ix.Name);
             }
-            RenderOrderableList<string>("miu mau", amp._prioByPlayer);
+            ImGui.SameLine();
+            if (ImGui.Button(I18n.Translate("Automarker/PrioType/Player/FillFromCongaLine")) == true)
+            {
+                Party pty = _state.GetPartyMembers();
+                AutomarkerPrio prio = new AutomarkerPrio() { Priority = PrioTypeEnum.CongaX };
+                prio.SortByPriority(pty.Members);
+                amp._prioByPlayer.Clear();
+                amp._prioByPlayer.AddRange(from ix in pty.Members select ix.Name);
+            }
+            RenderOrderableList<string>(amp._prioByPlayer);
         }
 
         private void RenderAutomarkerPrio(string path, PropertyInfo pi, object o)
@@ -2181,7 +2206,22 @@ namespace Lemegeton
                     {
                         _state.cfg.DebugOnlyLogAutomarkers = debugLogMarkers;
                     }
-                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine + Environment.NewLine);
+                    if (_state.cfg.AutomarkerSoft == true && _state.cfg.QuickToggleOverlays == false)
+                    {
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine);
+                        float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 1.0f, 0.0f, 1.0f));
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftPermsMissing",
+                            I18n.Translate("MainMenu/Settings/QuickToggles/Overlays"),
+                            I18n.Translate("MainMenu/Settings/QuickToggles"),
+                            I18n.Translate("MainMenu/Settings")
+                        ) + Environment.NewLine + Environment.NewLine);
+                        ImGui.PopStyleColor();
+                    }
+                    else
+                    {
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine + Environment.NewLine);
+                    }
                     bool autoSoft = _state.cfg.AutomarkerSoft;
                     if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersSoft"), ref autoSoft) == true)
                     {
@@ -2301,6 +2341,11 @@ namespace Lemegeton
                 {
                     ImGui.PushID("DebugSettings");
                     ImGui.Indent(30.0f);
+                    bool qFrame = _state.cfg.QueueFramework;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugSettings/QueueFramework"), ref qFrame) == true)
+                    {
+                        _state.cfg.QueueFramework = qFrame;
+                    }
                     if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/Config")) == true)
                     {
                         ImGui.PushID("Config");
@@ -2951,35 +2996,12 @@ namespace Lemegeton
             return doc;
         }
 
-        public int ProcessInvoqueue()
-        {
-            DeferredInvoke di = null;
-            lock (_state.Invoqueue)
-            {
-                if (_state.Invoqueue.Count > 0)
-                {
-                    di = _state.Invoqueue[0];
-                    if (di.CanInvoke() == false)
-                    {
-                        return (int)(di.FireAt - DateTime.Now).TotalMilliseconds;
-                    }
-                    _state.Invoqueue.RemoveAt(0);
-                }
-                else
-                {
-                    return Timeout.Infinite;
-                }
-            }
-            di.Invoke();
-            return 0;
-        }
-
         public void MainThreadProc(object o)
         {
             Plugin p = (Plugin)o;
             WaitHandle[] wh = new WaitHandle[3];
             wh[0] = p._stopEvent;
-            wh[1] = _state.InvoqueueNew;
+            wh[1] = _state.InvoqThreadNew;
             wh[2] = p._retryEvent;
             int timeout = 0;
             int tries = 0;
@@ -2993,7 +3015,7 @@ namespace Lemegeton
                         case 0:
                             return;
                         case 1:
-                            timeout = ProcessInvoqueue();
+                            timeout = _state.ProcessInvocations(_state.InvoqThread);
                             break;
                         case 2:
                             Log(LogLevelEnum.Debug, "Going to reload opcodes");
@@ -3017,7 +3039,7 @@ namespace Lemegeton
                             }
                             else
                             {
-                                timeout = ProcessInvoqueue();
+                                timeout = _state.ProcessInvocations(_state.InvoqThread);
                             }
                             break;
                     }
