@@ -280,9 +280,9 @@ namespace Lemegeton.Core
             halp.Add("/lemmy clear → Force clear all markers");
             halp.Add("/lemmy mark <sign> <target> → Places a softmarker; follows the same arguments as the ingame /mk command");
 #if !SANS_GOETIA
-            halp.Add("/lemmy <feature> <on|off> → Turn feature on/off, where feature can be: automarkers, drawing, sound, hacks, automation, softmarkers");
+            halp.Add("/lemmy <feature> <on|off|toggle> → Turn or toggle feature on/off, where feature can be: automarkers, drawing, sound, hacks, automation, softmarkers");
 #else
-            halp.Add("/lemmy <feature> <on|off> → Turn feature on/off, where feature can be: automarkers, drawing, sound, softmarkers");
+            halp.Add("/lemmy <feature> <on|off|toggle> → Turn or toggle feature on/off, where feature can be: automarkers, drawing, sound, softmarkers");
 #endif
             cm.AddHandler("/lemmy", new CommandInfo(OnCommand)
             {
@@ -368,10 +368,17 @@ namespace Lemegeton.Core
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
                             cfg.QuickToggleAutomarkers = true;
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomarkers/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
                             cfg.QuickToggleAutomarkers = false;
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomarkers/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.QuickToggleAutomarkers = (cfg.QuickToggleAutomarkers == false);
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomarkers/" + (cfg.QuickToggleAutomarkers == true ? "On" : "Off")));
                         }
                     }
                 }
@@ -382,10 +389,17 @@ namespace Lemegeton.Core
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
                             cfg.QuickToggleOverlays = true;
+                            cg.Print(I18n.Translate("Command/QuickToggleOverlays/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
                             cfg.QuickToggleOverlays = false;
+                            cg.Print(I18n.Translate("Command/QuickToggleOverlays/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.QuickToggleOverlays = (cfg.QuickToggleOverlays == false);
+                            cg.Print(I18n.Translate("Command/QuickToggleOverlays/" + (cfg.QuickToggleOverlays == true ? "On" : "Off")));
                         }
                     }
                 }
@@ -396,10 +410,17 @@ namespace Lemegeton.Core
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
                             cfg.QuickToggleSound = true;
+                            cg.Print(I18n.Translate("Command/QuickToggleSound/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
                             cfg.QuickToggleSound = false;
+                            cg.Print(I18n.Translate("Command/QuickToggleSound/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.QuickToggleSound = (cfg.QuickToggleSound == false);
+                            cg.Print(I18n.Translate("Command/QuickToggleSound/" + (cfg.QuickToggleSound == true ? "On" : "Off")));
                         }
                     }
                 }
@@ -422,10 +443,17 @@ namespace Lemegeton.Core
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
                             cfg.QuickToggleHacks = true;
+                            cg.Print(I18n.Translate("Command/QuickToggleHacks/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
                             cfg.QuickToggleHacks = false;
+                            cg.Print(I18n.Translate("Command/QuickToggleHacks/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.QuickToggleHacks = (cfg.QuickToggleHacks == false);
+                            cg.Print(I18n.Translate("Command/QuickToggleHacks/" + (cfg.QuickToggleHacks == true ? "On" : "Off")));
                         }
                     }
                 }
@@ -435,11 +463,18 @@ namespace Lemegeton.Core
                     {
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
-                            cfg.QuickToggleAutomarkers = true;
+                            cfg.QuickToggleAutomation = true;
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomation/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
-                            cfg.QuickToggleAutomarkers = false;
+                            cfg.QuickToggleAutomation = false;
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomation/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.QuickToggleAutomation = (cfg.QuickToggleAutomation == false);
+                            cg.Print(I18n.Translate("Command/QuickToggleAutomation/" + (cfg.QuickToggleAutomation == true ? "On" : "Off")));
                         }
                     }
                 }
@@ -451,10 +486,17 @@ namespace Lemegeton.Core
                         if (String.Compare(argsa[1], "on", true) == 0)
                         {
                             cfg.AutomarkerSoft = true;
+                            cg.Print(I18n.Translate("Command/AutomarkerSoft/On"));
                         }
                         else if (String.Compare(argsa[1], "off", true) == 0)
                         {
                             cfg.AutomarkerSoft = false;
+                            cg.Print(I18n.Translate("Command/AutomarkerSoft/Off"));
+                        }
+                        else if (String.Compare(argsa[1], "toggle", true) == 0)
+                        {
+                            cfg.AutomarkerSoft = (cfg.AutomarkerSoft == false);
+                            cg.Print(I18n.Translate("Command/AutomarkerSoft/" + (cfg.AutomarkerSoft == true ? "On" : "Off")));
                         }
                     }
                 }

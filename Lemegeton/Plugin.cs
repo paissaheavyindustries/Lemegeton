@@ -49,7 +49,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "v1.0.0.12";
+        public string Version = "v1.0.0.13";
 
         private State _state = new State();
         private Thread _mainThread = null;

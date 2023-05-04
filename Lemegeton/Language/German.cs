@@ -8,6 +8,18 @@
         {
             IsDefault = false;
             LanguageName = "Deutsch";
+            //AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: Automarkers are now enabled.");
+            //AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: Automarkers are now disabled.");
+            //AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: Draws and overlays are now enabled.");
+            //AddEntry("Command/QuickToggleOverlays/Off", "Lemegeton: Draws and overlays are now disabled.");
+            //AddEntry("Command/QuickToggleSound/On", "Lemegeton: Sound features are now enabled.");
+            //AddEntry("Command/QuickToggleSound/Off", "Lemegeton: Sound features are now disabled.");
+            //AddEntry("Command/QuickToggleHacks/On", "Lemegeton: Hacks and game-altering features are now enabled.");
+            //AddEntry("Command/QuickToggleHacks/Off", "Lemegeton: Hacks and game-altering features are now disabled.");
+            //AddEntry("Command/QuickToggleAutomation/On", "Lemegeton: Automation features are now enabled.");
+            //AddEntry("Command/QuickToggleAutomation/Off", "Lemegeton: Automation features are now disabled.");
+            //AddEntry("Command/AutomarkerSoft/On", "Lemegeton: Client-side soft automarkers are now enabled.");
+            //AddEntry("Command/AutomarkerSoft/Off", "Lemegeton: Client-side soft automarkers are now disabled.");
             AddEntry("Status/AtAGlance", "Auf einen Blick");
             AddEntry("Status/CurrentlyActive", "Gerade aktiv");
             AddEntry("Status/ImpactToFunctionality", "Ausmaß der Funktionalität");

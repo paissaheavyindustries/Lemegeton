@@ -8,6 +8,18 @@
         {
             IsDefault = false;
             LanguageName = "日本語";
+            //AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: Automarkers are now enabled.");
+            //AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: Automarkers are now disabled.");
+            //AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: Draws and overlays are now enabled.");
+            //AddEntry("Command/QuickToggleOverlays/Off", "Lemegeton: Draws and overlays are now disabled.");
+            //AddEntry("Command/QuickToggleSound/On", "Lemegeton: Sound features are now enabled.");
+            //AddEntry("Command/QuickToggleSound/Off", "Lemegeton: Sound features are now disabled.");
+            //AddEntry("Command/QuickToggleHacks/On", "Lemegeton: Hacks and game-altering features are now enabled.");
+            //AddEntry("Command/QuickToggleHacks/Off", "Lemegeton: Hacks and game-altering features are now disabled.");
+            //AddEntry("Command/QuickToggleAutomation/On", "Lemegeton: Automation features are now enabled.");
+            //AddEntry("Command/QuickToggleAutomation/Off", "Lemegeton: Automation features are now disabled.");
+            //AddEntry("Command/AutomarkerSoft/On", "Lemegeton: Client-side soft automarkers are now enabled.");
+            //AddEntry("Command/AutomarkerSoft/Off", "Lemegeton: Client-side soft automarkers are now disabled.");
             AddEntry("Status/AtAGlance", "一覧");
             AddEntry("Status/CurrentlyActive", "現在有効な機能");
             AddEntry("Status/ImpactToFunctionality", "機能への影響");
@@ -552,8 +564,8 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/SelfMarkOnly", "自分にのみマーキングする");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs", "ファーの際の並び順設定");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GPOB", "✕▢◯△-△▢◯✕");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GOPB", "✕▢◯△-△◯▢✕");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GPOB", "\xE04C\xE04B\xE04A\xE04D-\xE04D\xE04B\xE04A\xE04C");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/Presets/BPOG - GOPB", "\xE04C\xE04B\xE04A\xE04D-\xE04D\xE04A\xE04B\xE04C");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/CrossL", "クロス(左)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/CrossR", "クロス (右)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/SquareL", "四角 (左)");
@@ -563,7 +575,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/TriangleL", "三角 (左)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs/TriangleR", "三角 (右)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2", "ミドルの際の並び順設定");
-            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2/Presets/BPOG - BPOG", "✕▢◯△-✕▢◯△");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2/Presets/BPOG - BPOG", "\xE04C\xE04B\xE04A\xE04D-\xE04C\xE04B\xE04A\xE04D");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2/CrossL", "クロス(左)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2/CrossR", "クロス (右)");
             AddEntry("Content/Ultimate/UltOmegaProtocol/P2SynergyAM/Signs2/SquareL", "四角 (左)");
