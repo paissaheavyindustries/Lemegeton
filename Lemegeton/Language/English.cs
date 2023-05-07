@@ -8,6 +8,8 @@
         {
             IsDefault = true;
             LanguageName = "English";
+            FontDownload = null;
+            GlyphRange = GlyphRangeEnum.Undefined;
             AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: Automarkers are now enabled.");
             AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: Automarkers are now disabled.");
             AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: Draws and overlays are now enabled.");

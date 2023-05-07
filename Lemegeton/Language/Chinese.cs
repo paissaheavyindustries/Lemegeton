@@ -7,7 +7,9 @@
         public Chinese()
         {
             IsDefault = false;
-            LanguageName = "简体中文";
+            LanguageName = "中文";
+            FontDownload = @"https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf";
+            GlyphRange = GlyphRangeEnum.ChineseFull;
             AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: 自动标记已启用。");
             AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: 自动标记已关闭。");
             AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: 绘图和叠加层已启用。");

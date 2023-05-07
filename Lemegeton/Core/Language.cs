@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ImGuiNET;
+using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Lemegeton.Core
 {
@@ -7,9 +9,19 @@ namespace Lemegeton.Core
     public class Language
     {
 
+        public enum GlyphRangeEnum
+        {
+            Undefined,
+            ChineseSimplifiedCommon,
+            ChineseFull
+        }
+
         public bool IsDefault { get; set; }
         public string LanguageName { get; set; }
-        
+        public string FontDownload { get; set; } = null;
+        public GlyphRangeEnum GlyphRange { get; set; } = GlyphRangeEnum.Undefined;
+
+        internal ImFontPtr? Font { get; set; } = null;
         internal float Coverage { get; set; }
 
         private Dictionary<string, string> Translations { get; set; }
