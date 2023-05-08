@@ -262,6 +262,10 @@ namespace Lemegeton.Core
                     {
                         _st._runInstance++;
                     }
+                    if (param2 == 0x40000005 && _st.cfg.RemoveMarkersAfterWipe == true)
+                    {                        
+                        _st._suppressCombatEndMarkRemoval = true;
+                    }
                     if (param2 == 0x40000006 && _st.cfg.RemoveMarkersAfterWipe == true)
                     {
                         _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");

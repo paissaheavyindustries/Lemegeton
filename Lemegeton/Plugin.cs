@@ -50,7 +50,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "v1.0.0.14";
+        public string Version = "v1.0.0.15";
 
         internal class Downloadable
         {
@@ -151,7 +151,8 @@ namespace Lemegeton
                 pl = partylist,
                 tm = targetManager,
                 plug = this
-            };            
+            };
+            Log(LogLevelEnum.Info, "This is Lemegeton {0}", Version);
             LoadConfig();
             InitializeContent();
             _state.Initialize();
@@ -819,19 +820,19 @@ namespace Lemegeton
                 Log(LogLevelEnum.Error, "Missing quite a lot of data on this snapshot!");
                 return null;
             }
-            string tag = data.Substring(0, 10);
 #if !SANS_GOETIA
             string mytag = "Lemegeton2_";
 #else
             string mytag = "Lemegeton1_";
 #endif
+            string tag = data.Substring(0, mytag.Length);
             if (String.Compare(tag, mytag) != 0)
             {
                 Log(LogLevelEnum.Error, "This config snapshot is from {0}, while this instance is {1}!", tag, mytag);
                 return null;
             }
-            string md5 = data.Substring(10, 32);
-            string blob = data.Substring(42);
+            string md5 = data.Substring(mytag.Length, 32);
+            string blob = data.Substring(mytag.Length + 32);
             Regex rex = new Regex("[^A-Za-z0-9=+/]");
             blob = rex.Replace(blob, "");
             if (String.Compare(md5, GenerateMD5Hash(blob), true) != 0)

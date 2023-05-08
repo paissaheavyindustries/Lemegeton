@@ -146,6 +146,8 @@ namespace Lemegeton.Core
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
 
+        private bool _markersApplied = false;
+        internal bool _suppressCombatEndMarkRemoval = false;
         private bool _drawingReady = false;
         private int _drawingStarts = 0;
         private ImDrawListPtr _drawListPtr;
@@ -345,9 +347,17 @@ namespace Lemegeton.Core
                 _runInstance++;
                 if (value == false && cfg.RemoveMarkersAfterCombatEnd == true)
                 {
-                    Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
-                    ClearAutoMarkers();
+                    if (_suppressCombatEndMarkRemoval == false)
+                    {
+                        Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
+                        ClearAutoMarkers();
+                    }
+                    else
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Not clearing marks on combat end, because wipe clear is also in effect");
+                    }
                 }
+                _suppressCombatEndMarkRemoval = false;
                 InvokeCombatChange(value);
             }
         }
@@ -853,12 +863,13 @@ namespace Lemegeton.Core
 
         internal void ClearAutoMarkers()
         {
-            Log(LogLevelEnum.Debug, null, "Clearing automarkers");
+            Log(LogLevelEnum.Debug, null, "Clearing automarkers, hard markers applied: {0}", _markersApplied);
             Party pty = GetPartyMembers();
             foreach (Party.PartyMember pm in pty.Members)
             {
-                ClearMarkerOn(pm.GameObject, true, true);
+                ClearMarkerOn(pm.GameObject, _markersApplied, true);
             }
+            _markersApplied = false;
         }
 
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
@@ -1252,6 +1263,7 @@ namespace Lemegeton.Core
                     cfg.AutomarkersServed++;
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
+                        _markersApplied = true;
                         DeferredInvoke di = new DeferredInvoke()
                         {
                             State = this,
@@ -1298,6 +1310,7 @@ namespace Lemegeton.Core
                     }
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
+                        _markersApplied = true;
                         DeferredInvoke di = new DeferredInvoke()
                         {
                             State = this,
