@@ -38,6 +38,11 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using static Lemegeton.Core.AutomarkerPrio;
 using System.Net.Http;
+using Lumina.Excel.GeneratedSheets;
+using Condition = Dalamud.Game.ClientState.Conditions.Condition;
+using static Lemegeton.Core.AutomarkerSigns;
+using static System.Net.Mime.MediaTypeNames;
+using System.Xml.Linq;
 
 namespace Lemegeton
 {
@@ -50,7 +55,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "v1.0.0.16";
+        public string Version = "v1.0.0.17";
 
         internal class Downloadable
         {
@@ -72,6 +77,8 @@ namespace Lemegeton
         private AutoResetEvent _retryEvent = new AutoResetEvent(false);
         private AutoResetEvent _downloadRequestEvent = new AutoResetEvent(false);
         private float _adjusterX = 0.0f;
+        private float _adjusterXtl = 0.0f;
+        private float _adjusterYtl = 0.0f;
         private DateTime _loaded = DateTime.Now;
         private bool _aboutProg = false;
         private bool _softMarkerPreview = false;
@@ -80,6 +87,10 @@ namespace Lemegeton
         private Queue<Downloadable> _downloadQueue = new Queue<Downloadable>();
         private bool _downloadPending = false;
         private string _downloadFilename = "";
+        private string _timelineActionFilter = "";
+        private Timeline _selectedTimeline = null;
+        private Timeline.Profile _selectedProfile = null;
+        private Timeline.Entry _selectedEntry = null;
 
         private Dictionary<string, ImFontPtr> _fonts = new Dictionary<string, ImFontPtr>();
         private Dictionary<int, TextureWrap> _misc = new Dictionary<int, TextureWrap>();
@@ -97,6 +108,7 @@ namespace Lemegeton
         private Rectangle _lastSeen = new Rectangle();
         private List<string> _contribs = new List<string>();
         private string _newPresetName = "";
+        private string _newProfileName = "";
 
         private object _dragObject = null;
         private bool _isDragging = false;
@@ -116,7 +128,7 @@ namespace Lemegeton
             "don't be a statistic",
             "and pet all cats",
             "all of them",
-            "automarkers served to date: $auto",            
+            "automarkers served to date: $auto",
         };
 
         public Plugin(
@@ -161,16 +173,16 @@ namespace Lemegeton
             ApplyConfigToContent();
             ChangeLanguage(_state.cfg.Language);
             LoadTextures();
-            _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;            
+            _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
             _mainThread.Name = "Lemegeton main thread";
             _mainThread.Start(this);
             _state.cs.Login += Cs_Login;
-            _state.cs.Logout += Cs_Logout;            
+            _state.cs.Logout += Cs_Logout;
             if (_state.cs.IsLoggedIn == true)
             {
                 Cs_Login(null, null);
-            }            
+            }
         }
 
         private void LoadFontFromDisk(Downloadable d)
@@ -215,12 +227,12 @@ namespace Lemegeton
                             range = ImGui.GetIO().Fonts.GetGlyphRangesChineseFull();
                             break;
                     }
-                                        ImFontPtr font = ImGui.GetIO().Fonts.AddFontFromFileTTF(
-                        tp.Item2,
-                        18.0f,
-                        null,
-                        range
-                    );
+                    ImFontPtr font = ImGui.GetIO().Fonts.AddFontFromFileTTF(
+    tp.Item2,
+    18.0f,
+    null,
+    range
+);
                     Log(LogLevelEnum.Debug, "Font loaded from {0}, setting font to language {1}", tp.Item2, tp.Item1.LanguageName);
                     tp.Item1.Font = font;
                 }
@@ -228,7 +240,7 @@ namespace Lemegeton
                 {
                     GenericExceptionHandler(ex);
                 }
-            }            
+            }
         }
 
         private void Cs_Login(object sender, EventArgs e)
@@ -291,7 +303,7 @@ namespace Lemegeton
         {
             Log(State.LogLevelEnum.Info, "Changing language to {0}", language);
             I18n.ChangeLanguage(language);
-            Log(State.LogLevelEnum.Info, "Language changed to {0}", I18n.CurrentLanguage.LanguageName);            
+            Log(State.LogLevelEnum.Info, "Language changed to {0}", I18n.CurrentLanguage.LanguageName);
         }
 
         internal void GenericExceptionHandler(Exception ex)
@@ -347,14 +359,14 @@ namespace Lemegeton
             _roles[AutomarkerPrio.PrioRoleEnum.Healer] = GetTexture(62582);
             _roles[AutomarkerPrio.PrioRoleEnum.Melee] = GetTexture(62584);
             _roles[AutomarkerPrio.PrioRoleEnum.Ranged] = GetTexture(62586);
-            _roles[AutomarkerPrio.PrioRoleEnum.Caster] = GetTexture(62587);            
+            _roles[AutomarkerPrio.PrioRoleEnum.Caster] = GetTexture(62587);
             _jobs[AutomarkerPrio.PrioJobEnum.PLD] = GetTexture(62119);
             _jobs[AutomarkerPrio.PrioJobEnum.WAR] = GetTexture(62121);
             _jobs[AutomarkerPrio.PrioJobEnum.DRK] = GetTexture(62132);
             _jobs[AutomarkerPrio.PrioJobEnum.GNB] = GetTexture(62137);
             _jobs[AutomarkerPrio.PrioJobEnum.WHM] = GetTexture(62124);
             _jobs[AutomarkerPrio.PrioJobEnum.SCH] = GetTexture(62128);
-            _jobs[AutomarkerPrio.PrioJobEnum.AST] = GetTexture(62133); 
+            _jobs[AutomarkerPrio.PrioJobEnum.AST] = GetTexture(62133);
             _jobs[AutomarkerPrio.PrioJobEnum.SGE] = GetTexture(62140);
             _jobs[AutomarkerPrio.PrioJobEnum.MNK] = GetTexture(62120);
             _jobs[AutomarkerPrio.PrioJobEnum.DRG] = GetTexture(62122);
@@ -469,7 +481,7 @@ namespace Lemegeton
                     FoodSelector v = (FoodSelector)pi.GetValue(o);
                     val = v.Serialize();
                 }
-                else if (pi.PropertyType == typeof(Action))
+                else if (pi.PropertyType == typeof(System.Action))
                 {
                     continue;
                 }
@@ -635,7 +647,7 @@ namespace Lemegeton
                         Percentage v = (Percentage)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
-                    else if (pi.PropertyType == typeof(Action))
+                    else if (pi.PropertyType == typeof(System.Action))
                     {
                     }
                     else if (pi.PropertyType.IsSubclassOf(typeof(CustomPropertyInterface)))
@@ -871,7 +883,7 @@ namespace Lemegeton
                     case Core.ContentCategory.ContentCategoryTypeEnum.Other:
                         _other.Add(c);
                         break;
-                }                
+                }
             }
             foreach (Core.ContentCategory cc in _content)
             {
@@ -893,7 +905,7 @@ namespace Lemegeton
             foreach (Type type in Assembly.GetAssembly(typeof(Core.Language)).GetTypes().Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(Core.Language))))
             {
                 //Log(LogLevelEnum.Debug, "Creating Language {0}", type.Name.ToString());
-                Core.Language c = (Core.Language)Activator.CreateInstance(type);
+                Core.Language c = (Core.Language)Activator.CreateInstance(type, new object[] { _state });
                 I18n.AddLanguage(c);
             }
             Core.Language def = I18n.DefaultLanguage;
@@ -920,7 +932,7 @@ namespace Lemegeton
         }
 
         private List<Tuple<PropertyInfo, int>> GetConfigurableProperties(ContentModule cm, bool disregardAdvanced, out bool hasDebug)
-        {            
+        {
             PropertyInfo[] props = cm.GetType().GetProperties();
             List<Tuple<PropertyInfo, int>> result = new List<Tuple<PropertyInfo, int>>();
             hasDebug = false;
@@ -1245,7 +1257,7 @@ namespace Lemegeton
                     {
                         amp.Priority = p;
                     }
-                }                
+                }
                 ImGui.EndCombo();
             }
             ImGui.PopItemWidth();
@@ -1258,7 +1270,7 @@ namespace Lemegeton
                         {
                             amp.Reversed = reverse;
                         }
-                    }                    
+                    }
                     break;
                 case AutomarkerPrio.PrioTypeEnum.PartyListCustom:
                     ImGui.Text(Environment.NewLine);
@@ -1407,7 +1419,7 @@ namespace Lemegeton
                         ams.ApplyPreset(null);
                     }
                     bool firstCustom = true;
-                    foreach(KeyValuePair<string, AutomarkerSigns.Preset> kp in ams.Presets)
+                    foreach (KeyValuePair<string, AutomarkerSigns.Preset> kp in ams.Presets)
                     {
                         if (kp.Value.Builtin == true)
                         {
@@ -1430,7 +1442,7 @@ namespace Lemegeton
                     }
                     ImGui.EndCombo();
                 }
-                ImGui.PopItemWidth();                
+                ImGui.PopItemWidth();
                 if (cm._debugDisplayToggled == true)
                 {
                     AutomarkerSigns.Preset preset = null;
@@ -1473,7 +1485,7 @@ namespace Lemegeton
                     ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2.0f);
                     ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     if (ImGui.BeginPopup(popupname) == true)
-                    {                        
+                    {
                         ImGui.Text(I18n.Translate("Misc/SaveNewPresetAs"));
                         string prename = _newPresetName;
                         if (ImGui.InputText("##Pn" + popupname, ref prename, 256) == true)
@@ -1572,7 +1584,7 @@ namespace Lemegeton
                 }
                 else
                 {
-                    TextureWrap tw = _signs[AutomarkerSigns.SignEnum.Attack1];                    
+                    TextureWrap tw = _signs[AutomarkerSigns.SignEnum.Attack1];
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X);
                 }
                 if (ImGui.BeginCombo("##" + proppath, signtr) == true)
@@ -1608,7 +1620,7 @@ namespace Lemegeton
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
             if (hasDebug == true && _state.cfg.AdvancedOptions == false)
             {
-                Vector2 curpos = ImGui.GetCursorPos();                
+                Vector2 curpos = ImGui.GetCursorPos();
                 ImGui.PushFont(UiBuilder.IconFont);
                 string ico = FontAwesomeIcon.Cog.ToIconString();
                 Vector2 sz = ImGui.CalcTextSize(ico);
@@ -1634,7 +1646,7 @@ namespace Lemegeton
                 if (isToggled)
                 {
                     ImGui.PopStyleColor();
-                }                
+                }
                 ImGui.SetCursorPos(curpos);
             }
             foreach (Tuple<PropertyInfo, int> prop in props)
@@ -1731,15 +1743,15 @@ namespace Lemegeton
                     FoodSelector fs = (FoodSelector)pi.GetValue(cm);
                     fs.Render(path + "/" + pi.Name);
                 }
-                else if (pi.PropertyType == typeof(Action))
+                else if (pi.PropertyType == typeof(System.Action))
                 {
-                    Action act = (Action)pi.GetValue(cm);
+                    System.Action act = (System.Action)pi.GetValue(cm);
                     if (act == null)
                     {
                         ImGui.BeginDisabled();
                     }
                     if (ImGui.Button(proptr) == true)
-                    {                        
+                    {
                         act();
                     }
                     if (act == null)
@@ -1758,6 +1770,318 @@ namespace Lemegeton
                 }
             }
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
+        }
+
+        private string DescribeTimelineEntry(Timeline.Entry e)
+        {
+            if (e.Description != null)
+            { 
+                return e.Description;
+            }
+            if (e.Type == Timeline.EntryTypeEnum.OnCastBegin)
+            {
+                var action = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Key);
+                return action.Name.ToString();
+            }
+            return "?";
+        }
+
+        private void RenderTimelineView()
+        {
+            Timeline t = _state._timeline;
+            if (t == null)
+            {
+                return;
+            }
+            IEnumerable<Timeline.Entry> entries = t.PeekEntries(10, 60.0f);
+            if (entries.Count() == 0)
+            {
+                return;
+            }
+            foreach (Timeline.Entry e in entries)
+            {
+
+            }
+        }
+
+        private string GetNameForTimelineEntry(Timeline.Entry e)
+        {
+            if (e.CachedName == null)
+            {
+                switch (e.Type)
+                {
+                    case Timeline.EntryTypeEnum.OnCastBegin:
+                        {
+                            Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Key);
+                            e.CachedName = a.Name;
+                        }
+                        break;
+                    default:
+                        e.CachedName = "???";
+                        break;
+                }
+            }
+            return e.CachedName;
+        }
+
+        private string GetInstanceNameForTimeline(Timeline tl)
+        {
+            if (tl.CachedName == null)
+            {
+                TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.TerritoryType>().GetRow(tl.Territory);
+                ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>().Where(x => x.TerritoryType.Value == tt).FirstOrDefault();
+                tl.CachedName = cfc.Name;
+            }
+            return tl.CachedName;
+        }
+
+        private void RenderTimelineContentSettings()
+        {
+            Timeline tl = _selectedTimeline;
+            Vector2 fsp = ImGui.GetContentRegionAvail();
+            float topy = ImGui.GetCursorPosY();
+            ImGuiStylePtr style = ImGui.GetStyle();
+            ImGui.PushItemWidth(150.0f + _adjusterXtl);
+            ImGui.Text(I18n.Translate("Timelines/Timeline"));
+            ImGui.SameLine();
+            string seltlname = tl != null ? GetInstanceNameForTimeline(tl) : null;
+            if (ImGui.BeginCombo("##MainMenu/Timelines/Timelines", seltlname) == true)
+            {
+                foreach (KeyValuePair<ushort, Timeline> kp in _state.Timelines)
+                {
+                    string name = GetInstanceNameForTimeline(kp.Value);
+                    if (ImGui.Selectable(name, kp.Value == _selectedTimeline) == true)
+                    {
+                        if (kp.Value != tl)
+                        {
+                            _selectedProfile = null;
+                            _selectedEntry = null;
+                        }
+                        tl = _selectedTimeline = kp.Value;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.SameLine();
+            ImGui.Text(I18n.Translate("Timelines/Profile"));
+            ImGui.SameLine();
+            bool hasprofiles = tl != null && tl.Profiles.Count > 0;
+            if (hasprofiles == false)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (ImGui.BeginCombo("##MainMenu/Timelines/Profiles", _selectedProfile != null ? _selectedProfile.Name : "") == true)
+            {
+                foreach (Timeline.Profile p in tl.Profiles)
+                {
+                    if (ImGui.Selectable(p.Name, _selectedProfile == p) == true)
+                    {
+                        _selectedProfile = p;                        
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            if (hasprofiles == false)
+            {
+                ImGui.EndDisabled();
+            }
+            string ico;
+            ImGui.PushFont(UiBuilder.IconFont);
+            ico = FontAwesomeIcon.Save.ToIconString();
+            ImGui.SameLine();
+            if (tl == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            string popupname = "Timelines/SaveProfilePopup";
+            if (ImGui.Button(ico) == true)
+            {
+                _newProfileName = "";
+                ImGui.OpenPopup(popupname);
+            }
+            ImGui.PopFont();
+            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text(I18n.Translate("Timelines/SaveProfile"));
+                ImGui.EndTooltip();
+            }
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2.0f);
+            ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));            
+            ImGui.PushFont(UiBuilder.IconFont);
+            if (tl == null)
+            {
+                ImGui.EndDisabled();
+            }
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar();
+            if (_selectedProfile == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            ico = FontAwesomeIcon.Copy.ToIconString();
+            ImGui.SameLine();
+            if (ImGui.Button(ico) == true)
+            {
+            }
+            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+            {
+                ImGui.PopFont();
+                ImGui.BeginTooltip();
+                ImGui.Text(I18n.Translate("Timelines/CloneProfile"));
+                ImGui.EndTooltip();
+                ImGui.PushFont(UiBuilder.IconFont);
+            }
+            ico = FontAwesomeIcon.Trash.ToIconString();
+            ImGui.SameLine();
+            if (ImGui.Button(ico) == true)
+            {
+            }
+            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+            {
+                ImGui.PopFont();
+                ImGui.BeginTooltip();
+                ImGui.Text(I18n.Translate("Timelines/DeleteProfile"));
+                ImGui.EndTooltip();
+                ImGui.PushFont(UiBuilder.IconFont);
+            }
+            if (_selectedProfile == null)
+            {
+                ImGui.EndDisabled();
+            }
+            ImGui.PopFont();
+            if (ImGui.BeginPopup(popupname) == true)
+            {
+                ImGui.Text(I18n.Translate("Timelines/SaveNewProfileAs"));
+                string prename = _newProfileName;
+                if (ImGui.InputText("##Pn" + popupname, ref prename, 256) == true)
+                {
+                    _newProfileName = prename;
+                }
+                ImGui.SameLine();
+                bool goodname = _newProfileName.Trim().Length > 0;
+                ImGui.PushFont(UiBuilder.IconFont);
+                ico = FontAwesomeIcon.Save.ToIconString();
+                if (goodname == false)
+                {
+                    ImGui.BeginDisabled();
+                }
+                if (ImGui.Button(ico) == true)
+                {
+                    string prname = _newProfileName.Trim();
+                    Log(LogLevelEnum.Debug, "Saving new profile {0}", prname);
+                    Timeline.Profile pro = new Timeline.Profile() { Name = prname };
+                    tl.Profiles.Add(pro);
+                    // todo reactions & settings to profile
+                    _selectedProfile = pro;
+                    ImGui.CloseCurrentPopup();
+                }
+                if (goodname == false)
+                {
+                    ImGui.EndDisabled();
+                }
+                ImGui.PopFont();
+                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text(I18n.Translate("Timelines/SaveProfile"));
+                    ImGui.EndTooltip();
+                }
+                ImGui.EndPopup();
+            }
+            ImGui.PopItemWidth();
+            ImGui.SameLine();
+            _adjusterXtl += (float)Math.Floor((fsp.X - ImGui.GetCursorPosX()) / 2.0f);
+            ImGui.Text("");
+            ImGui.Separator();
+            float timelineColumnWidth = 200.0f;
+            if (ImGui.BeginListBox("##TimelinesActionListbox", new Vector2(timelineColumnWidth, fsp.Y - (ImGui.GetCursorPosY() - topy) - _adjusterYtl)))
+            {
+                if (tl != null)
+                {
+                    IEnumerable<Timeline.Entry> entries = tl.Entries;
+                    if (_timelineActionFilter != null)
+                    {
+                        string tmp = _timelineActionFilter.Trim();
+                        if (tmp.Length > 0)
+                        {
+                            entries = from ix in tl.Entries where GetNameForTimelineEntry(ix).Contains(tmp, StringComparison.InvariantCultureIgnoreCase) == true select ix;
+                        }
+                    }
+                    foreach (var item in entries)
+                    {
+                        string name = GetNameForTimelineEntry(item);
+                        if (ImGui.Selectable(String.Format("{0:0}", item.StartTime) + ": " + name + "##" + item.Id, item == _selectedEntry) == true)
+                        {
+                            _selectedEntry = item;
+                        }
+                    }
+                }
+                ImGui.EndListBox();
+            }
+            if (tl == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            ImGui.PushFont(UiBuilder.IconFont);
+            ico = FontAwesomeIcon.Search.ToIconString();
+            Vector2 sz = ImGui.CalcTextSize(ico);
+            ImGui.Text(ico);
+            ImGui.PopFont();
+            ImGui.SameLine();                        
+            ImGui.PushItemWidth(timelineColumnWidth - sz.X - style.ItemSpacing.X);
+            if (ImGui.InputText("##Timelines/FilterBox", ref _timelineActionFilter, 256) == true)
+            {
+            }
+            _adjusterYtl += ImGui.GetCursorPosY() - fsp.Y;
+            ImGui.PopItemWidth();
+            if (tl == null)
+            {
+                ImGui.EndDisabled();
+            }
+        }
+
+        private void RenderTimelineOverlaySettings()
+        {
+            // todo
+        }
+
+        private void RenderTimelineRecorderSettings()
+        {
+            // todo
+        }
+
+        private void RenderTimelineTab()
+        {
+            Vector2 fsz = ImGui.GetContentRegionAvail();
+            ImGui.BeginChild("LemmyTimelineFrame", fsz);
+            ImGui.BeginTabBar("LemmyTimelinetabs");
+            // timelines
+            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Timelines")) == true)
+            {
+                ImGui.BeginChild("MainMenu/Timelines/Timelines");
+                RenderTimelineContentSettings();
+                ImGui.EndChild();
+                ImGui.EndTabItem();
+            }
+            // overlay
+            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Overlay")) == true)
+            {
+                ImGui.BeginChild("MainMenu/Timelines/Overlay");
+                RenderTimelineOverlaySettings();
+                ImGui.EndChild();
+                ImGui.EndTabItem();
+            }
+            // recorder
+            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Recorder")) == true)
+            {
+                ImGui.BeginChild("MainMenu/Timelines/Recorder");
+                RenderTimelineRecorderSettings();
+                ImGui.EndChild();
+                ImGui.EndTabItem();
+            }
+            ImGui.EndTabBar();
+            ImGui.EndChild();
         }
 
         private void RenderContentTab(IEnumerable<Core.ContentCategory> contentCats)
@@ -1891,7 +2215,7 @@ namespace Lemegeton
             {
                 ImGui.PushFont((ImFontPtr)font);
             }
-            DrawConfig();
+            DrawMainWindow();
             if (font != null)
             {
                 ImGui.PopFont();
@@ -1940,12 +2264,12 @@ namespace Lemegeton
             }
             float mul = (float)Math.Abs(Math.Cos(DateTime.Now.Millisecond / 1000.0f * Math.PI));
             Vector3 temp = TranslateToScreen(
-                go.Position.X + _state.cfg.SoftmarkerOffsetWorldX, 
-                go.Position.Y + _state.cfg.SoftmarkerOffsetWorldY + (_state.cfg.SoftmarkerBounce == true ? (0.5f * mul * _state.cfg.SoftmarkerScale) : 0.0f), 
+                go.Position.X + _state.cfg.SoftmarkerOffsetWorldX,
+                go.Position.Y + _state.cfg.SoftmarkerOffsetWorldY + (_state.cfg.SoftmarkerBounce == true ? (0.5f * mul * _state.cfg.SoftmarkerScale) : 0.0f),
                 go.Position.Z + _state.cfg.SoftmarkerOffsetWorldZ
             );
             Vector2 pt = new Vector2(
-                temp.X + _state.cfg.SoftmarkerOffsetScreenX, 
+                temp.X + _state.cfg.SoftmarkerOffsetScreenX,
                 temp.Y + _state.cfg.SoftmarkerOffsetScreenY
             );
             TextureWrap tw = _signs[sign];
@@ -1955,8 +2279,8 @@ namespace Lemegeton
             pt.Y -= calcHeight;
             ImGui.SetCursorPos(pt);
             draw.AddImage(
-                tw.ImGuiHandle, 
-                new Vector2(pt.X, pt.Y), 
+                tw.ImGuiHandle,
+                new Vector2(pt.X, pt.Y),
                 new Vector2(pt.X + calcWidth, pt.Y + calcHeight),
                 new Vector2(0.0f, 0.0f),
                 new Vector2(1.0f, 1.0f),
@@ -1991,7 +2315,7 @@ namespace Lemegeton
                 {
                     sign = AutomarkerSigns.SignEnum.Bind1;
                 }
-                else 
+                else
                 {
                     sign = AutomarkerSigns.SignEnum.Plus;
                 }
@@ -2070,39 +2394,369 @@ namespace Lemegeton
                 }
                 else
                 {
-                    Vector2 pt = ImGui.GetWindowPos();
-                    bool moved = false;
-                    Vector2 sz = ImGui.GetIO().DisplaySize;
-                    if (pt.X < 0)
-                    {
-                        pt.X += (0.0f - pt.X) / 5.0f;
-                        moved = true;
-                    }
-                    if (pt.Y < 0)
-                    {
-                        pt.Y += (0.0f - pt.Y) / 5.0f;
-                        moved = true;
-                    }
-                    if (pt.X + tw.Width + 10 > sz.X)
-                    {
-                        pt.X -= ((pt.X + tw.Width + 10) - sz.X) / 5.0f;
-                        moved = true;
-                    }
-                    if (pt.Y + tw.Height + 10 > sz.Y)
-                    {
-                        pt.Y -= ((pt.Y + tw.Height + 10) - sz.Y) / 5.0f;
-                        moved = true;
-                    }
-                    if (moved == true)
-                    {
-                        ImGui.SetWindowPos(pt);
-                    }
+                    KeepWindowInSight();
                 }
                 ImGui.End();
             }
         }
 
-        private bool DrawAboutTab(bool forceOpen)
+        private void RenderSettingsTab()
+        {
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/QuickToggles")) == true)
+            {
+                ImGui.PushID("QuickToggles");
+                ImGui.Indent(30.0f);
+                ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/QuickToggles/Info") + Environment.NewLine + Environment.NewLine);
+                bool qtAutomarker = _state.cfg.QuickToggleAutomarkers;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Automarkers"), ref qtAutomarker) == true)
+                {
+                    _state.cfg.QuickToggleAutomarkers = qtAutomarker;
+                }
+                bool qtOverlays = _state.cfg.QuickToggleOverlays;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Overlays"), ref qtOverlays) == true)
+                {
+                    _state.cfg.QuickToggleOverlays = qtOverlays;
+                }
+                bool qtSound = _state.cfg.QuickToggleSound;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Sound"), ref qtSound) == true)
+                {
+                    _state.cfg.QuickToggleSound = qtSound;
+                }
+#if !SANS_GOETIA
+                    bool qtHacks = _state.cfg.QuickToggleHacks;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Hacks"), ref qtHacks) == true)
+                    {
+                        _state.cfg.QuickToggleHacks = qtHacks;
+                    }
+                    bool qtAutomation = _state.cfg.QuickToggleAutomation;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Automation"), ref qtAutomation) == true)
+                    {
+                        _state.cfg.QuickToggleAutomation = qtAutomation;
+                    }
+#endif
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/UiSettings")) == true)
+            {
+                ImGui.PushID("UiSettings");
+                ImGui.Indent(30.0f);
+                ImGui.Text(I18n.Translate("MainMenu/Settings/Language"));
+                if (ImGui.BeginCombo("##MainMenu/Settings/Language", _state.cfg.Language) == true)
+                {
+                    foreach (KeyValuePair<string, Core.Language> kp in I18n.RegisteredLanguages)
+                    {
+                        if (ImGui.Selectable(kp.Key + " (" + (int)Math.Floor(kp.Value.Coverage * 100.0f) + " %)", kp.Key == _state.cfg.Language) == true)
+                        {
+                            ChangeLanguage(kp.Key);
+                            _state.cfg.Language = kp.Key;
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+                bool shortcut = _state.cfg.ShowShortcut;
+                ImGui.Text(Environment.NewLine);
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/ShowShortcut"), ref shortcut) == true)
+                {
+                    _state.cfg.ShowShortcut = shortcut;
+                }
+                bool streamNag = _state.cfg.NagAboutStreaming;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/NagAboutStreaming"), ref streamNag) == true)
+                {
+                    _state.cfg.NagAboutStreaming = streamNag;
+                }
+                bool advOpts = _state.cfg.AdvancedOptions;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AdvancedOptions"), ref advOpts) == true)
+                {
+                    _state.cfg.AdvancedOptions = advOpts;
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/AutomarkerSettings")) == true)
+            {
+                ImGui.PushID("AutomarkerSettings");
+                ImGui.Indent(30.0f);
+                bool remCombat = _state.cfg.RemoveMarkersAfterCombatEnd;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterCombatEnd"), ref remCombat) == true)
+                {
+                    _state.cfg.RemoveMarkersAfterCombatEnd = remCombat;
+                }
+                bool remWipe = _state.cfg.RemoveMarkersAfterWipe;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterWipe"), ref remWipe) == true)
+                {
+                    _state.cfg.RemoveMarkersAfterWipe = remWipe;
+                }
+                ImGui.Text(Environment.NewLine);
+                if (ImGui.Button(I18n.Translate("MainMenu/Settings/RemoveAutomarkers")) == true)
+                {
+                    _state.ClearAutoMarkers();
+                }
+                ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
+                float autoIniMin = _state.cfg.AutomarkerIniDelayMin;
+                float autoIniMax = _state.cfg.AutomarkerIniDelayMax;
+                if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersInitialApplicationDelay", ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 60.0f) == true)
+                {
+                    _state.cfg.AutomarkerIniDelayMin = autoIniMin;
+                    _state.cfg.AutomarkerIniDelayMax = autoIniMax;
+                }
+                ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSubsequentApplicationDelay"));
+                float autoSubMin = _state.cfg.AutomarkerSubDelayMin;
+                float autoSubMax = _state.cfg.AutomarkerSubDelayMax;
+                if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersSubsequentApplicationDelay", ref autoSubMin, ref autoSubMax, 0.01f, 0.0f, 2.0f) == true)
+                {
+                    _state.cfg.AutomarkerSubDelayMin = autoSubMin;
+                    _state.cfg.AutomarkerSubDelayMax = autoSubMax;
+                }
+                ImGui.Text(Environment.NewLine);
+                bool autoCmd = _state.cfg.AutomarkerCommands;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersCommands"), ref autoCmd) == true)
+                {
+                    _state.cfg.AutomarkerCommands = autoCmd;
+                }
+                bool debugLogMarkers = _state.cfg.DebugOnlyLogAutomarkers;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugOnlyLogAutomarkers"), ref debugLogMarkers) == true)
+                {
+                    _state.cfg.DebugOnlyLogAutomarkers = debugLogMarkers;
+                }
+                if (_state.cfg.AutomarkerSoft == true && _state.cfg.QuickToggleOverlays == false)
+                {
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine);
+                    float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 1.0f, 0.0f, 1.0f));
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftPermsMissing",
+                        I18n.Translate("MainMenu/Settings/QuickToggles/Overlays"),
+                        I18n.Translate("MainMenu/Settings/QuickToggles"),
+                        I18n.Translate("MainMenu/Settings")
+                    ) + Environment.NewLine + Environment.NewLine);
+                    ImGui.PopStyleColor();
+                }
+                else
+                {
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine + Environment.NewLine);
+                }
+                bool autoSoft = _state.cfg.AutomarkerSoft;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersSoft"), ref autoSoft) == true)
+                {
+                    _state.cfg.AutomarkerSoft = autoSoft;
+                }
+                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/SoftmarkerSettings")) == true)
+                {
+                    _softMarkerPreview = true;
+                    ImGui.PushID("SoftmarkerSettings");
+                    ImGui.Indent(30.0f);
+                    ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/SoftmarkerPreviewActive") + Environment.NewLine + Environment.NewLine);
+                    Vector4 smcolor = _state.cfg.SoftmarkerTint;
+                    if (ImGui.ColorEdit4(I18n.Translate("MainMenu/Settings/SoftmarkerTint"), ref smcolor, ImGuiColorEditFlags.NoInputs) == true)
+                    {
+                        _state.cfg.SoftmarkerTint = smcolor;
+                    }
+                    bool smbounce = _state.cfg.SoftmarkerBounce;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBounce"), ref smbounce) == true)
+                    {
+                        _state.cfg.SoftmarkerBounce = smbounce;
+                    }
+                    bool smblink = _state.cfg.SoftmarkerBlink;
+                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBlink"), ref smblink) == true)
+                    {
+                        _state.cfg.SoftmarkerBlink = smblink;
+                    }
+                    ImGui.PushItemWidth(200.0f);
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerScaling"));
+                    float smscale = _state.cfg.SoftmarkerScale * 100.0f;
+                    if (ImGui.DragFloat("%##SmTint", ref smscale, 1.0f, 50.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerScale = smscale / 100.0f;
+                    }
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetWorld"));
+                    float smofsworldx = _state.cfg.SoftmarkerOffsetWorldX;
+                    if (ImGui.DragFloat("X##SmWorldX", ref smofsworldx, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerOffsetWorldX = smofsworldx;
+                    }
+                    float smofsworldy = _state.cfg.SoftmarkerOffsetWorldY;
+                    if (ImGui.DragFloat("Y##SmWorldY", ref smofsworldy, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerOffsetWorldY = smofsworldy;
+                    }
+                    float smofsworldz = _state.cfg.SoftmarkerOffsetWorldZ;
+                    if (ImGui.DragFloat("Z##SmWorldZ", ref smofsworldz, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerOffsetWorldZ = smofsworldz;
+                    }
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetScreen"));
+                    float smofsscreenx = _state.cfg.SoftmarkerOffsetScreenX;
+                    if (ImGui.DragFloat("X##SmScreenX", ref smofsscreenx, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerOffsetScreenX = smofsscreenx;
+                    }
+                    float smofsscreeny = _state.cfg.SoftmarkerOffsetScreenY;
+                    if (ImGui.DragFloat("Y##SmScreenY", ref smofsscreeny, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _state.cfg.SoftmarkerOffsetScreenY = smofsscreeny;
+                    }
+                    ImGui.PopItemWidth();
+                    ImGui.Unindent(30.0f);
+                    ImGui.PopID();
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/OpcodeSettings")) == true)
+            {
+                ImGui.PushID("OpcodeSettings");
+                ImGui.Indent(30.0f);
+                bool qtLog = _state.cfg.LogUnhandledOpcodes;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/LogUnhandledOpcodes"), ref qtLog) == true)
+                {
+                    _state.cfg.LogUnhandledOpcodes = qtLog;
+                }
+                string temp = _state.cfg.OpcodeUrl;
+                ImGui.Text(I18n.Translate("MainMenu/Settings/OpcodeUrl"));
+                if (ImGui.InputText("##MainMenu/Settings/OpcodeUrl", ref temp, 256) == true)
+                {
+                    _state.cfg.OpcodeUrl = temp;
+                }
+                ImGui.Text(I18n.Translate("MainMenu/Settings/OpcodeRegion"));
+                IEnumerable<string> ops = _state._dec.GetOpcodeRegions();
+                if (ops == null)
+                {
+                    ImGui.BeginDisabled();
+                }
+                if (ImGui.BeginCombo("##MainMenu/Settings/OpcodeRegion", _state.cfg.OpcodeRegion) == true)
+                {
+                    if (ops != null)
+                    {
+                        foreach (string op in ops)
+                        {
+                            if (ImGui.Selectable(op, op == _state.cfg.OpcodeRegion) == true)
+                            {
+                                _state._dec.SetOpcodeRegion(op);
+                                _state.cfg.OpcodeRegion = op;
+                            }
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+                if (ops == null)
+                {
+                    ImGui.EndDisabled();
+                }
+                if (ImGui.Button(I18n.Translate("MainMenu/Settings/OpcodeReload")) == true)
+                {
+                    Log(LogLevelEnum.Debug, "Triggering opcode reload");
+                    _retryEvent.Set();
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings")) == true)
+            {
+                ImGui.PushID("DebugSettings");
+                ImGui.Indent(30.0f);
+                bool qFrame = _state.cfg.QueueFramework;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugSettings/QueueFramework"), ref qFrame) == true)
+                {
+                    _state.cfg.QueueFramework = qFrame;
+                }
+                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/Config")) == true)
+                {
+                    ImGui.PushID("Config");
+                    ImGui.Indent(30.0f);
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/LoadConfig")) == true)
+                    {
+                        LoadConfig();
+                        ApplyConfigToContent();
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/SaveConfig")) == true)
+                    {
+                        SaveConfig();
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/BackupConfig")) == true)
+                    {
+                        BackupConfig();
+                    }
+                    ImGui.Separator();
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ExportConfig")) == true)
+                    {
+                        _configSnapshot = SerializeConfigSnapshot();
+                        Log(LogLevelEnum.Debug, "Config snapshot generated");
+                    }
+                    ImGui.InputTextMultiline("##ConfigSnapshot", ref _configSnapshot, 100000, new Vector2(ImGui.GetContentRegionAvail().X, 200.0f), ImGuiInputTextFlags.AutoSelectAll);
+                    bool isempty = _configSnapshot.Trim().Length == 0;
+                    if (isempty == true)
+                    {
+                        ImGui.BeginDisabled();
+                    }
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/CopyToClipboard")) == true)
+                    {
+                        ImGui.SetClipboardText(_configSnapshot);
+                        Log(LogLevelEnum.Debug, "Config snapshot copied to clipboard");
+                    }
+                    if (isempty == true)
+                    {
+                        ImGui.EndDisabled();
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/PasteFromClipboard")) == true)
+                    {
+                        _configSnapshot = ImGui.GetClipboardText();
+                        Log(LogLevelEnum.Debug, "Config snapshot pasted from clipboard");
+                    }
+                    ImGui.SameLine();
+                    if (isempty == true)
+                    {
+                        ImGui.BeginDisabled();
+                    }
+                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ImportConfig")) == true)
+                    {
+                        IPluginConfiguration imp = DeserializeConfigSnapshot(_configSnapshot);
+                        if (imp != null)
+                        {
+                            _state.cfg = (Config)imp;
+                            Log(LogLevelEnum.Debug, "Config snapshot imported");
+                        }
+                        else
+                        {
+                            Log(LogLevelEnum.Error, "Couldn't import config snapshot");
+                        }
+                    }
+                    if (isempty == true)
+                    {
+                        ImGui.EndDisabled();
+                    }
+                    ImGui.Unindent(30.0f);
+                    ImGui.PopID();
+                }
+                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/DelegateDebug")) == true)
+                {
+                    ImGui.PushID("DelegateDebug");
+                    ImGui.Indent(30.0f);
+                    ImGui.PushItemWidth(100.0f);
+                    RenderMethodCall(_state.InvokeCombatantAdded);
+                    RenderMethodCall(_state.InvokeCombatantRemoved);
+                    RenderMethodCall(_state.InvokeZoneChange);
+                    RenderMethodCall(_state.InvokeCombatChange);
+                    RenderMethodCall(_state.InvokeCastBegin);
+                    RenderMethodCall(_state.InvokeAction);
+                    RenderMethodCall(_state.InvokeHeadmarker);
+                    RenderMethodCall(_state.InvokeStatusChange);
+                    RenderMethodCall(_state.InvokeTether);
+                    RenderMethodCall(_state.InvokeDirectorUpdate);
+                    RenderMethodCall(_state.InvokeMapEffect);
+                    RenderMethodCall(_state.InvokeEventPlay);
+                    ImGui.PopItemWidth();
+                    ImGui.Unindent(30.0f);
+                    ImGui.PopID();
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+        }
+
+        private bool BeginAboutTab(bool forceOpen)
         {
             if (forceOpen == true)
             {
@@ -2115,7 +2769,189 @@ namespace Lemegeton
             }
         }
 
-        private void DrawConfig()
+        private void RenderAboutTab()
+        {
+            Vector2 cnv = ImGui.GetContentRegionAvail();
+            float sz = Math.Min(cnv.X, cnv.Y) - 20.0f;
+            Vector2 pos = ImGui.GetWindowPos();
+            float basex = pos.X + (cnv.X / 2.0f);
+            float basey = pos.Y + (cnv.Y / 2.0f);
+            float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 1200.0);
+            int maxp = 100;
+            float rim = sz / 20.0f;
+            float thicc = sz / 50.0f;
+            float delay = 4.0f;
+            DateTime now = DateTime.Now;
+            double secs = (now - _aboutOpened).TotalSeconds;
+            double curtime = secs % delay;
+            double transer = curtime < 1.0f ? 1.0f - curtime : (curtime > 3.0f ? curtime - 3.0f : 0.0f);
+            float mul = sz / 200.0f;
+            rim = Math.Clamp(rim, 2.0f, 20.0f);
+            thicc = Math.Clamp(thicc, 2.0f, 5.0f);
+            mul = Math.Clamp(mul, 0.5f, 5.0f);
+            ImDrawListPtr draw = ImGui.GetWindowDrawList();
+#if !SANS_GOETIA
+                maxp = 5;
+#else
+            maxp = 10;
+#endif
+            float inner = (sz / 2.0f) - rim - 10.0f;
+            for (int i = 0; i < maxp; i++)
+            {
+                float ag1 = time + ((float)Math.PI * 2.0f / maxp * (float)i);
+                float ag2 = time + ((float)Math.PI * 2.0f / maxp * (float)(i + 2));
+                draw.AddLine(
+                    new Vector2(basex + (float)Math.Cos(ag1) * inner, basey + (float)Math.Sin(ag1) * inner),
+                    new Vector2(basex + (float)Math.Cos(ag2) * inner, basey + (float)Math.Sin(ag2) * inner),
+                    ImGui.GetColorU32(new Vector4(0.3f, 0.0f, 0.0f, 1.0f)),
+                    thicc
+                );
+            }
+            draw.AddCircle(
+                new Vector2(basex, basey),
+                (sz / 2.0f) - 10.0f,
+                ImGui.GetColorU32(new Vector4(0.5f, 0.0f, 0.0f, 1.0f)),
+                32,
+                thicc
+            );
+            draw.AddCircle(
+                new Vector2(basex, basey),
+                inner,
+                ImGui.GetColorU32(new Vector4(0.5f, 0.0f, 0.0f, 1.0f)),
+                32,
+                thicc
+            );
+            maxp = 100;
+            for (int i = 0; i < maxp; i++)
+            {
+                float ang = (float)(Math.PI * 2.0 / maxp * (float)i) + (float)Math.Cos(i);
+                float dis = (sz / 2.0f) * (float)Math.Cos((i + time / (float)maxp) + time);
+                float col = (float)Math.Abs(Math.Cos(ang + time));
+                draw.AddCircleFilled(
+                    new Vector2(
+                        basex + ((float)Math.Cos(ang) * dis),
+                        basey + ((float)Math.Sin(ang) * dis)
+                    ),
+                    (thicc * 2.0f) + (thicc * (float)Math.Cos((i + time / (float)maxp) + time)),
+                    ImGui.GetColorU32(new Vector4(col, dis / sz / 2.0f, 0.0f, col)),
+                    32
+                );
+            }
+            int maxscroller = _aboutScroller.Count();
+            int curtext = (int)Math.Floor(secs / delay) % (maxscroller + _contribs.Count);
+            string curstr;
+            if (curtext < maxscroller)
+            {
+                curstr = _aboutScroller[curtext].Replace("$auto", _state.cfg.AutomarkersServed.ToString());
+            }
+            else
+            {
+                curstr = _contribs[curtext - maxscroller];
+            }
+            Vector2 tsz = ImGui.CalcTextSize(curstr);
+            tsz.X *= mul;
+            tsz.Y *= mul;
+            float curX = basex - tsz.X / 2.0f;
+            int nc = 0;
+            foreach (char c in curstr)
+            {
+                string glyph = c.ToString();
+                Vector2 tsg = ImGui.CalcTextSize(glyph);
+                float bonk = Math.Abs((float)Math.Cos((nc / 2.0f) + (time * 2.0f)));
+                draw.AddText(
+                    ImGui.GetFont(),
+                    ImGui.GetFontSize() * mul,
+                    new Vector2(
+                        curX + (mul * (10.0f * (float)transer) * 3.0f * (float)Math.Cos((nc / 4.0f) + (time * 2.0f))),
+                        basey - (tsz.Y / 2.0f) + ((float)Math.Cos((nc / 2.0f) + (time * 2.0f))) * (mul * 5.0f)
+                    ),
+                    ImGui.GetColorU32(new Vector4(1.0f, 1.0f - (float)transer, (1.0f - bonk) * (1.0f - (float)transer), 1.0f - (float)transer)),
+                    glyph
+                );
+                curX += tsg.X * mul;
+                nc++;
+            }
+        }
+
+        private void RenderFooter()
+        {
+            ImGui.Separator();
+            Vector2 fp = ImGui.GetCursorPos();
+            ImGui.SetCursorPosY(fp.Y + 2);
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
+            ImGui.Text(Version + " - " + _state.GameVersion);
+            ImGui.PopStyleColor();
+            ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
+            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
+            if (ImGui.Button("Discord") == true)
+            {
+                Task tx = new Task(() =>
+                {
+                    Process p = new Process();
+                    p.StartInfo.UseShellExecute = true;
+                    p.StartInfo.FileName = @"https://discord.gg/6f9MY55";
+                    p.Start();
+                });
+                tx.Start();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("GitHub") == true)
+            {
+                Task tx = new Task(() =>
+                {
+                    Process p = new Process();
+                    p.StartInfo.UseShellExecute = true;
+                    p.StartInfo.FileName = @"https://github.com/paissaheavyindustries/Lemegeton";
+                    p.Start();
+                });
+                tx.Start();
+            }
+            ImGui.SameLine();
+            _adjusterX += ImGui.GetContentRegionAvail().X;
+            ImGui.PopStyleColor(3);
+        }
+
+        private void KeepWindowInSight()
+        {
+            Vector2 pt = ImGui.GetWindowPos();
+            Vector2 szy = ImGui.GetWindowSize();
+            bool moved = false;
+            Vector2 szx = ImGui.GetIO().DisplaySize;
+            if (szy.X > szx.X || szy.Y > szx.Y)
+            {
+                szy.X = Math.Min(szy.X, szx.X);
+                szy.Y = Math.Min(szy.Y, szx.Y);
+                ImGui.SetWindowSize(szy);
+            }
+            if (pt.X < 0)
+            {
+                pt.X += (0.0f - pt.X) / 5.0f;
+                moved = true;
+            }
+            if (pt.Y < 0)
+            {
+                pt.Y += (0.0f - pt.Y) / 5.0f;
+                moved = true;
+            }
+            if (pt.X + szy.X > szx.X)
+            {
+                pt.X -= ((pt.X + szy.X) - szx.X) / 5.0f;
+                moved = true;
+            }
+            if (pt.Y + szy.Y > szx.Y)
+            {
+                pt.Y -= ((pt.Y + szy.Y) - szx.Y) / 5.0f;
+                moved = true;
+            }
+            if (moved == true)
+            {
+                ImGui.SetWindowPos(pt);
+            }
+        }
+
+        private void DrawMainWindow()
         {
             if (_state.cfg.Opened == false)
             {
@@ -2178,7 +3014,7 @@ namespace Lemegeton
                 ImGui.TextWrapped("Downloading, please wait.." + Environment.NewLine + (dlfn != null ? dlfn : ""));
                 Vector2 anp2 = ImGui.GetCursorPos();
                 ImGui.SetCursorPos(new Vector2(tenp.X, Math.Max(anp1.Y, anp2.Y)));
-                ImGui.Separator();                
+                ImGui.Separator();
                 fsz.Y -= ImGui.GetCursorPosY() - tenp.Y;
                 ImGui.BeginDisabled();
             }
@@ -2187,11 +3023,20 @@ namespace Lemegeton
             // status
             if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Status")) == true)
             {
-                ImGui.BeginChild("MainMenu/Status"); 
-                RenderStatus();
+                ImGui.BeginChild("MainMenu/Status");
+                RenderStatusTab();
                 ImGui.EndChild();
                 ImGui.EndTabItem();
             }
+            // timeline
+            /*
+            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines")) == true)
+            {
+                ImGui.BeginChild("MainMenu/Timelines");
+                RenderTimelineTab();
+                ImGui.EndChild();
+                ImGui.EndTabItem();
+            }*/
             // content
             if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Content")) == true)
             {
@@ -2212,363 +3057,12 @@ namespace Lemegeton
             if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Settings")) == true)
             {
                 ImGui.BeginChild("MainMenu/Settings");
-                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/QuickToggles")) == true)
-                {
-                    ImGui.PushID("QuickToggles");
-                    ImGui.Indent(30.0f);
-                    ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/QuickToggles/Info") + Environment.NewLine + Environment.NewLine);
-                    bool qtAutomarker = _state.cfg.QuickToggleAutomarkers;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Automarkers"), ref qtAutomarker) == true)
-                    {
-                        _state.cfg.QuickToggleAutomarkers = qtAutomarker;
-                    }
-                    bool qtOverlays = _state.cfg.QuickToggleOverlays;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Overlays"), ref qtOverlays) == true)
-                    {
-                        _state.cfg.QuickToggleOverlays = qtOverlays;
-                    }
-                    bool qtSound = _state.cfg.QuickToggleSound;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Sound"), ref qtSound) == true)
-                    {
-                        _state.cfg.QuickToggleSound = qtSound;
-                    }
-#if !SANS_GOETIA
-                    bool qtHacks = _state.cfg.QuickToggleHacks;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Hacks"), ref qtHacks) == true)
-                    {
-                        _state.cfg.QuickToggleHacks = qtHacks;
-                    }
-                    bool qtAutomation = _state.cfg.QuickToggleAutomation;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/QuickToggles/Automation"), ref qtAutomation) == true)
-                    {
-                        _state.cfg.QuickToggleAutomation = qtAutomation;
-                    }
-#endif
-                    ImGui.Unindent(30.0f);
-                    ImGui.PopID();
-                }
-                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/UiSettings")) == true)
-                {
-                    ImGui.PushID("UiSettings");
-                    ImGui.Indent(30.0f);
-                    ImGui.Text(I18n.Translate("MainMenu/Settings/Language"));
-                    if (ImGui.BeginCombo("##MainMenu/Settings/Language", _state.cfg.Language) == true)
-                    {
-                        foreach (KeyValuePair<string, Core.Language> kp in I18n.RegisteredLanguages)
-                        {
-                            if (ImGui.Selectable(kp.Key + " (" + (int)Math.Floor(kp.Value.Coverage * 100.0f) + " %)", kp.Key == _state.cfg.Language) == true)
-                            {
-                                ChangeLanguage(kp.Key);
-                                _state.cfg.Language = kp.Key;
-                            }
-                        }
-                        ImGui.EndCombo();
-                    }
-                    bool shortcut = _state.cfg.ShowShortcut;
-                    ImGui.Text(Environment.NewLine);
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/ShowShortcut"), ref shortcut) == true)
-                    {
-                        _state.cfg.ShowShortcut = shortcut;
-                    }
-                    bool streamNag = _state.cfg.NagAboutStreaming;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/NagAboutStreaming"), ref streamNag) == true)
-                    {
-                        _state.cfg.NagAboutStreaming = streamNag;
-                    }
-                    bool advOpts = _state.cfg.AdvancedOptions;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AdvancedOptions"), ref advOpts) == true)
-                    {
-                        _state.cfg.AdvancedOptions = advOpts;
-                    }
-                    ImGui.Unindent(30.0f);
-                    ImGui.PopID();
-                }
-                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/AutomarkerSettings")) == true)
-                {
-                    ImGui.PushID("AutomarkerSettings");
-                    ImGui.Indent(30.0f);
-                    bool remCombat = _state.cfg.RemoveMarkersAfterCombatEnd;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterCombatEnd"), ref remCombat) == true)
-                    {
-                        _state.cfg.RemoveMarkersAfterCombatEnd = remCombat;
-                    }
-                    bool remWipe = _state.cfg.RemoveMarkersAfterWipe;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/RemoveMarkersAfterWipe"), ref remWipe) == true)
-                    {
-                        _state.cfg.RemoveMarkersAfterWipe = remWipe;
-                    }
-                    ImGui.Text(Environment.NewLine);
-                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/RemoveAutomarkers")) == true)
-                    {
-                        _state.ClearAutoMarkers();
-                    }
-                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersInitialApplicationDelay"));
-                    float autoIniMin = _state.cfg.AutomarkerIniDelayMin;
-                    float autoIniMax = _state.cfg.AutomarkerIniDelayMax;
-                    if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersInitialApplicationDelay", ref autoIniMin, ref autoIniMax, 0.01f, 0.0f, 60.0f) == true)
-                    {
-                        _state.cfg.AutomarkerIniDelayMin = autoIniMin;
-                        _state.cfg.AutomarkerIniDelayMax = autoIniMax;
-                    }
-                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSubsequentApplicationDelay"));
-                    float autoSubMin = _state.cfg.AutomarkerSubDelayMin;
-                    float autoSubMax = _state.cfg.AutomarkerSubDelayMax;
-                    if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##MainMenu/Settings/AutomarkersSubsequentApplicationDelay", ref autoSubMin, ref autoSubMax, 0.01f, 0.0f, 2.0f) == true)
-                    {
-                        _state.cfg.AutomarkerSubDelayMin = autoSubMin;
-                        _state.cfg.AutomarkerSubDelayMax = autoSubMax;
-                    }
-                    ImGui.Text(Environment.NewLine);
-                    bool autoCmd = _state.cfg.AutomarkerCommands;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersCommands"), ref autoCmd) == true)
-                    {
-                        _state.cfg.AutomarkerCommands = autoCmd;
-                    }
-                    bool debugLogMarkers = _state.cfg.DebugOnlyLogAutomarkers;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugOnlyLogAutomarkers"), ref debugLogMarkers) == true)
-                    {
-                        _state.cfg.DebugOnlyLogAutomarkers = debugLogMarkers;
-                    }
-                    if (_state.cfg.AutomarkerSoft == true && _state.cfg.QuickToggleOverlays == false)
-                    {
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine);
-                        float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
-                        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 1.0f, 0.0f, 1.0f));
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftPermsMissing",
-                            I18n.Translate("MainMenu/Settings/QuickToggles/Overlays"),
-                            I18n.Translate("MainMenu/Settings/QuickToggles"),
-                            I18n.Translate("MainMenu/Settings")
-                        ) + Environment.NewLine + Environment.NewLine);
-                        ImGui.PopStyleColor();
-                    }
-                    else
-                    {
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/AutomarkersSoftDesc") + Environment.NewLine + Environment.NewLine);
-                    }
-                    bool autoSoft = _state.cfg.AutomarkerSoft;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/AutomarkersSoft"), ref autoSoft) == true)
-                    {
-                        _state.cfg.AutomarkerSoft = autoSoft;
-                    }
-                    if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/SoftmarkerSettings")) == true)
-                    {
-                        _softMarkerPreview = true;
-                        ImGui.PushID("SoftmarkerSettings");
-                        ImGui.Indent(30.0f);
-                        ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/SoftmarkerPreviewActive") + Environment.NewLine + Environment.NewLine);
-                        Vector4 smcolor = _state.cfg.SoftmarkerTint;
-                        if (ImGui.ColorEdit4(I18n.Translate("MainMenu/Settings/SoftmarkerTint"), ref smcolor, ImGuiColorEditFlags.NoInputs) == true)
-                        {
-                            _state.cfg.SoftmarkerTint = smcolor;
-                        }
-                        bool smbounce = _state.cfg.SoftmarkerBounce;
-                        if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBounce"), ref smbounce) == true)
-                        {
-                            _state.cfg.SoftmarkerBounce = smbounce;
-                        }
-                        bool smblink = _state.cfg.SoftmarkerBlink;
-                        if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/SoftmarkerBlink"), ref smblink) == true)
-                        {
-                            _state.cfg.SoftmarkerBlink = smblink;
-                        }
-                        ImGui.PushItemWidth(200.0f);
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerScaling"));
-                        float smscale = _state.cfg.SoftmarkerScale * 100.0f;
-                        if (ImGui.DragFloat("%##SmTint", ref smscale, 1.0f, 50.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerScale = smscale / 100.0f;
-                        }
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetWorld"));
-                        float smofsworldx = _state.cfg.SoftmarkerOffsetWorldX;
-                        if (ImGui.DragFloat("X##SmWorldX", ref smofsworldx, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerOffsetWorldX = smofsworldx;
-                        }
-                        float smofsworldy = _state.cfg.SoftmarkerOffsetWorldY;
-                        if (ImGui.DragFloat("Y##SmWorldY", ref smofsworldy, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerOffsetWorldY = smofsworldy;
-                        }
-                        float smofsworldz = _state.cfg.SoftmarkerOffsetWorldZ;
-                        if (ImGui.DragFloat("Z##SmWorldZ", ref smofsworldz, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerOffsetWorldZ = smofsworldz;
-                        }
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("MainMenu/Settings/SoftmarkerOffsetScreen"));
-                        float smofsscreenx = _state.cfg.SoftmarkerOffsetScreenX;
-                        if (ImGui.DragFloat("X##SmScreenX", ref smofsscreenx, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerOffsetScreenX = smofsscreenx;
-                        }
-                        float smofsscreeny = _state.cfg.SoftmarkerOffsetScreenY;
-                        if (ImGui.DragFloat("Y##SmScreenY", ref smofsscreeny, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _state.cfg.SoftmarkerOffsetScreenY = smofsscreeny;
-                        }
-                        ImGui.PopItemWidth();
-                        ImGui.Unindent(30.0f);
-                        ImGui.PopID();
-                    }
-                    ImGui.Unindent(30.0f);
-                    ImGui.PopID();
-                }
-                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/OpcodeSettings")) == true)
-                {
-                    ImGui.PushID("OpcodeSettings");
-                    ImGui.Indent(30.0f);
-                    bool qtLog = _state.cfg.LogUnhandledOpcodes;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/LogUnhandledOpcodes"), ref qtLog) == true)
-                    {
-                        _state.cfg.LogUnhandledOpcodes = qtLog;
-                    }
-                    string temp = _state.cfg.OpcodeUrl;
-                    ImGui.Text(I18n.Translate("MainMenu/Settings/OpcodeUrl"));
-                    if (ImGui.InputText("##MainMenu/Settings/OpcodeUrl", ref temp, 256) == true)
-                    {
-                        _state.cfg.OpcodeUrl = temp;
-                    }
-                    ImGui.Text(I18n.Translate("MainMenu/Settings/OpcodeRegion"));
-                    IEnumerable<string> ops = _state._dec.GetOpcodeRegions();
-                    if (ops == null)
-                    {
-                        ImGui.BeginDisabled();
-                    }
-                    if (ImGui.BeginCombo("##MainMenu/Settings/OpcodeRegion", _state.cfg.OpcodeRegion) == true)
-                    {
-                        if (ops != null)
-                        {
-                            foreach (string op in ops)
-                            {
-                                if (ImGui.Selectable(op, op == _state.cfg.OpcodeRegion) == true)
-                                {
-                                    _state._dec.SetOpcodeRegion(op);
-                                    _state.cfg.OpcodeRegion = op;
-                                }
-                            }
-                        }
-                        ImGui.EndCombo();
-                    }
-                    if (ops == null)
-                    {
-                        ImGui.EndDisabled();
-                    }
-                    if (ImGui.Button(I18n.Translate("MainMenu/Settings/OpcodeReload")) == true)
-                    {
-                        Log(LogLevelEnum.Debug, "Triggering opcode reload");
-                        _retryEvent.Set();
-                    }
-                    ImGui.Unindent(30.0f);
-                    ImGui.PopID();
-                }
-                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings")) == true)
-                {
-                    ImGui.PushID("DebugSettings");
-                    ImGui.Indent(30.0f);
-                    bool qFrame = _state.cfg.QueueFramework;
-                    if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugSettings/QueueFramework"), ref qFrame) == true)
-                    {
-                        _state.cfg.QueueFramework = qFrame;
-                    }
-                    if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/Config")) == true)
-                    {
-                        ImGui.PushID("Config");
-                        ImGui.Indent(30.0f);
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/LoadConfig")) == true)
-                        {
-                            LoadConfig();
-                            ApplyConfigToContent();
-                        }
-                        ImGui.SameLine();
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/SaveConfig")) == true)
-                        {
-                            SaveConfig();
-                        }
-                        ImGui.SameLine();
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/BackupConfig")) == true)
-                        {
-                            BackupConfig();
-                        }
-                        ImGui.Separator();
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ExportConfig")) == true)
-                        {
-                            _configSnapshot = SerializeConfigSnapshot();
-                            Log(LogLevelEnum.Debug, "Config snapshot generated");
-                        }
-                        ImGui.InputTextMultiline("##ConfigSnapshot", ref _configSnapshot, 100000, new Vector2(ImGui.GetContentRegionAvail().X, 200.0f), ImGuiInputTextFlags.AutoSelectAll);
-                        bool isempty = _configSnapshot.Trim().Length == 0;
-                        if (isempty == true)
-                        {
-                            ImGui.BeginDisabled();
-                        }
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/CopyToClipboard")) == true)
-                        {
-                            ImGui.SetClipboardText(_configSnapshot);
-                            Log(LogLevelEnum.Debug, "Config snapshot copied to clipboard");
-                        }
-                        if (isempty == true)
-                        {
-                            ImGui.EndDisabled();
-                        }
-                        ImGui.SameLine();
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/PasteFromClipboard")) == true)
-                        {
-                            _configSnapshot = ImGui.GetClipboardText();
-                            Log(LogLevelEnum.Debug, "Config snapshot pasted from clipboard");
-                        }
-                        ImGui.SameLine();
-                        if (isempty == true)
-                        {
-                            ImGui.BeginDisabled();
-                        }
-                        if (ImGui.Button(I18n.Translate("MainMenu/Settings/DebugSettings/ImportConfig")) == true)
-                        {
-                            IPluginConfiguration imp = DeserializeConfigSnapshot(_configSnapshot);
-                            if (imp != null)
-                            {
-                                _state.cfg = (Config)imp;
-                                Log(LogLevelEnum.Debug, "Config snapshot imported");
-                            }
-                            else
-                            {
-                                Log(LogLevelEnum.Error, "Couldn't import config snapshot");
-                            }
-                        }
-                        if (isempty == true)
-                        {
-                            ImGui.EndDisabled();
-                        }
-                        ImGui.Unindent(30.0f);
-                        ImGui.PopID();
-                    }
-                    if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/DelegateDebug")) == true)
-                    {
-                        ImGui.PushID("DelegateDebug");
-                        ImGui.Indent(30.0f);
-                        ImGui.PushItemWidth(100.0f);
-                        RenderMethodCall(_state.InvokeCombatantAdded);
-                        RenderMethodCall(_state.InvokeCombatantRemoved);
-                        RenderMethodCall(_state.InvokeZoneChange);
-                        RenderMethodCall(_state.InvokeCombatChange);
-                        RenderMethodCall(_state.InvokeCastBegin);
-                        RenderMethodCall(_state.InvokeAction);
-                        RenderMethodCall(_state.InvokeHeadmarker);
-                        RenderMethodCall(_state.InvokeStatusChange);
-                        RenderMethodCall(_state.InvokeTether);
-                        RenderMethodCall(_state.InvokeDirectorUpdate);
-                        RenderMethodCall(_state.InvokeMapEffect);
-                        RenderMethodCall(_state.InvokeEventPlay);
-                        ImGui.PopItemWidth();
-                        ImGui.Unindent(30.0f);
-                        ImGui.PopID();
-                    }
-                    ImGui.Unindent(30.0f);
-                    ImGui.PopID();
-                }
+                RenderSettingsTab();
                 ImGui.EndChild();
                 ImGui.EndTabItem();
             }
             // about
-            if (DrawAboutTab(aboutForceOpen) == true)
+            if (BeginAboutTab(aboutForceOpen) == true)
             {
                 if (_aboutProg == false)
                 {
@@ -2576,106 +3070,7 @@ namespace Lemegeton
                     _aboutProg = true;
                 }
                 ImGui.BeginChild("MainMenu/About");
-                Vector2 cnv = ImGui.GetContentRegionAvail();
-                float sz = Math.Min(cnv.X, cnv.Y) - 20.0f;
-                Vector2 pos = ImGui.GetWindowPos();
-                float basex = pos.X + (cnv.X / 2.0f);
-                float basey = pos.Y + (cnv.Y / 2.0f);
-                float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 1200.0);
-                int maxp = 100;
-                float rim = sz / 20.0f;
-                float thicc = sz / 50.0f;
-                float delay = 4.0f;
-                DateTime now = DateTime.Now;
-                double secs = (now - _aboutOpened).TotalSeconds;
-                double curtime = secs % delay;
-                double transer = curtime < 1.0f ? 1.0f - curtime : (curtime > 3.0f ? curtime - 3.0f : 0.0f);
-                float mul = sz / 200.0f;
-                rim = Math.Clamp(rim, 2.0f, 20.0f);
-                thicc = Math.Clamp(thicc, 2.0f, 5.0f);
-                mul = Math.Clamp(mul, 0.5f, 5.0f);
-                ImDrawListPtr draw = ImGui.GetWindowDrawList();
-#if !SANS_GOETIA
-                maxp = 5;
-#else
-                maxp = 10;
-#endif
-                float inner = (sz / 2.0f) - rim - 10.0f;
-                for (int i = 0; i < maxp; i++)
-                {
-                    float ag1 = time + ((float)Math.PI * 2.0f / maxp * (float)i);
-                    float ag2 = time + ((float)Math.PI * 2.0f / maxp * (float)(i + 2));
-                    draw.AddLine(
-                        new Vector2(basex + (float)Math.Cos(ag1) * inner, basey + (float)Math.Sin(ag1) * inner),
-                        new Vector2(basex + (float)Math.Cos(ag2) * inner, basey + (float)Math.Sin(ag2) * inner),
-                        ImGui.GetColorU32(new Vector4(0.3f, 0.0f, 0.0f, 1.0f)),
-                        thicc
-                    );
-                }
-                draw.AddCircle(
-                    new Vector2(basex, basey),
-                    (sz / 2.0f) - 10.0f,
-                    ImGui.GetColorU32(new Vector4(0.5f, 0.0f, 0.0f, 1.0f)),
-                    32,
-                    thicc
-                );
-                draw.AddCircle(
-                    new Vector2(basex, basey),
-                    inner,
-                    ImGui.GetColorU32(new Vector4(0.5f, 0.0f, 0.0f, 1.0f)),
-                    32,
-                    thicc
-                );
-                maxp = 100;
-                for (int i = 0; i < maxp; i++)
-                {
-                    float ang = (float)(Math.PI * 2.0 / maxp * (float)i) + (float)Math.Cos(i);
-                    float dis = (sz / 2.0f) * (float)Math.Cos((i + time / (float)maxp) + time);
-                    float col = (float)Math.Abs(Math.Cos(ang + time));
-                    draw.AddCircleFilled(
-                        new Vector2(
-                            basex + ((float)Math.Cos(ang) * dis), 
-                            basey + ((float)Math.Sin(ang) * dis)
-                        ),
-                        (thicc * 2.0f) + (thicc * (float)Math.Cos((i + time / (float)maxp) + time)),
-                        ImGui.GetColorU32(new Vector4(col, dis / sz / 2.0f, 0.0f, col)),
-                        32
-                    );
-                }
-                int maxscroller = _aboutScroller.Count();
-                int curtext = (int)Math.Floor(secs / delay) % (maxscroller + _contribs.Count);
-                string curstr;
-                if (curtext < maxscroller)
-                {
-                    curstr = _aboutScroller[curtext].Replace("$auto", _state.cfg.AutomarkersServed.ToString());
-                }
-                else
-                {
-                    curstr = _contribs[curtext - maxscroller];
-                }                
-                Vector2 tsz = ImGui.CalcTextSize(curstr);                
-                tsz.X *= mul;
-                tsz.Y *= mul;
-                float curX = basex - tsz.X / 2.0f;
-                int nc = 0;
-                foreach (char c in curstr)
-                {
-                    string glyph = c.ToString();
-                    Vector2 tsg = ImGui.CalcTextSize(glyph);
-                    float bonk = Math.Abs((float)Math.Cos((nc / 2.0f) + (time * 2.0f)));
-                    draw.AddText(
-                        ImGui.GetFont(),
-                        ImGui.GetFontSize() * mul,
-                        new Vector2(
-                            curX + (mul * (10.0f * (float)transer) * 3.0f * (float)Math.Cos((nc / 4.0f) + (time * 2.0f))),
-                            basey - (tsz.Y / 2.0f) + ((float)Math.Cos((nc / 2.0f) + (time * 2.0f))) * (mul * 5.0f)
-                        ),
-                        ImGui.GetColorU32(new Vector4(1.0f, 1.0f - (float)transer, (1.0f - bonk) * (1.0f - (float)transer), 1.0f - (float)transer)),
-                        glyph
-                    );
-                    curX += tsg.X * mul;
-                    nc++;
-                }
+                RenderAboutTab();
                 ImGui.EndChild();
                 ImGui.EndTabItem();
             }
@@ -2689,76 +3084,8 @@ namespace Lemegeton
             {
                 ImGui.EndDisabled();
             }
-            ImGui.Separator();
-            Vector2 fp = ImGui.GetCursorPos();
-            ImGui.SetCursorPosY(fp.Y + 2);
-            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui.Text(Version + " - " + _state.GameVersion);
-            ImGui.PopStyleColor();
-            ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
-            if (ImGui.Button("Discord") == true)
-            {
-                Task tx = new Task(() =>
-                {
-                    Process p = new Process();
-                    p.StartInfo.UseShellExecute = true;
-                    p.StartInfo.FileName = @"https://discord.gg/6f9MY55";
-                    p.Start();
-                });
-                tx.Start();
-            }
-            ImGui.SameLine();
-            if (ImGui.Button("GitHub") == true)
-            {
-                Task tx = new Task(() =>
-                {
-                    Process p = new Process();
-                    p.StartInfo.UseShellExecute = true;
-                    p.StartInfo.FileName = @"https://github.com/paissaheavyindustries/Lemegeton";
-                    p.Start();
-                });
-                tx.Start();
-            }
-            ImGui.SameLine();
-            _adjusterX += ImGui.GetContentRegionAvail().X;
-            ImGui.PopStyleColor(3);
-            Vector2 pt = ImGui.GetWindowPos();
-            Vector2 szy = ImGui.GetWindowSize();
-            bool moved = false;
-            Vector2 szx = ImGui.GetIO().DisplaySize;
-            if (szy.X > szx.X || szy.Y > szx.Y)
-            {
-                szy.X = Math.Min(szy.X, szx.X);
-                szy.Y = Math.Min(szy.Y, szx.Y);
-                ImGui.SetWindowSize(szy);
-            }
-            if (pt.X < 0)
-            {
-                pt.X += (0.0f - pt.X) / 5.0f;
-                moved = true;
-            }
-            if (pt.Y < 0)
-            {
-                pt.Y += (0.0f - pt.Y) / 5.0f;
-                moved = true;
-            }
-            if (pt.X + szy.X > szx.X)
-            {
-                pt.X -= ((pt.X + szy.X) - szx.X) / 5.0f;
-                moved = true;
-            }
-            if (pt.Y + szy.Y > szx.Y)
-            {
-                pt.Y -= ((pt.Y + szy.Y) - szx.Y) / 5.0f;
-                moved = true;
-            }
-            if (moved == true)
-            {
-                ImGui.SetWindowPos(pt);
-            }
+            RenderFooter();
+            KeepWindowInSight();
             ImGui.End();
             ImGui.PopStyleColor(3);
         }
@@ -2865,7 +3192,7 @@ namespace Lemegeton
                     else if (p.ParameterType == typeof(IntPtr))
                     {
                         string temp = _delDebugInput[del][k];
-                        nint addr = nint.Parse(temp, System.Globalization.NumberStyles.HexNumber);                        
+                        nint addr = nint.Parse(temp, System.Globalization.NumberStyles.HexNumber);
                         conversions.Add(new IntPtr(addr));
                     }
                     else if (p.ParameterType == typeof(byte[]))
@@ -2895,14 +3222,14 @@ namespace Lemegeton
             }
         }
 
-        private void RenderStatus()
+        private void RenderStatusTab()
         {
             TextureWrap tw;
             bool tfer;
             ImGuiStylePtr style = ImGui.GetStyle();
             float textofsx = (style.ItemSpacing.X / 2.0f);
             float textofsy = 0.0f;
-            List<string> complaints = new List<string>();            
+            List<string> complaints = new List<string>();
             if (ImGui.BeginTable("Table" + I18n.Translate("Status/AtAGlance"), 2) == true)
             {
                 ImGui.TableNextRow();
@@ -3196,8 +3523,8 @@ namespace Lemegeton
                     {
                         Method = HttpMethod.Get,
                         RequestUri = u
-                    };                    
-                    using HttpResponseMessage resp = http.Send(req);                    
+                    };
+                    using HttpResponseMessage resp = http.Send(req);
                     if (resp.StatusCode != System.Net.HttpStatusCode.OK)
                     {
                         Log(State.LogLevelEnum.Error, null, "Couldn't load file from {0}, response code was: {1}", uri, resp.StatusCode);

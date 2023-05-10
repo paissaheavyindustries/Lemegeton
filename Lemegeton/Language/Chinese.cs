@@ -1,15 +1,33 @@
-﻿namespace Lemegeton.Language
+﻿using Lemegeton.Core;
+
+namespace Lemegeton.Language
 {
 
     internal class Chinese : Core.Language
     {
 
-        public Chinese()
+        public override bool IsDefault => false;
+        public override string LanguageName => "中文";
+        public override bool FontDownloadNecessary { get { return (int)_state.cs.ClientLanguage != 4; } }
+        public override string FontDownload => @"https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf";
+        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.ChineseFull;
+
+        public Chinese(State st) : base(st)
         {
-            IsDefault = false;
-            LanguageName = "中文";
-            FontDownload = @"https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf";
-            GlyphRange = GlyphRangeEnum.ChineseFull;
+            #region 1.0.1.0
+            // do not translate yet please - feature still in development and these may change!
+            //AddEntry("MainMenu/Timelines", "Timelines");
+            //AddEntry("MainMenu/Timelines/Timelines", "Timelines");
+            //AddEntry("MainMenu/Timelines/Overlay", "Overlay");
+            //AddEntry("MainMenu/Timelines/Recorder", "Recorder");
+            //AddEntry("Timelines/Timeline", "Timeline");
+            //AddEntry("Timelines/Profile", "Profile");
+            //AddEntry("MainMenu/Timelines/SaveProfile", "Save profile");
+            //AddEntry("MainMenu/Timelines/SaveNewProfileAs", "Save new profile as..");
+            //AddEntry("MainMenu/Timelines/CloneProfile", "Clone profile");
+            //AddEntry("MainMenu/Timelines/DeleteProfile", "Delete profile");
+            #endregion
+            #region <1.0.1.0
             AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: 自动标记已启用。");
             AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: 自动标记已关闭。");
             AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: 绘图和叠加层已启用。");
@@ -673,6 +691,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Enabled", "启用");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/HighlightColor", "高亮颜色");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Test", "测试绘制");
+            #endregion
         }
 
     }

@@ -1,15 +1,33 @@
-﻿namespace Lemegeton.Language
+﻿using Lemegeton.Core;
+
+namespace Lemegeton.Language
 {
 
     internal class Japanese : Core.Language
     {
 
-        public Japanese()
+        public override bool IsDefault => false;
+        public override string LanguageName => "日本語";
+        public override bool FontDownloadNecessary => false;
+        public override string FontDownload => null;
+        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.Undefined;
+
+        public Japanese(State st) : base(st)
         {
-            IsDefault = false;
-            LanguageName = "日本語";
-            FontDownload = null;
-            GlyphRange = GlyphRangeEnum.Undefined;
+            #region 1.0.1.0
+            // do not translate yet please - feature still in development and these may change!
+            //AddEntry("MainMenu/Timelines", "Timelines");
+            //AddEntry("MainMenu/Timelines/Timelines", "Timelines");
+            //AddEntry("MainMenu/Timelines/Overlay", "Overlay");
+            //AddEntry("MainMenu/Timelines/Recorder", "Recorder");
+            //AddEntry("Timelines/Timeline", "Timeline");
+            //AddEntry("Timelines/Profile", "Profile");
+            //AddEntry("MainMenu/Timelines/SaveProfile", "Save profile");
+            //AddEntry("MainMenu/Timelines/SaveNewProfileAs", "Save new profile as..");
+            //AddEntry("MainMenu/Timelines/CloneProfile", "Clone profile");
+            //AddEntry("MainMenu/Timelines/DeleteProfile", "Delete profile");
+            #endregion
+            #region <1.0.1.0
             AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: オートマーカーを有効にしました。");
             AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: オートマーカーを無効にしました。");
             AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: 描画とオーバーレイを有効にしました。");
@@ -673,6 +691,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Enabled", "有効");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/HighlightColor", "表示色");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Test", "オーバーレイのテスト");
+            #endregion
         }
 
     }

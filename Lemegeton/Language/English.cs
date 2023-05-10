@@ -1,15 +1,33 @@
-﻿namespace Lemegeton.Language
+﻿using Lemegeton.Core;
+
+namespace Lemegeton.Language
 {
 
     internal class English : Core.Language
     {
 
-        public English()
+        public override bool IsDefault => true;
+        public override string LanguageName => "English";
+        public override bool FontDownloadNecessary => false;
+        public override string FontDownload => null;
+        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.Undefined;
+
+        public English(State st) : base(st)
         {
-            IsDefault = true;
-            LanguageName = "English";
-            FontDownload = null;
-            GlyphRange = GlyphRangeEnum.Undefined;
+            #region 1.0.1.0
+            // do not translate yet please - feature still in development and these may change!
+            AddEntry("MainMenu/Timelines", "Timelines");
+            AddEntry("MainMenu/Timelines/Timelines", "Timelines");
+            AddEntry("MainMenu/Timelines/Overlay", "Overlay");
+            AddEntry("MainMenu/Timelines/Recorder", "Recorder");
+            AddEntry("Timelines/Timeline", "Timeline");
+            AddEntry("Timelines/Profile", "Profile");
+            AddEntry("Timelines/SaveProfile", "Save profile");
+            AddEntry("Timelines/SaveNewProfileAs", "Save new profile as..");
+            AddEntry("Timelines/CloneProfile", "Clone profile");
+            AddEntry("Timelines/DeleteProfile", "Delete profile");
+            #endregion
+            #region <1.0.1.0
             AddEntry("Command/QuickToggleAutomarkers/On", "Lemegeton: Automarkers are now enabled.");
             AddEntry("Command/QuickToggleAutomarkers/Off", "Lemegeton: Automarkers are now disabled.");
             AddEntry("Command/QuickToggleOverlays/On", "Lemegeton: Draws and overlays are now enabled.");
@@ -673,6 +691,7 @@
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/HighlightColor", "Highlight color");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisOmegaDrawBossMonitor/Test", "Test overlay");
+            #endregion
         }
 
     }

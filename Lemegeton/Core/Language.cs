@@ -6,7 +6,7 @@ using System.Text;
 namespace Lemegeton.Core
 {
 
-    public class Language
+    public abstract class Language
     {
 
         public enum GlyphRangeEnum
@@ -16,20 +16,22 @@ namespace Lemegeton.Core
             ChineseFull
         }
 
-        public bool IsDefault { get; set; }
-        public string LanguageName { get; set; }
-        public string FontDownload { get; set; } = null;
-        public GlyphRangeEnum GlyphRange { get; set; } = GlyphRangeEnum.Undefined;
+        public abstract bool IsDefault { get; }
+        public abstract string LanguageName { get; }
+        public abstract bool FontDownloadNecessary { get; }
+        public abstract string FontDownload { get; }
+        public abstract GlyphRangeEnum GlyphRange { get; }
 
+        internal State _state { get; set; } = null;
         internal ImFontPtr? Font { get; set; } = null;
         internal float Coverage { get; set; }
 
         private Dictionary<string, string> Translations { get; set; }
 
-        public Language()
+        public Language(State st)
         {
-            LanguageName = "(undefined)";
             Translations = new Dictionary<string, string>();
+            _state = st;
         }
 
         internal void AddEntry(string key, string value)

@@ -29,6 +29,7 @@ using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
+using static Lumina.Data.Parsing.Uld.UldRoot;
 
 namespace Lemegeton.Core
 {
@@ -138,6 +139,7 @@ namespace Lemegeton.Core
         internal Config cfg;
         internal SigLocator _sig;
         internal NetworkDecoder _dec;
+        internal Timeline _timeline = null;
 
         private Dictionary<string, nint> _sigs = new Dictionary<string, nint>();
         private delegate char MarkingFunctionDelegate(nint ctrl, byte markId, uint actorId);
@@ -145,6 +147,7 @@ namespace Lemegeton.Core
         private delegate void PostCommandDelegate(IntPtr ui, IntPtr cmd, IntPtr unk1, byte unk2);
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
+        internal Dictionary<ushort, Timeline> Timelines = new Dictionary<ushort, Timeline>();
 
         private bool _markersApplied = false;
         internal bool _suppressCombatEndMarkRemoval = false;
@@ -152,6 +155,7 @@ namespace Lemegeton.Core
         private int _drawingStarts = 0;
         private ImDrawListPtr _drawListPtr;
         private bool _listening = false;
+        private DateTime _tlUpdate = DateTime.Now;
         public bool _inCombat = false;
         private ulong _runObject = 0;
         internal ulong _runInstance = 1;
@@ -293,6 +297,23 @@ namespace Lemegeton.Core
             cs.TerritoryChanged += Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
             Cs_TerritoryChanged(null, cs.TerritoryType);
+            Timeline tl = new Timeline() { Territory = 1122 };
+            Timelines[1122] = tl;
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 11.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B03 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 29.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 38.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 47.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 56.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 69.2f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B0B });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 787.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8110 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 787.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B89 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 788.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8111 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 788.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B8A });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 789.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8111 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 789.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B8A });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 805.2f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x81AC });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 808.5f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B01 });
+            tl.Entries.Add(new Timeline.Entry() { StartTime = 910.7f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8015 });
         }
 
         private void GetGameVersion()
@@ -331,6 +352,16 @@ namespace Lemegeton.Core
 
         private void FrameworkUpdate(Framework framework)
         {
+            if (_inCombat == true)
+            {
+                Timeline t = _timeline;
+                if (t != null)
+                {
+                    float delta = (float)(DateTime.Now - _tlUpdate).TotalSeconds;
+                    t.AdvanceTime(delta);
+                }
+            }
+            _tlUpdate = DateTime.Now;
             ProcessInvocations(InvoqFramework);            
         }
 
@@ -345,16 +376,24 @@ namespace Lemegeton.Core
             {
                 _inCombat = value;
                 _runInstance++;
-                if (value == false && cfg.RemoveMarkersAfterCombatEnd == true)
+                if (value == false)
                 {
-                    if (_suppressCombatEndMarkRemoval == false)
+                    Timeline t = _timeline;
+                    if (t != null)
                     {
-                        Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
-                        ClearAutoMarkers();
+                        t.Reset();
                     }
-                    else
+                    if (cfg.RemoveMarkersAfterCombatEnd == true)
                     {
-                        Log(State.LogLevelEnum.Debug, null, "Not clearing marks on combat end, because wipe clear is also in effect");
+                        if (_suppressCombatEndMarkRemoval == false)
+                        {
+                            Log(LogLevelEnum.Debug, null, "Combat ended, removing markers");
+                            ClearAutoMarkers();
+                        }
+                        else
+                        {
+                            Log(State.LogLevelEnum.Debug, null, "Not clearing marks on combat end, because wipe clear is also in effect");
+                        }
                     }
                 }
                 _suppressCombatEndMarkRemoval = false;

@@ -27,7 +27,7 @@ namespace Lemegeton.Core
                     _CurrentLanguage = value;
                     if (_CurrentLanguage != null && _CurrentLanguage.Font == null)
                     {
-                        if (_CurrentLanguage.FontDownload != null) 
+                        if (_CurrentLanguage.FontDownload != null && _CurrentLanguage.FontDownloadNecessary == true) 
                         {
                             OnFontDownload?.Invoke(_CurrentLanguage);
                         }
@@ -42,25 +42,7 @@ namespace Lemegeton.Core
             {
                 DefaultLanguage = ld;
             }
-            if (RegisteredLanguages.ContainsKey(ld.LanguageName) == true)
-            {
-                string basename = ld.LanguageName;
-                for (int i = 2; ; i++)
-                {
-                    string curname = basename + " #" + i;
-                    if (RegisteredLanguages.ContainsKey(curname) == true)
-                    {
-                        continue;
-                    }
-                    ld.LanguageName = curname;
-                    RegisteredLanguages[curname] = ld;
-                    break;
-                }
-            }
-            else
-            {
-                RegisteredLanguages[ld.LanguageName] = ld;
-            }
+            RegisteredLanguages[ld.LanguageName] = ld;
             if (_CurrentLanguage == null)
             {
                 _CurrentLanguage = ld;
