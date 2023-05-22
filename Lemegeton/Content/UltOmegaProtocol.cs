@@ -722,16 +722,16 @@ namespace Lemegeton.Content
                     float minDist = 20.0f;
                     float maxDist = 26.0f;
                     bool distOk = (dist >= minDist && dist <= maxDist);
-                    t1 = _state.plug.TranslateToScreen(p2.X, p2.Y, p2.Z);
-                    t2 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
+                    t1 = _state.plug._ui.TranslateToScreen(p2.X, p2.Y, p2.Z);
+                    t2 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
                     draw.AddLine(
                         new Vector2(t1.X, t1.Y),
                         new Vector2(t2.X, t2.Y),
                         ImGui.GetColorU32(TetherNokColor),
                         3.0f
                     );
-                    t1 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
-                    t2 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * maxDist), p2.Y + (angley * maxDist), p2.Z + (Math.Sin(anglexz) * maxDist));
+                    t1 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
+                    t2 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * maxDist), p2.Y + (angley * maxDist), p2.Z + (Math.Sin(anglexz) * maxDist));
                     draw.AddLine(
                         new Vector2(t1.X, t1.Y),
                         new Vector2(t2.X, t2.Y),
@@ -739,8 +739,8 @@ namespace Lemegeton.Content
                         6.0f
                     );
                     float distm = Math.Max(dist, maxDist + 5.0f);
-                    t1 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * maxDist), p2.Y + (angley * maxDist), p2.Z + (Math.Sin(anglexz) * maxDist));
-                    t2 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * distm), p2.Y + (angley * distm), p2.Z + (Math.Sin(anglexz) * distm));
+                    t1 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * maxDist), p2.Y + (angley * maxDist), p2.Z + (Math.Sin(anglexz) * maxDist));
+                    t2 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * distm), p2.Y + (angley * distm), p2.Z + (Math.Sin(anglexz) * distm));
                     draw.AddLine(
                         new Vector2(t1.X, t1.Y),
                         new Vector2(t2.X, t2.Y),
@@ -752,8 +752,8 @@ namespace Lemegeton.Content
                 {
                     float minDist = 35.0f;
                     bool distOk = (dist > minDist);
-                    t1 = _state.plug.TranslateToScreen(p2.X, p2.Y, p2.Z);
-                    t2 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
+                    t1 = _state.plug._ui.TranslateToScreen(p2.X, p2.Y, p2.Z);
+                    t2 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
                     draw.AddLine(
                         new Vector2(t1.X, t1.Y),
                         new Vector2(t2.X, t2.Y),
@@ -761,8 +761,8 @@ namespace Lemegeton.Content
                         3.0f
                     );
                     float distm = Math.Max(dist, minDist + 5.0f);
-                    t1 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
-                    t2 = _state.plug.TranslateToScreen(p2.X + (Math.Cos(anglexz) * distm), p2.Y + (angley * distm), p2.Z + (Math.Sin(anglexz) * distm));
+                    t1 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * minDist), p2.Y + (angley * minDist), p2.Z + (Math.Sin(anglexz) * minDist));
+                    t2 = _state.plug._ui.TranslateToScreen(p2.X + (Math.Cos(anglexz) * distm), p2.Y + (angley * distm), p2.Z + (Math.Sin(anglexz) * distm));
                     draw.AddLine(
                         new Vector2(t1.X, t1.Y),
                         new Vector2(t2.X, t2.Y),
@@ -1310,10 +1310,10 @@ namespace Lemegeton.Content
                 Vector3 t3 = new Vector3(x2, 0.0f, y2);
                 Vector3 t2 = new Vector3(t3.X, (t1.Y + t3.Y) / 2.0f, t1.Z);
                 Vector3 t4 = new Vector3(t1.X, (t1.Y + t3.Y) / 2.0f, t3.Z);
-                Vector3 v1 = _state.plug.TranslateToScreen(t1.X, t1.Y, t1.Z);
-                Vector3 v2 = _state.plug.TranslateToScreen(t2.X, t2.Y, t2.Z);
-                Vector3 v3 = _state.plug.TranslateToScreen(t3.X, t3.Y, t3.Z);
-                Vector3 v4 = _state.plug.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
                 draw.PathLineTo(new Vector2(v1.X, v1.Y));
                 draw.PathLineTo(new Vector2(v2.X, v2.Y));
                 draw.PathLineTo(new Vector2(v3.X, v3.Y));
@@ -1605,10 +1605,10 @@ namespace Lemegeton.Content
                 Vector3 t3 = new Vector3(x2, 0.0f, 120.0f);
                 Vector3 t2 = new Vector3(t3.X, (t1.Y + t3.Y) / 2.0f, t1.Z);
                 Vector3 t4 = new Vector3(t1.X, (t1.Y + t3.Y) / 2.0f, t3.Z);
-                Vector3 v1 = _state.plug.TranslateToScreen(t1.X, t1.Y, t1.Z);
-                Vector3 v2 = _state.plug.TranslateToScreen(t2.X, t2.Y, t2.Z);
-                Vector3 v3 = _state.plug.TranslateToScreen(t3.X, t3.Y, t3.Z);
-                Vector3 v4 = _state.plug.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
                 draw.PathLineTo(new Vector2(v1.X, v1.Y));
                 draw.PathLineTo(new Vector2(v2.X, v2.Y));
                 draw.PathLineTo(new Vector2(v3.X, v3.Y));

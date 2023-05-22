@@ -23,6 +23,7 @@ namespace Lemegeton.ContentCategory
         {
             Dictionary<string, Core.Content> items = new Dictionary<string, Core.Content>();
             items["Debugger"] = new Debugger(st);
+            items["Timelines"] = new Timelines(st);
             return items;
         }
 

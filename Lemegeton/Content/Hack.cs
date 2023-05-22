@@ -76,7 +76,7 @@ namespace Lemegeton.Content
                 Vector4 scol = new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
                 for (int i = 0; i <= 24; i++)
                 {
-                    Vector3 mauw = _state.plug.TranslateToScreen(
+                    Vector3 mauw = _state.plug._ui.TranslateToScreen(
                         temp.X + (dist * Math.Sin((Math.PI / 12.0) * i)),
                         temp.Y,
                         temp.Z + (dist * Math.Cos((Math.PI / 12.0) * i))
@@ -88,8 +88,8 @@ namespace Lemegeton.Content
                     ImDrawFlags.None,
                     2.0f + ((1.0f - bla) * 4.0f)
                 );
-                v1 = _state.plug.TranslateToScreen(temp.X + 3.0f, temp.Y, temp.Z);
-                v2 = _state.plug.TranslateToScreen(temp.X - 3.0f, temp.Y, temp.Z);
+                v1 = _state.plug._ui.TranslateToScreen(temp.X + 3.0f, temp.Y, temp.Z);
+                v2 = _state.plug._ui.TranslateToScreen(temp.X - 3.0f, temp.Y, temp.Z);
                 draw.AddLine(
                     new Vector2(v1.X, v1.Y),
                     new Vector2(v2.X, v2.Y),
@@ -102,8 +102,8 @@ namespace Lemegeton.Content
                 draw.AddText(ImGui.GetFont(), 40.0f,
                     new Vector2(v1.X, v1.Y), ImGui.GetColorU32(tcol), "X+"
                 );
-                v1 = _state.plug.TranslateToScreen(temp.X, temp.Y + 3.0f, temp.Z);
-                v2 = _state.plug.TranslateToScreen(temp.X, temp.Y - 3.0f, temp.Z);
+                v1 = _state.plug._ui.TranslateToScreen(temp.X, temp.Y + 3.0f, temp.Z);
+                v2 = _state.plug._ui.TranslateToScreen(temp.X, temp.Y - 3.0f, temp.Z);
                 draw.AddLine(
                     new Vector2(v1.X, v1.Y),
                     new Vector2(v2.X, v2.Y),
@@ -116,8 +116,8 @@ namespace Lemegeton.Content
                 draw.AddText(ImGui.GetFont(), 40.0f,
                     new Vector2(v1.X, v1.Y), ImGui.GetColorU32(tcol), "Y+"
                 );
-                v1 = _state.plug.TranslateToScreen(temp.X, temp.Y, temp.Z + 3.0f);
-                v2 = _state.plug.TranslateToScreen(temp.X, temp.Y, temp.Z - 3.0f);
+                v1 = _state.plug._ui.TranslateToScreen(temp.X, temp.Y, temp.Z + 3.0f);
+                v2 = _state.plug._ui.TranslateToScreen(temp.X, temp.Y, temp.Z - 3.0f);
                 draw.AddLine(
                     new Vector2(v1.X, v1.Y),
                     new Vector2(v2.X, v2.Y),

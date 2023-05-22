@@ -80,7 +80,7 @@ namespace Lemegeton.Content
                             float ex = go.HitboxRadius * bc.CurrentCastTime / bc.TotalCastTime;
                             for (int i = 0; i <= 48; i++)
                             {
-                                Vector3 mauw = _state.plug.TranslateToScreen(
+                                Vector3 mauw = _state.plug._ui.TranslateToScreen(
                                     go.Position.X + (ex * Math.Sin((Math.PI / 24.0) * i)),
                                     go.Position.Y,
                                     go.Position.Z + (ex * Math.Cos((Math.PI / 24.0) * i))
@@ -94,7 +94,7 @@ namespace Lemegeton.Content
                     }
                     for (int i = 0; i <= 48; i++)
                     {
-                        Vector3 mauw = _state.plug.TranslateToScreen(
+                        Vector3 mauw = _state.plug._ui.TranslateToScreen(
                             go.Position.X + (go.HitboxRadius * Math.Sin((Math.PI / 24.0) * i)),
                             go.Position.Y,
                             go.Position.Z + (go.HitboxRadius * Math.Cos((Math.PI / 24.0) * i))
@@ -106,9 +106,9 @@ namespace Lemegeton.Content
                         ImDrawFlags.None,
                         4.0f
                     );
-                    Vector3 t3, t1 = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                    Vector3 t3, t1 = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                     float ag = -1.0f * go.Rotation - (float)(Math.PI / 4.0f);
-                    Vector3 t2 = _state.plug.TranslateToScreen(
+                    Vector3 t2 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * go.HitboxRadius), 
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * go.HitboxRadius)
@@ -120,7 +120,7 @@ namespace Lemegeton.Content
                         4.0f
                     );
                     ag -= (float)(Math.PI / 2.0f);
-                    t2 = _state.plug.TranslateToScreen(
+                    t2 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * go.HitboxRadius),
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * go.HitboxRadius)
@@ -132,12 +132,12 @@ namespace Lemegeton.Content
                         4.0f
                     );
                     ag -= (float)(Math.PI / 2.0f);
-                    t1 = _state.plug.TranslateToScreen(
+                    t1 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * (go.HitboxRadius - go.HitboxRadius / 10.0f)),
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * (go.HitboxRadius - go.HitboxRadius / 10.0f))
                     );
-                    t2 = _state.plug.TranslateToScreen(
+                    t2 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * go.HitboxRadius),
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * go.HitboxRadius)
@@ -149,12 +149,12 @@ namespace Lemegeton.Content
                         4.0f
                     );
                     ag -= (float)(Math.PI / 2.0f);
-                    t1 = _state.plug.TranslateToScreen(
+                    t1 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * (go.HitboxRadius - go.HitboxRadius / 10.0f)),
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * (go.HitboxRadius - go.HitboxRadius / 10.0f))
                     );
-                    t2 = _state.plug.TranslateToScreen(
+                    t2 = _state.plug._ui.TranslateToScreen(
                         go.Position.X + (Math.Cos(ag) * go.HitboxRadius),
                         go.Position.Y,
                         go.Position.Z + (Math.Sin(ag) * go.HitboxRadius)
@@ -174,17 +174,17 @@ namespace Lemegeton.Content
                         (float)(go.Position.X + (Math.Cos(ag) * go.HitboxRadius)),
                         (float)(go.Position.Z + (Math.Sin(ag) * go.HitboxRadius))
                     );
-                    t1 = _state.plug.TranslateToScreen(
+                    t1 = _state.plug._ui.TranslateToScreen(
                         point.X,
                         go.Position.Y,
                         point.Y
                     );
-                    t2 = _state.plug.TranslateToScreen(
+                    t2 = _state.plug._ui.TranslateToScreen(
                         point.X + (Math.Cos(exag + wid) * dist),
                         go.Position.Y,
                         point.Y + (Math.Sin(exag + wid) * dist)
                     );
-                    t3 = _state.plug.TranslateToScreen(
+                    t3 = _state.plug._ui.TranslateToScreen(
                         point.X + (Math.Cos(exag - wid) * dist),
                         go.Position.Y,
                         point.Y + (Math.Sin(exag - wid) * dist)

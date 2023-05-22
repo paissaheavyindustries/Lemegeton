@@ -15,11 +15,13 @@ namespace Lemegeton.Content
         private const int StatusSpreadingFlames = 2758;
         private const int StatusThunderstruck = 2833;
         private const int StatusPrey = 562;
+        private const int StatusDoom = 2976;
 
         private bool ZoneOk = false;
 
         private MeteorAM _meteorAm;
         private ChainLightningAm _chainLightningAm;
+        private DothAM _dothAm;
         private WrothAM _wrothAm;
 
         #region MeteorAM
@@ -221,6 +223,105 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region DothAM
+
+        public class DothAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public Action Test { get; set; }
+
+            private List<uint> _dooms = new List<uint>();
+            private bool _fired = false;
+
+            public DothAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Signs.SetRole("Doom1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Doom2", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Doom3", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("Doom4", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("NonDoom1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("NonDoom2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("NonDoom3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("NonDoom4", AutomarkerSigns.SignEnum.Attack4, false);
+                Prio = new AutomarkerPrio();
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.CongaX;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _dooms.Clear();
+                _fired = false;
+            }
+
+            internal void FeedStatus(uint actorId, uint statusId, bool gained)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} for {2:X}", statusId, gained, actorId);
+                if (gained == false)
+                {
+                    if (_fired == true)
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                        Reset();
+                        _state.ClearAutoMarkers();
+                    }
+                    return;
+                }
+                if (statusId == StatusDoom)
+                {
+                    _dooms.Add(actorId);
+                }
+                if (_dooms.Count < 4)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _doomsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members join jx in _dooms on ix.ObjectId equals jx select ix
+                );
+                List<Party.PartyMember> _nonDoomsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members where _doomsGo.Contains(ix) == false select ix
+                );
+                Prio.SortByPriority(_doomsGo);
+                Prio.SortByPriority(_nonDoomsGo);                
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["Doom1"], _doomsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Doom2"], _doomsGo[1].GameObject);
+                ap.Assign(Signs.Roles["Doom3"], _doomsGo[2].GameObject);
+                ap.Assign(Signs.Roles["Doom4"], _doomsGo[3].GameObject);
+                ap.Assign(Signs.Roles["NonDoom1"], _nonDoomsGo[0].GameObject);
+                ap.Assign(Signs.Roles["NonDoom2"], _nonDoomsGo[1].GameObject);
+                ap.Assign(Signs.Roles["NonDoom3"], _nonDoomsGo[2].GameObject);
+                ap.Assign(Signs.Roles["NonDoom4"], _nonDoomsGo[3].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+        }
+
+        #endregion
+
         #region WrothAM
 
         public class WrothAM : Automarker
@@ -382,6 +483,10 @@ namespace Lemegeton.Content
             {
                 _meteorAm.FeedStatus(dest, statusId, gained);
             }
+            if (statusId == StatusDoom)
+            {
+                _dothAm.FeedStatus(dest, statusId, gained);
+            }
             if (statusId == StatusEntangledFlames || statusId == StatusSpreadingFlames)
             {
                 _wrothAm.FeedStatus(dest, statusId, gained);
@@ -418,6 +523,7 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _meteorAm = (MeteorAM)Items["MeteorAM"];
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
+                _dothAm = (DothAM)Items["DothAM"];
                 _wrothAm = (WrothAM)Items["WrothAM"];
                 _state.OnCombatChange += OnCombatChange;
             }

@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using static Lemegeton.Content.UltOmegaProtocol;
+using static Lemegeton.Core.State;
+using static Lumina.Data.Parsing.Uld.UldRoot;
 
 namespace Lemegeton.Core
 {
@@ -270,6 +272,10 @@ namespace Lemegeton.Core
                     {
                         _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");
                         _st.ClearAutoMarkers();
+                    }
+                    if (param2 == 0x40000007)
+                    {
+                        _st.AutoselectTimeline(_st.cs.TerritoryType);
                     }
                     _st.InvokeDirectorUpdate(param1, param2, param3, param4);
                     break;

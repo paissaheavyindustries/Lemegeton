@@ -29,7 +29,7 @@ using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
-using static Lumina.Data.Parsing.Uld.UldRoot;
+using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
 namespace Lemegeton.Core
 {
@@ -37,12 +37,52 @@ namespace Lemegeton.Core
     public sealed class State
     {
 
+        public enum SoundEffectEnum
+        {
+            None,
+            Se1,
+            Se2,
+            Se3,
+            Se4,
+            Se5,
+            Se6,
+            Se7,
+            Se8,
+            Se9,
+            Se10,
+            Se11,
+            Se12,
+            Se13,
+            Se14,
+            Se15,
+            Se16,
+        }
+
         internal enum LogLevelEnum
         {
             Error,
             Warning,
             Info,
             Debug
+        }
+
+        internal class ReactionExecution
+        {
+
+            internal Timeline.Reaction reaction { get; set; }
+            internal float when { get; set; }
+
+            public ReactionExecution(Timeline.Reaction r, float currentTime, float timeToEvent)
+            {
+                reaction = r;
+                when = currentTime + r.EffectiveTime + timeToEvent;
+            }
+
+            public void Execute(State st)
+            {
+                reaction.Execute(st);
+            }
+
         }
 
         internal class DeferredInvoke
@@ -140,6 +180,7 @@ namespace Lemegeton.Core
         internal SigLocator _sig;
         internal NetworkDecoder _dec;
         internal Timeline _timeline = null;
+        internal List<ReactionExecution> ReactionQueue = new List<ReactionExecution>();
 
         private Dictionary<string, nint> _sigs = new Dictionary<string, nint>();
         private delegate char MarkingFunctionDelegate(nint ctrl, byte markId, uint actorId);
@@ -147,7 +188,7 @@ namespace Lemegeton.Core
         private delegate void PostCommandDelegate(IntPtr ui, IntPtr cmd, IntPtr unk1, byte unk2);
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
-        internal Dictionary<ushort, Timeline> Timelines = new Dictionary<ushort, Timeline>();
+        internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
 
         private bool _markersApplied = false;
         internal bool _suppressCombatEndMarkRemoval = false;
@@ -155,6 +196,7 @@ namespace Lemegeton.Core
         private int _drawingStarts = 0;
         private ImDrawListPtr _drawListPtr;
         private bool _listening = false;
+        private bool _prevTargettable = false;
         private DateTime _tlUpdate = DateTime.Now;
         public bool _inCombat = false;
         private ulong _runObject = 0;
@@ -162,7 +204,9 @@ namespace Lemegeton.Core
         internal List<DeferredInvoke> InvoqThread = new List<DeferredInvoke>();
         internal List<DeferredInvoke> InvoqFramework = new List<DeferredInvoke>();
         internal AutoResetEvent InvoqThreadNew = new AutoResetEvent(false);
+        internal bool _newReactions = false;
 
+        private Dictionary<nint, bool> _objectsInCombat = new Dictionary<nint, bool>();
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
         private Dictionary<nint, uint> _objectsToActors = new Dictionary<nint, uint>();
 
@@ -205,6 +249,10 @@ namespace Lemegeton.Core
         internal delegate void EventPlay64Delegate();
         internal event EventPlay64Delegate OnEventPlay64;
 
+        internal delegate void TargettableDelegate();
+        internal event TargettableDelegate OnTargettable;
+        internal event TargettableDelegate OnUntargettable;
+
         internal void InvokeZoneChange(ushort newZone)
         {
             OnZoneChange?.Invoke(newZone);
@@ -217,11 +265,21 @@ namespace Lemegeton.Core
 
         internal void InvokeCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
         {
+            Timeline tl = _timeline;
+            if (tl != null)
+            {
+                tl.FeedEventCastBegin(this, GetActorById(dest), actionId, castTime);
+            }
             OnCastBegin?.Invoke(src, dest, actionId, castTime, rotation);
         }
 
         internal void InvokeAction(uint src, uint dest, ushort actionId)
         {
+            Timeline tl = _timeline;
+            if (tl != null)
+            {
+                tl.FeedEventCastEnd(this, GetActorById(dest), actionId);
+            }
             OnAction?.Invoke(src, dest, actionId);
         }
 
@@ -270,8 +328,120 @@ namespace Lemegeton.Core
             OnEventPlay64?.Invoke();
         }
 
+        internal void InvokeTargettable()
+        {
+            OnTargettable?.Invoke();
+        }
+
+        internal void InvokeUntargettable()
+        {
+            OnUntargettable?.Invoke();
+        }
+
         public State()
         {
+        }
+
+        public void LoadLocalTimelines()
+        {            
+            var timelinefiles = Directory.GetFiles(cfg.TimelineLocalFolder, "*.timeline.xml").OrderBy(x => new FileInfo(x).LastWriteTime);
+            Dictionary<ushort, Timeline> tls = new Dictionary<ushort, Timeline>();
+            foreach (string fn in timelinefiles)
+            {
+                Timeline tlx = LoadTimeline(fn);
+                if (tlx != null)
+                {
+                    tls[tlx.Territory] = tlx;
+                }
+            }
+            foreach (KeyValuePair<ushort, Timeline> tl in tls)
+            {
+                Log(LogLevelEnum.Debug, null, "Timeline from {0} set to territory {1}", tl.Value.Filename, tl.Key);
+                lock (AllTimelines)
+                {
+                    AllTimelines[tl.Key] = tl.Value;
+                }
+            }
+        }
+        
+        public Timeline LoadTimeline(string filename)
+        {
+            try
+            {                
+                Log(LogLevelEnum.Debug, null, "Loading timeline from {0}", filename);
+                FileInfo fi = new FileInfo(filename);
+                string data = File.ReadAllText(filename);
+                Timeline tl = XmlSerializer<Timeline>.Deserialize(data);
+                tl.Filename = filename;
+                tl.LastModified = fi.LastWriteTime;
+                if (tl.Territory == 0)
+                {
+                    Log(LogLevelEnum.Debug, null, "No territory specified in timeline file {0}", filename);
+                    tl = null;
+                }
+                return tl;
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevelEnum.Error, ex, "Timeline load failed");
+            }
+            return null;
+        }
+
+        public void UnloadTimeline(ushort territory)
+        {
+            lock (AllTimelines)
+            {
+                if (AllTimelines.TryGetValue(territory, out Timeline tl) == true)
+                {
+                    AllTimelines.Remove(territory);
+                }
+            }
+        }
+
+        public Timeline GetTimeline(ushort territory)
+        {
+            lock (AllTimelines)
+            {
+                if (AllTimelines.TryGetValue(territory, out Timeline tl) == true)
+                {
+                    return tl;
+                }
+            }
+            return null;
+        }
+
+        public Timeline CheckTimelineReload(Timeline tl)
+        {
+            if (tl.Filename == null)
+            {
+                Log(LogLevelEnum.Debug, null, "Can't check reload for timeline for territory {0}, source file not specified", tl.Territory);
+                return tl;
+            }
+            FileInfo fi = new FileInfo(tl.Filename);
+            if (fi.Exists == false)
+            {
+                Log(LogLevelEnum.Debug, null, "Can't check reload for timeline for territory {0}, source file {1} doesn't exist anymore", tl.Territory, tl.LastModified);
+                return tl;
+            }
+            if (fi.LastWriteTime > tl.LastModified)
+            {
+                Log(LogLevelEnum.Debug, null, "Timeline for territory {0} has changed since last load, reloading from {1}", tl.Territory, tl.LastModified);
+                Timeline.Profile dpro = tl.DefaultProfile;
+                List<Timeline.Profile> pros = new List<Timeline.Profile>(tl.Profiles);
+                Timeline ntl = LoadTimeline(tl.Filename);                
+                if (ntl != null && ntl.Territory == tl.Territory)
+                {
+                    ntl.Profiles.AddRange(pros);
+                    ntl.DefaultProfile = dpro;
+                    return ntl;
+                }
+            }
+            else
+            {
+                Log(LogLevelEnum.Debug, null, "Timeline file {0} for territory {1} has not changed since last load", tl.Filename, tl.Territory);
+            }
+            return tl;
         }
 
         public void Initialize()
@@ -296,24 +466,11 @@ namespace Lemegeton.Core
             });
             cs.TerritoryChanged += Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
+            if (cfg.TimelineLocalAllowed == true)
+            {
+                LoadLocalTimelines();
+            }
             Cs_TerritoryChanged(null, cs.TerritoryType);
-            Timeline tl = new Timeline() { Territory = 1122 };
-            Timelines[1122] = tl;
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 11.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B03 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 29.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 38.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 47.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 56.1f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B04 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 69.2f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B0B });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 787.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8110 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 787.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B89 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 788.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8111 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 788.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B8A });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 789.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8111 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 789.0f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B8A });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 805.2f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x81AC });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 808.5f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x7B01 });
-            tl.Entries.Add(new Timeline.Entry() { StartTime = 910.7f, Type = Timeline.EntryTypeEnum.OnCastBegin, Key = 0x8015 });
         }
 
         private void GetGameVersion()
@@ -358,15 +515,73 @@ namespace Lemegeton.Core
                 if (t != null)
                 {
                     float delta = (float)(DateTime.Now - _tlUpdate).TotalSeconds;
-                    t.AdvanceTime(delta);
+                    t.AdvanceTime(this, delta);
                 }
             }
             _tlUpdate = DateTime.Now;
-            ProcessInvocations(InvoqFramework);            
+            ProcessInvocations(InvoqFramework);
+            ProcessReactions(ReactionQueue);
+        }
+
+        internal void QueueReactionExecution(Timeline.Reaction r, float timeToEvent)
+        {
+            if (r.Fired == true)
+            {
+                return;
+            }
+            r.Fired = true;
+            float ct = _timeline != null ? _timeline.CurrentTime : -1.0f;
+            ReactionExecution re = new ReactionExecution(r, ct, timeToEvent);
+            lock (ReactionQueue)
+            {
+                ReactionQueue.Add(re);
+                ReactionQueue.Sort((a, b) => a.when.CompareTo(b.when));
+                Log(LogLevelEnum.Debug, null, "Queued reaction {0} execution to {1} at tl time {2}", 
+                    r.Name, 
+                    re.when,
+                    ct
+                );
+                _newReactions = true;
+            }
+        }
+
+        internal void AutoselectTimeline(ushort territory)
+        {
+            _timeline = null;
+            if (cs.LocalPlayer == null)
+            {
+                return;
+            }
+            Timeline tl = GetTimeline(territory);
+            if (tl != null)
+            {
+                tl = CheckTimelineReload(tl);
+                _timeline = tl;
+                _timeline.Reset(this);
+                int num = tl.SelectProfiles(cs.LocalPlayer.ClassJob.Id);
+                if (num > 0)
+                {
+                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, {1} selected profile(s)", cs.TerritoryType, num);
+                }
+                else
+                {
+                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, no profile selected", cs.TerritoryType);
+                }
+            }
+            else
+            {
+                Log(LogLevelEnum.Debug, null, "No timeline available for territory {0}", cs.TerritoryType);
+            }
+            ClearReactionQueue();
         }
 
         private void Cs_TerritoryChanged(object sender, ushort e)
         {
+            _timeline = null;
+            if (sender != null)
+            {
+                AutoselectTimeline(e);
+            }
             InvokeZoneChange(e);
         }
 
@@ -376,12 +591,22 @@ namespace Lemegeton.Core
             {
                 _inCombat = value;
                 _runInstance++;
+                Timeline t = _timeline;
                 if (value == false)
                 {
-                    Timeline t = _timeline;
                     if (t != null)
                     {
-                        t.Reset();
+                        int num = t.SelectProfiles(cs.LocalPlayer.ClassJob.Id);
+                        if (num > 0)
+                        {
+                            Log(LogLevelEnum.Debug, null, "Resetting timeline on combat end, {0} selected profile(s)", num);
+                        }
+                        else
+                        {
+                            Log(LogLevelEnum.Debug, null, "Resetting timeline on combat end");
+                        }
+                        t.Reset(this);
+                        ClearReactionQueue();
                     }
                     if (cfg.RemoveMarkersAfterCombatEnd == true)
                     {
@@ -394,6 +619,17 @@ namespace Lemegeton.Core
                         {
                             Log(State.LogLevelEnum.Debug, null, "Not clearing marks on combat end, because wipe clear is also in effect");
                         }
+                    }
+                }
+                if (t != null)
+                {
+                    if (value == true)
+                    {
+                        t.FeedCombatStart(this);
+                    }
+                    else
+                    {
+                        t.FeedCombatEnd(this);
                     }
                 }
                 _suppressCombatEndMarkRemoval = false;
@@ -603,6 +839,46 @@ namespace Lemegeton.Core
             return 0;
         }
 
+        internal void ClearReactionQueue()
+        {
+            lock (ReactionQueue)
+            {
+                ReactionQueue.Clear();
+            }
+        }
+
+        internal void ProcessReactions(List<ReactionExecution> queue)
+        {
+            if (_newReactions == false)
+            {
+                return;
+            }
+            List<ReactionExecution> res;
+            Timeline tl = _timeline;
+            if (tl != null)
+            {
+                lock (ReactionQueue)
+                {
+                    res = (from ix in ReactionQueue where ix.when <= tl.CurrentTime select ix).ToList();
+                }
+                if (res.Count > 0)
+                {
+                    foreach (ReactionExecution re in res)
+                    {
+                        re.Execute(this);
+                    }
+                    _newReactions = ReactionQueue.Count != res.Count;
+                    lock (ReactionQueue)
+                    {
+                        foreach (ReactionExecution re in res)
+                        {
+                            ReactionQueue.Remove(re);
+                        }
+                    }
+                }
+            }
+        }
+
         internal void QueueInvocation(DeferredInvoke di)
         {
             List<DeferredInvoke> queue = cfg.QueueFramework == true ? InvoqFramework : InvoqThread;
@@ -805,6 +1081,7 @@ namespace Lemegeton.Core
 
         internal void TrackObjects()
         {
+            bool hostileTargettable = false;
             _runObject++;
             List<GameObject> newobjs = new List<GameObject>();
             Dictionary<nint, uint> repobjs = new Dictionary<nint, uint>();
@@ -819,8 +1096,22 @@ namespace Lemegeton.Core
                     &&
                     (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
                 )
-                {
+                {                    
                     continue;
+                }
+                bool incombat = false;
+                if (go is BattleChara)
+                {
+                    BattleChara bc = (BattleChara)go;
+                    incombat = (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.InCombat) != 0;
+                    if (hostileTargettable == false && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
+                    {
+                        unsafe
+                        {
+                            GameObjectPtr* gop = (GameObjectPtr*)go.Address;
+                            hostileTargettable = gop->GetIsTargetable();
+                        }
+                    }
                 }
                 if (_objectsSeen.ContainsKey(go.Address) == false)
                 {
@@ -834,6 +1125,43 @@ namespace Lemegeton.Core
                     _objectsToActors[go.Address] = go.ObjectId;
                 }
                 _objectsSeen[go.Address] = _runObject;
+                if (incombat == true)
+                {
+                    Timeline tl = _timeline;
+                    if (_objectsInCombat.TryGetValue(go.Address, out bool oldcombat) == true)
+                    {
+                        if (oldcombat == false && tl != null)
+                        {
+                            tl.FeedPulled(this, go);
+                        }
+                    }
+                    else if (tl != null)
+                    {
+                        tl.FeedPulled(this, go);
+                    }
+                }
+                _objectsInCombat[go.Address] = incombat;
+            }
+            if (hostileTargettable != _prevTargettable)
+            {
+                _prevTargettable = hostileTargettable;
+                Timeline tl = _timeline;
+                if (hostileTargettable == true)
+                {
+                    InvokeTargettable();
+                    if (tl != null)
+                    {
+                        tl.FeedEventTargettable(this);
+                    }
+                }
+                else
+                {
+                    InvokeUntargettable();
+                    if (tl != null)
+                    {
+                        tl.FeedEventUntargettable(this);
+                    }
+                }
             }
             if (numcurrent != numobjs)
             {
@@ -844,6 +1172,7 @@ namespace Lemegeton.Core
                         nint addr = kp.Key;
                         InvokeCombatantRemoved(_objectsToActors[addr], addr);
                         _objectsSeen.Remove(addr);
+                        _objectsInCombat.Remove(addr);
                         _objectsToActors.Remove(addr);
                     }
                 }                
@@ -857,8 +1186,13 @@ namespace Lemegeton.Core
             }
             if (newobjs.Count > 0)
             {
+                Timeline tl = _timeline;
                 foreach (GameObject go in newobjs)
-                {
+                {                    
+                    if (tl != null)
+                    {
+                        tl.FeedNewCombatant(this, go);
+                    }
                     InvokeCombatantAdded(go);
                 }
             }

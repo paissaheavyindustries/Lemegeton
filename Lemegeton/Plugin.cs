@@ -14,7 +14,6 @@ using Lemegeton.Core;
 using System.Reflection;
 using Dalamud.Data;
 using ImGuiScene;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.Types;
 using System.Xml;
 using Vector2 = System.Numerics.Vector2;
@@ -40,8 +39,9 @@ using static Lemegeton.Core.AutomarkerPrio;
 using System.Net.Http;
 using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
-using static Lemegeton.Core.AutomarkerSigns;
-using static System.Net.Mime.MediaTypeNames;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using System.Xml.Xsl;
 using System.Xml.Linq;
 
 namespace Lemegeton
@@ -55,7 +55,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "v1.0.0.17";
+        public string Version = "1.0.1.0";
 
         internal class Downloadable
         {
@@ -70,7 +70,9 @@ namespace Lemegeton
 
         internal delegate void DownloadableCompletionDelegate(Downloadable d);
         private List<Tuple<Core.Language, string>> _fontBuilderQueue = new List<Tuple<Core.Language, string>>();
-
+        private List<Notification> Notifications = new List<Notification>();
+        private List<Notification> NotificationsQueue = new List<Notification>();
+        internal UserInterface _ui = new UserInterface();
         private State _state = new State();
         private Thread _mainThread = null;
         private ManualResetEvent _stopEvent = new ManualResetEvent(false);
@@ -79,6 +81,8 @@ namespace Lemegeton
         private float _adjusterX = 0.0f;
         private float _adjusterXtl = 0.0f;
         private float _adjusterYtl = 0.0f;
+        private float _adjusterYtl2 = 0.0f;
+        private float _adjusterYtl3 = 0.0f;
         private DateTime _loaded = DateTime.Now;
         private bool _aboutProg = false;
         private bool _softMarkerPreview = false;
@@ -88,16 +92,126 @@ namespace Lemegeton
         private bool _downloadPending = false;
         private string _downloadFilename = "";
         private string _timelineActionFilter = "";
+        private bool _newNotifications = false;
+        private int _ttsCounter = 1;
+
+        private bool _movingShortcut = false;
+        private Vector2 _movingMouse;
+
         private Timeline _selectedTimeline = null;
+        private Timeline SelectedTimeline
+        {
+            get
+            {
+                return _selectedTimeline;
+            }
+            set
+            {
+                if (_selectedTimeline != value)
+                {
+                    _selectedTimeline = value;
+                    _selectedProfile = _selectedTimeline != null ? _selectedTimeline.DefaultProfile : null;
+                    SelectedEncounter = _selectedTimeline != null && _selectedTimeline.Encounters.Count > 0 ? _selectedTimeline.Encounters[0] : null;
+                }
+            }
+        }
+
         private Timeline.Profile _selectedProfile = null;
+        private Timeline.Profile SelectedProfile
+        {
+            get
+            {
+                return _selectedProfile;
+            }
+            set
+            {
+                if (_selectedProfile != value)
+                {
+                    _selectedProfile = value;
+                    if (_selectedProfile == null)
+                    {
+                        SelectedEntry = null;
+                    }
+                }
+            }
+        }
+
+        private Timeline.Encounter _selectedEncounter = null;
+        private Timeline.Encounter SelectedEncounter
+        {
+            get
+            {
+                return _selectedEncounter;
+            }
+            set
+            {
+                if (_selectedEncounter != value)
+                {
+                    _selectedEncounter = value;
+                    SelectedEntry = _selectedEncounter != null && _selectedEncounter.Entries.Count > 0 ? _selectedEncounter.Entries[0] : null;
+                }
+            }
+        }
+
         private Timeline.Entry _selectedEntry = null;
+        private Timeline.Entry SelectedEntry
+        {
+            get
+            {
+                return _selectedEntry;
+            }
+            set
+            {
+                if (_selectedEntry != value)
+                {
+                    _selectedEntry = value;                    
+                    if (_selectedEntry != null && SelectedProfile != null)
+                    {
+                        Timeline.Entry.ProfileSettings pro = SelectedProfile.GetSettingsForEntry(_selectedEntry);
+                        if (pro.Reactions.Count > 0)
+                        {
+                            SelectedReaction = pro.Reactions[0];
+                        }
+                        else
+                        {
+                            SelectedReaction = null;
+                        }
+                    }
+                    else
+                    {
+                        SelectedReaction = null;
+                    }
+                }
+            }
+        }
+
+        private Timeline.Reaction _selectedReaction = null;
+        private Timeline.Reaction SelectedReaction
+        {
+            get
+            {
+                return _selectedReaction;
+            }
+            set
+            {
+                if (_selectedReaction != value)
+                {
+                    _selectedReaction = value;
+                    if (_selectedReaction != null && _selectedReaction.Actions.Count > 0)
+                    {
+                        _selectedAction = _selectedReaction.Actions[0];
+                    }
+                    else
+                    {
+                        _selectedAction = null;
+                    }
+                }
+            }
+        }
+
+        private Timeline.Action _selectedAction = null;
 
         private Dictionary<string, ImFontPtr> _fonts = new Dictionary<string, ImFontPtr>();
-        private Dictionary<int, TextureWrap> _misc = new Dictionary<int, TextureWrap>();
-        private Dictionary<AutomarkerSigns.SignEnum, TextureWrap> _signs = new Dictionary<AutomarkerSigns.SignEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap>();
         public List<Core.ContentCategory> _content = new List<Core.ContentCategory>();
         public List<Core.ContentCategory> _other = new List<Core.ContentCategory>();
         private float _lemmyShortcutOpacity = 0.5f;
@@ -109,11 +223,11 @@ namespace Lemegeton
         private List<string> _contribs = new List<string>();
         private string _newPresetName = "";
         private string _newProfileName = "";
-
-        private object _dragObject = null;
-        private bool _isDragging = false;
-        private int _dragStartItem = 0;
-        private int _dragEndItem = 0;
+        private string _newReactionName = "";
+        private bool _renderTimelineOverlay = false;
+        private bool _timelineOverlayConfig = false;
+        private bool _renderNotificationOverlay = false;
+        private bool _notificationOverlayConfig = false;
 
         private string[] _aboutScroller = new string[] {
 #if !SANS_GOETIA
@@ -164,15 +278,17 @@ namespace Lemegeton
                 tm = targetManager,
                 plug = this
             };
+            _ui._state = _state;
             Log(LogLevelEnum.Info, "This is Lemegeton {0}", Version);
             LoadConfig();
-            InitializeContent();
-            _state.Initialize();
+            ApplyVersionChanges();
             I18n.OnFontDownload += I18n_OnFontDownload;
             InitializeLanguage();
+            InitializeContent();
+            _state.Initialize();
             ApplyConfigToContent();
             ChangeLanguage(_state.cfg.Language);
-            LoadTextures();
+            _ui.LoadTextures();
             _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
             _mainThread.Name = "Lemegeton main thread";
@@ -182,6 +298,23 @@ namespace Lemegeton
             if (_state.cs.IsLoggedIn == true)
             {
                 Cs_Login(null, null);
+            }
+            _state.AutoselectTimeline(_state.cs.TerritoryType);
+        }
+
+        private void ApplyVersionChanges()
+        {
+            if (String.Compare(_state.cfg.PlogonVersion, Version) != 0)
+            {
+                Log(LogLevelEnum.Info, "Plugin version changed from {0} to {1}", _state.cfg.PlogonVersion, Version);
+                BackupConfig();
+                if (new Version(_state.cfg.PlogonVersion) < new Version("1.0.1.0"))
+                {
+                    // 1.0.1.0 - change tasks to always queue on framework thread
+                    Log(LogLevelEnum.Info, "Applying config fixes for version 1.0.1.0");
+                    _state.cfg.QueueFramework = true;
+                }
+                _state.cfg.PlogonVersion = Version;
             }
         }
 
@@ -277,7 +410,7 @@ namespace Lemegeton
             _state.Uninitialize();
             _stopEvent.Set();
             _state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts;
-            UnloadTextures();
+            _ui.UnloadTextures();
             SaveConfig();
             if (_state.InvoqThreadNew != null)
             {
@@ -287,16 +420,6 @@ namespace Lemegeton
             _downloadRequestEvent.Dispose();
             _stopEvent.Dispose();
             _retryEvent.Dispose();
-        }
-
-        internal TextureWrap GetJobIcon(uint jobId)
-        {
-            AutomarkerPrio.PrioJobEnum job = (AutomarkerPrio.PrioJobEnum)jobId;
-            if (_jobs.ContainsKey(job) == true)
-            {
-                return _jobs[job];
-            }
-            return null;
         }
 
         internal void ChangeLanguage(string language)
@@ -314,115 +437,6 @@ namespace Lemegeton
         internal void Log(State.LogLevelEnum level, string message, params object[] args)
         {
             _state.Log(level, null, message, args);
-        }
-
-        private void LoadTextures()
-        {
-            _misc[1] = GetTexture(33237);
-            _misc[2] = GetTexture(63937);
-            _misc[3] = GetTexture(63939);
-            _misc[4] = GetTexture(63938);
-            _misc[5] = GetTexture(61551);
-            _misc[6] = GetTexture(61552);
-            _misc[7] = GetTexture(61555);
-            _misc[8] = GetTexture(61553);
-            _misc[9] = GetTexture(5);
-            _misc[11] = GetTexture(66162);
-            _misc[12] = GetTexture(66163);
-            _misc[13] = GetTexture(66164);
-            _misc[14] = GetTexture(66165);
-            _misc[15] = GetTexture(66166);
-            _misc[16] = GetTexture(66167);
-            _misc[17] = GetTexture(66168);
-            _misc[18] = GetTexture(66169);
-            _signs[AutomarkerSigns.SignEnum.Attack1] = GetTexture(61201);
-            _signs[AutomarkerSigns.SignEnum.Attack2] = GetTexture(61202);
-            _signs[AutomarkerSigns.SignEnum.Attack3] = GetTexture(61203);
-            _signs[AutomarkerSigns.SignEnum.Attack4] = GetTexture(61204);
-            _signs[AutomarkerSigns.SignEnum.Attack5] = GetTexture(61205);
-            _signs[AutomarkerSigns.SignEnum.Bind1] = GetTexture(61211);
-            _signs[AutomarkerSigns.SignEnum.Bind2] = GetTexture(61212);
-            _signs[AutomarkerSigns.SignEnum.Bind3] = GetTexture(61213);
-            _signs[AutomarkerSigns.SignEnum.Ignore1] = GetTexture(61221);
-            _signs[AutomarkerSigns.SignEnum.Ignore2] = GetTexture(61222);
-            _signs[AutomarkerSigns.SignEnum.Square] = GetTexture(61231);
-            _signs[AutomarkerSigns.SignEnum.Circle] = GetTexture(61232);
-            _signs[AutomarkerSigns.SignEnum.Plus] = GetTexture(61233);
-            _signs[AutomarkerSigns.SignEnum.Triangle] = GetTexture(61234);
-            _signs[AutomarkerSigns.SignEnum.AttackNext] = _signs[AutomarkerSigns.SignEnum.Attack1];
-            _signs[AutomarkerSigns.SignEnum.BindNext] = _signs[AutomarkerSigns.SignEnum.Bind1];
-            _signs[AutomarkerSigns.SignEnum.IgnoreNext] = _signs[AutomarkerSigns.SignEnum.Ignore1];
-            _trinity[AutomarkerPrio.PrioTrinityEnum.Tank] = GetTexture(62581);
-            _trinity[AutomarkerPrio.PrioTrinityEnum.Healer] = GetTexture(62582);
-            _trinity[AutomarkerPrio.PrioTrinityEnum.DPS] = GetTexture(62583);
-            _roles[AutomarkerPrio.PrioRoleEnum.Tank] = GetTexture(62581);
-            _roles[AutomarkerPrio.PrioRoleEnum.Healer] = GetTexture(62582);
-            _roles[AutomarkerPrio.PrioRoleEnum.Melee] = GetTexture(62584);
-            _roles[AutomarkerPrio.PrioRoleEnum.Ranged] = GetTexture(62586);
-            _roles[AutomarkerPrio.PrioRoleEnum.Caster] = GetTexture(62587);
-            _jobs[AutomarkerPrio.PrioJobEnum.PLD] = GetTexture(62119);
-            _jobs[AutomarkerPrio.PrioJobEnum.WAR] = GetTexture(62121);
-            _jobs[AutomarkerPrio.PrioJobEnum.DRK] = GetTexture(62132);
-            _jobs[AutomarkerPrio.PrioJobEnum.GNB] = GetTexture(62137);
-            _jobs[AutomarkerPrio.PrioJobEnum.WHM] = GetTexture(62124);
-            _jobs[AutomarkerPrio.PrioJobEnum.SCH] = GetTexture(62128);
-            _jobs[AutomarkerPrio.PrioJobEnum.AST] = GetTexture(62133);
-            _jobs[AutomarkerPrio.PrioJobEnum.SGE] = GetTexture(62140);
-            _jobs[AutomarkerPrio.PrioJobEnum.MNK] = GetTexture(62120);
-            _jobs[AutomarkerPrio.PrioJobEnum.DRG] = GetTexture(62122);
-            _jobs[AutomarkerPrio.PrioJobEnum.NIN] = GetTexture(62130);
-            _jobs[AutomarkerPrio.PrioJobEnum.SAM] = GetTexture(62134);
-            _jobs[AutomarkerPrio.PrioJobEnum.RPR] = GetTexture(62139);
-            _jobs[AutomarkerPrio.PrioJobEnum.BRD] = GetTexture(62123);
-            _jobs[AutomarkerPrio.PrioJobEnum.MCH] = GetTexture(62131);
-            _jobs[AutomarkerPrio.PrioJobEnum.DNC] = GetTexture(62138);
-            _jobs[AutomarkerPrio.PrioJobEnum.BLM] = GetTexture(62125);
-            _jobs[AutomarkerPrio.PrioJobEnum.SMN] = GetTexture(62127);
-            _jobs[AutomarkerPrio.PrioJobEnum.RDM] = GetTexture(62135);
-        }
-
-        private void UnloadTextures()
-        {
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, TextureWrap> kp in _signs)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _signs.Clear();
-            foreach (KeyValuePair<int, TextureWrap> kp in _misc)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _misc.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioTrinityEnum, TextureWrap> kp in _trinity)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _trinity.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioRoleEnum, TextureWrap> kp in _roles)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _roles.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioJobEnum, TextureWrap> kp in _jobs)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _jobs.Clear();
         }
 
         private void QueueForDownload(Downloadable d)
@@ -664,6 +678,41 @@ namespace Lemegeton
             }
         }
 
+        internal void AddNotification(Notification n)
+        {
+            lock (NotificationsQueue)
+            {
+                NotificationsQueue.Add(n);
+                _newNotifications = true;
+            }
+        }
+
+        internal void AddNotifications()
+        {
+            if (_newNotifications == true)
+            {
+                lock (NotificationsQueue)
+                {
+                    Notifications.AddRange(NotificationsQueue);
+                    NotificationsQueue.Clear();
+                    _newNotifications = false;
+                }
+            }
+            List<Notification> delNotif = new List<Notification>();
+            foreach (Notification n in Notifications)
+            {
+                if (DateTime.Now > n.SpawnTime.AddSeconds(n.TTL))
+                {
+                    delNotif.Add(n);
+                    continue;
+                }
+            }
+            foreach (Notification n in delNotif)
+            {
+                Notifications.Remove(n);
+            }
+        }
+
         internal static string Base64Encode(string text)
         {
             var bytes = Encoding.UTF8.GetBytes(text);
@@ -732,6 +781,29 @@ namespace Lemegeton
                 {
                     DeserializeContentCategory(cc, _other);
                 }
+                else if (cc.Name == "TimelineProfiles")
+                {
+                    foreach (XmlNode ncc in cc.ChildNodes)
+                    {
+                        ushort territory = ushort.Parse(ncc.Attributes["Territory"].Value);
+                        lock (_state.AllTimelines)
+                        {
+                            if (_state.AllTimelines.TryGetValue(territory, out Timeline tl) == true)
+                            {
+                                string xml = Base64Decode(ncc.Attributes["Data"].Value);
+                                Timeline.Profile pro = XmlSerializer<Timeline.Profile>.Deserialize(xml);
+                                if (pro.Default == true)
+                                {
+                                    tl.DefaultProfile = pro;
+                                }
+                                else
+                                {
+                                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -754,6 +826,35 @@ namespace Lemegeton
                 foreach (Core.ContentCategory cc in _other)
                 {
                     c.AppendChild(SerializeContentCategory(doc, cc));
+                }
+            }
+            {
+                XmlNode c = doc.CreateElement("TimelineProfiles");
+                root.AppendChild(c);
+                lock (_state.AllTimelines)
+                {
+                    foreach (KeyValuePair<ushort, Timeline> kp in _state.AllTimelines)
+                    {
+                        XmlNode cc = doc.CreateElement("Profile");
+                        c.AppendChild(cc);
+                        XmlAttribute a = doc.CreateAttribute("Territory");
+                        a.Value = kp.Key.ToString();
+                        cc.Attributes.Append(a);
+                        a = doc.CreateAttribute("Data");
+                        a.Value = Base64Encode(XmlSerializer<Timeline.Profile>.Serialize(kp.Value.DefaultProfile));
+                        cc.Attributes.Append(a);
+                        foreach (Timeline.Profile pro in kp.Value.Profiles)
+                        {
+                            cc = doc.CreateElement("Profile");
+                            c.AppendChild(cc);
+                            a = doc.CreateAttribute("Territory");
+                            a.Value = kp.Key.ToString();
+                            cc.Attributes.Append(a);
+                            a = doc.CreateAttribute("Data");
+                            a.Value = Base64Encode(XmlSerializer<Timeline.Profile>.Serialize(pro));
+                            cc.Attributes.Append(a);
+                        }
+                    }
                 }
             }
             return doc.OuterXml;
@@ -798,7 +899,7 @@ namespace Lemegeton
             string tempfile = Path.Combine(temp, String.Format("lemegeton_backup_{0}.json", DateTime.Now.ToString("yyyyMMdd_HHmmssfff")));
             string data = SerializeConfig();
             File.WriteAllText(tempfile, data);
-            Log(State.LogLevelEnum.Debug, "Configuration backup saved to {0}", tempfile);
+            Log(State.LogLevelEnum.Info, "Configuration backup saved to {0}", tempfile);
         }
 
         public string SerializeConfig()
@@ -915,22 +1016,6 @@ namespace Lemegeton
             }
         }
 
-
-        internal Vector3 TranslateToScreen(double x, double y, double z)
-        {
-            Vector2 tenp;
-            _state.gg.WorldToScreen(
-                new Vector3((float)x, (float)y, (float)z),
-                out tenp
-            );
-            return new Vector3(tenp.X, tenp.Y, (float)z);
-        }
-
-        internal TextureWrap? GetTexture(uint id)
-        {
-            return _state.dm.GetImGuiTextureIcon(id);
-        }
-
         private List<Tuple<PropertyInfo, int>> GetConfigurableProperties(ContentModule cm, bool disregardAdvanced, out bool hasDebug)
         {
             PropertyInfo[] props = cm.GetType().GetProperties();
@@ -968,222 +1053,6 @@ namespace Lemegeton
             return temp;
         }
 
-
-        private string TranslateOrderableItem<T>(T item)
-        {
-            if (item is PrioRoleEnum)
-            {
-                PrioRoleEnum tmp = (PrioRoleEnum)Convert.ChangeType(item, typeof(PrioRoleEnum));
-                return I18n.Translate("Role/" + tmp.ToString());
-            }
-            if (item is PrioTrinityEnum)
-            {
-                PrioTrinityEnum tmp = (PrioTrinityEnum)Convert.ChangeType(item, typeof(PrioTrinityEnum));
-                return I18n.Translate("Trinity/" + tmp.ToString());
-            }
-            if (item is PrioJobEnum)
-            {
-                PrioJobEnum tmp = (PrioJobEnum)Convert.ChangeType(item, typeof(PrioJobEnum));
-                return I18n.Translate("Job/" + tmp.ToString());
-            }
-            if (item is int)
-            {
-                return I18n.Translate("Automarker/PrioType/PartyMember");
-            }
-            if (item is string)
-            {
-                return item.ToString();
-            }
-            return "???";
-        }
-
-        private TextureWrap? RetrieveOrderableIcon<T>(T item)
-        {
-            if (item is PrioRoleEnum)
-            {
-                PrioRoleEnum tmp = (PrioRoleEnum)Convert.ChangeType(item, typeof(PrioRoleEnum));
-                return _roles[tmp];
-            }
-            if (item is PrioTrinityEnum)
-            {
-                PrioTrinityEnum tmp = (PrioTrinityEnum)Convert.ChangeType(item, typeof(PrioTrinityEnum));
-                return _trinity[tmp];
-            }
-            if (item is PrioJobEnum)
-            {
-                PrioJobEnum tmp = (PrioJobEnum)Convert.ChangeType(item, typeof(PrioJobEnum));
-                return _jobs[tmp];
-            }
-            if (item is int)
-            {
-                int tmp = (int)Convert.ChangeType(item, typeof(int));
-                return _misc[10 + tmp];
-            }
-            if (item is string)
-            {
-                return null;
-            }
-            return null;
-        }
-
-        private void RenderOrderableItem<T>(T item, int index, float x, float y)
-        {
-            Vector2 btnsize = new Vector2(160, 50);
-            Vector2 icosize = new Vector2(30, 30);
-            Vector2 pt = ImGui.GetCursorPos();
-            string text = TranslateOrderableItem(item);
-            TextureWrap? icon = RetrieveOrderableIcon(item);
-            float icospace = 0.0f;
-            if (icon != null)
-            {
-                ImGui.SetCursorPos(new Vector2(x + (btnsize.X - icosize.X) - 5.0f, y + (btnsize.Y / 2.0f) - (icosize.Y / 2.0f)));
-                ImGui.Image(icon.ImGuiHandle, icosize);
-                icospace = icosize.X;
-            }
-            ImGui.SetCursorPos(new Vector2(x + 5.0f, y + (btnsize.Y / 2.0f) - ImGui.GetFontSize() / 2.0f));
-            ImGui.Text((index + 1).ToString());
-            ImGui.SetCursorPos(new Vector2(x + (btnsize.X - icospace - 10.0f) - ImGui.CalcTextSize(text).X, y + (btnsize.Y / 2.0f) - (ImGui.GetFontSize() / 2.0f)));
-            ImGui.Text(text);
-            ImGui.SetCursorPos(pt);
-        }
-
-        private void RenderOrderableList<T>(List<T> items)
-        {
-            Vector2 maxsize = ImGui.GetContentRegionAvail();
-            Vector2 btnsize = new Vector2(160, 50);
-            Vector2 margin = new Vector2(10, 10);
-            Vector2 icosize = new Vector2(30, 30);
-            float x = 0.0f, y = 0.0f;
-            Vector2 curpos = ImGui.GetCursorPos();
-            ImGuiStylePtr style = ImGui.GetStyle();
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, 0.0f));
-            int perRow = (int)Math.Floor(maxsize.X / (btnsize.X + margin.X));
-            perRow = Math.Clamp(perRow, 1, items.Count > 0 ? items.Count : 1);
-            int itemx = 1, itemy = 1;
-            bool isStillDragging = false;
-            Vector2 screenpos = ImGui.GetCursorScreenPos();
-            float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 300.0);
-            Vector4 hilite = new Vector4(1.0f, 1.0f, 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)), 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)));
-            for (int i = 0; i < items.Count; i++)
-            {
-                T p = items[i];
-                string temp = "##OrderableList_" + i;
-                Vector2 curItem = new Vector2(curpos.X + x, curpos.Y + y);
-                ImGui.SetCursorPos(curItem);
-                ImGui.Selectable(temp, true, ImGuiSelectableFlags.None, btnsize);
-                x += btnsize.X + margin.X;
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Misc/DragToReorderPrio"));
-                    ImGui.EndTooltip();
-                }
-                if (ImGui.IsItemActive() == true)
-                {
-                    isStillDragging = true;
-                    if (_isDragging == false)
-                    {
-                        _isDragging = true;
-                        _dragObject = items;
-                        _dragStartItem = i;
-                    }
-                    ImDrawListPtr dl = ImGui.GetWindowDrawList();
-                    if (ImGui.IsItemHovered() == false)
-                    {
-                        Vector2 mpos = ImGui.GetMousePos();
-                        int xpos = (int)Math.Floor((mpos.X - screenpos.X) / (btnsize.X + margin.X));
-                        int ypos = (int)Math.Floor((mpos.Y - screenpos.Y) / (btnsize.Y + margin.Y));
-                        xpos = Math.Clamp(xpos, 0, perRow - 1);
-                        ypos = Math.Clamp(ypos, 0, (int)Math.Ceiling((float)items.Count / perRow) - 1);
-                        int xtpos = (int)Math.Floor((mpos.X - screenpos.X + (btnsize.X / 2.0f)) / (btnsize.X + margin.X));
-                        int jpos, ipos = (ypos * perRow) + xpos;
-                        ipos = Math.Clamp(ipos, 0, items.Count);
-                        int lim = perRow * (int)Math.Floor((float)ipos / perRow);
-                        lim = items.Count - lim;
-                        xpos = Math.Clamp(xpos, 0, lim - 1);
-                        ipos = (ypos * perRow) + xpos;
-                        if (i != ipos)
-                        {
-                            jpos = (xtpos > xpos) ? 1 : -1;
-                            float cpx = (xpos * (btnsize.X + margin.X) + screenpos.X);
-                            float cpy = (ypos * (btnsize.Y + margin.Y) + screenpos.Y);
-                            if (jpos < 0)
-                            {
-                                dl.AddLine(new Vector2(cpx, cpy), new Vector2(cpx, cpy + btnsize.Y), ImGui.GetColorU32(hilite), 3.0f);
-                                dl.AddTriangleFilled(
-                                    new Vector2(cpx, cpy),
-                                    new Vector2(cpx + 10.0f, cpy),
-                                    new Vector2(cpx, cpy + 10.0f),
-                                    ImGui.GetColorU32(hilite)
-                                );
-                                dl.AddTriangleFilled(
-                                    new Vector2(cpx, cpy + btnsize.Y),
-                                    new Vector2(cpx + 10.0f, cpy + btnsize.Y),
-                                    new Vector2(cpx, cpy + btnsize.Y - 10.0f),
-                                    ImGui.GetColorU32(hilite)
-                                );
-                                _dragEndItem = ipos;
-                            }
-                            else
-                            {
-                                dl.AddLine(new Vector2(cpx + btnsize.X, cpy), new Vector2(cpx + btnsize.X, cpy + btnsize.Y), ImGui.GetColorU32(hilite), 3.0f);
-                                dl.AddTriangleFilled(
-                                    new Vector2(cpx + btnsize.X, cpy),
-                                    new Vector2(cpx + btnsize.X - 10.0f, cpy),
-                                    new Vector2(cpx + btnsize.X, cpy + 10.0f),
-                                    ImGui.GetColorU32(hilite)
-                                );
-                                dl.AddTriangleFilled(
-                                    new Vector2(cpx + btnsize.X, cpy + btnsize.Y),
-                                    new Vector2(cpx + btnsize.X - 10.0f, cpy + btnsize.Y),
-                                    new Vector2(cpx + btnsize.X, cpy + btnsize.Y - 10.0f),
-                                    ImGui.GetColorU32(hilite)
-                                );
-                                _dragEndItem = ipos + 1;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _dragEndItem = _dragStartItem;
-                    }
-                    {
-                        Vector2 cpos = Vector2.Add(ImGui.GetWindowPos(), curItem);
-                        cpos = Vector2.Subtract(cpos, new Vector2(ImGui.GetScrollX(), ImGui.GetScrollY()));
-                        dl.AddRect(cpos, new Vector2(cpos.X + btnsize.X, cpos.Y + btnsize.Y), ImGui.GetColorU32(hilite), 0.0f, ImDrawFlags.None, 2.0f);
-                    }
-                }
-                itemx++;
-                if (itemx > perRow)
-                {
-                    x = 0.0f;
-                    y += btnsize.Y + margin.Y;
-                    itemy++;
-                    itemx = 1;
-                }
-                else if (i < items.Count - 1)
-                {
-                    ImGui.SameLine();
-                }
-                RenderOrderableItem(p, i, curItem.X, curItem.Y);
-            }
-            ImGui.PopStyleVar();
-            if (isStillDragging == false && _dragObject == items)
-            {
-                _dragEndItem = Math.Clamp(_dragEndItem, 0, items.Count);
-                _isDragging = false;
-                if (_dragStartItem != _dragEndItem)
-                {
-                    var tmp = items[_dragStartItem];
-                    items.Remove(tmp);
-                    items.Insert(_dragEndItem >= _dragStartItem ? _dragEndItem - 1 : _dragEndItem, tmp);
-                }
-                _dragStartItem = 0;
-                _dragEndItem = 0;
-                _dragObject = null;
-            }
-        }
-
         private void RenderAutomarkerPrioPlCustom(AutomarkerPrio amp)
         {
             if (ImGui.Button(I18n.Translate("Automarker/PrioType/PlCustom/FillFromCongaLine")) == true)
@@ -1203,22 +1072,22 @@ namespace Lemegeton
                 }
                 amp._prioByPlCustom.AddRange(prios);
             }
-            RenderOrderableList<int>(amp._prioByPlCustom);
+            _ui.RenderOrderableList<int>(amp._prioByPlCustom);
         }
 
         private void RenderAutomarkerPrioTrinity(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioTrinityEnum>(amp._prioByTrinity);
+            _ui.RenderOrderableList<PrioTrinityEnum>(amp._prioByTrinity);
         }
 
         private void RenderAutomarkerPrioRole(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioRoleEnum>(amp._prioByRole);
+            _ui.RenderOrderableList<PrioRoleEnum>(amp._prioByRole);
         }
 
         private void RenderAutomarkerPrioJob(AutomarkerPrio amp)
         {
-            RenderOrderableList<PrioJobEnum>(amp._prioByJob);
+            _ui.RenderOrderableList<PrioJobEnum>(amp._prioByJob);
         }
 
         private void RenderAutomarkerPrioPlayer(AutomarkerPrio amp)
@@ -1238,7 +1107,7 @@ namespace Lemegeton
                 amp._prioByPlayer.Clear();
                 amp._prioByPlayer.AddRange(from ix in pty.Members select ix.Name);
             }
-            RenderOrderableList<string>(amp._prioByPlayer);
+            _ui.RenderOrderableList<string>(amp._prioByPlayer);
         }
 
         private void RenderAutomarkerPrio(string path, PropertyInfo pi, object o)
@@ -1454,15 +1323,12 @@ namespace Lemegeton
                     bool trashEnabled = preset != null && preset.Builtin == false;
                     customPreset = saveEnabled;
                     ImGui.SameLine();
-                    string ico;
                     if (saveEnabled == false)
                     {
                         ImGui.BeginDisabled();
                     }
-                    ImGui.PushFont(UiBuilder.IconFont);
-                    ico = FontAwesomeIcon.Save.ToIconString();
                     string popupname = path + "/" + pi.Name + "/SavePresetPopup";
-                    if (ImGui.Button(ico) == true)
+                    if (UserInterface.IconButton(FontAwesomeIcon.Save, I18n.Translate("Misc/SavePreset")) == true)
                     {
                         if (preset != null)
                         {
@@ -1474,13 +1340,6 @@ namespace Lemegeton
                             _newPresetName = "";
                             ImGui.OpenPopup(popupname);
                         }
-                    }
-                    ImGui.PopFont();
-                    if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                    {
-                        ImGui.BeginTooltip();
-                        ImGui.Text(I18n.Translate("Misc/SavePreset"));
-                        ImGui.EndTooltip();
                     }
                     ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2.0f);
                     ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -1494,13 +1353,11 @@ namespace Lemegeton
                         }
                         ImGui.SameLine();
                         bool goodname = _newPresetName.Trim().Length > 0;
-                        ImGui.PushFont(UiBuilder.IconFont);
-                        ico = FontAwesomeIcon.Save.ToIconString();
                         if (goodname == false)
                         {
                             ImGui.BeginDisabled();
                         }
-                        if (ImGui.Button(ico) == true)
+                        if (UserInterface.IconButton(FontAwesomeIcon.Save, I18n.Translate("Misc/SavePreset")) == true)
                         {
                             string prname = _newPresetName.Trim();
                             Log(LogLevelEnum.Debug, "Saving new preset {0} for {1}", prname, path);
@@ -1510,13 +1367,6 @@ namespace Lemegeton
                         if (goodname == false)
                         {
                             ImGui.EndDisabled();
-                        }
-                        ImGui.PopFont();
-                        if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                        {
-                            ImGui.BeginTooltip();
-                            ImGui.Text(I18n.Translate("Misc/SavePreset"));
-                            ImGui.EndTooltip();
                         }
                         ImGui.EndPopup();
                     }
@@ -1531,19 +1381,10 @@ namespace Lemegeton
                     {
                         ImGui.BeginDisabled();
                     }
-                    ImGui.PushFont(UiBuilder.IconFont);
-                    ico = FontAwesomeIcon.Trash.ToIconString();
-                    if (ImGui.Button(ico) == true)
+                    if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Misc/DeletePreset")) == true)
                     {
                         Log(LogLevelEnum.Debug, "Deleting preset {0} from {1}", ams.SelectedPreset, path);
                         ams.DeletePreset(ams.SelectedPreset);
-                    }
-                    ImGui.PopFont();
-                    if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-                    {
-                        ImGui.BeginTooltip();
-                        ImGui.Text(I18n.Translate("Misc/DeletePreset"));
-                        ImGui.EndTooltip();
                     }
                     if (trashEnabled == false)
                     {
@@ -1578,13 +1419,13 @@ namespace Lemegeton
                 ImGui.Text(proptr);
                 if (kp.Value != AutomarkerSigns.SignEnum.None)
                 {
-                    TextureWrap tw = _signs[kp.Value];
+                    TextureWrap tw = _ui.GetSignIcon(kp.Value);
                     ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     ImGui.SameLine();
                 }
                 else
                 {
-                    TextureWrap tw = _signs[AutomarkerSigns.SignEnum.Attack1];
+                    TextureWrap tw = _ui.GetSignIcon(AutomarkerSigns.SignEnum.Attack1);
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X);
                 }
                 if (ImGui.BeginCombo("##" + proppath, signtr) == true)
@@ -1772,49 +1613,53 @@ namespace Lemegeton
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
         }
 
-        private string DescribeTimelineEntry(Timeline.Entry e)
+        internal static string Capitalize(string str)
         {
-            if (e.Description != null)
-            { 
-                return e.Description;
-            }
-            if (e.Type == Timeline.EntryTypeEnum.OnCastBegin)
+            if (string.IsNullOrEmpty(str) == true)
             {
-                var action = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Key);
-                return action.Name.ToString();
+                return string.Empty;
             }
-            return "?";
+            char[] a = str.ToCharArray();
+            a[0] = char.ToUpper(a[0]);
+            return new string(a);
         }
 
-        private void RenderTimelineView()
-        {
-            Timeline t = _state._timeline;
-            if (t == null)
-            {
-                return;
-            }
-            IEnumerable<Timeline.Entry> entries = t.PeekEntries(10, 60.0f);
-            if (entries.Count() == 0)
-            {
-                return;
-            }
-            foreach (Timeline.Entry e in entries)
-            {
-
-            }
-        }
-
-        private string GetNameForTimelineEntry(Timeline.Entry e)
+        private string GetFullNameForTimelineEntry(Timeline.Entry e)
         {
             if (e.CachedName == null)
             {
                 switch (e.Type)
                 {
-                    case Timeline.EntryTypeEnum.OnCastBegin:
+                    case Timeline.Entry.EntryTypeEnum.Ability:
                         {
-                            Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Key);
-                            e.CachedName = a.Name;
+                            List<string> temp = new List<string>();
+                            foreach (uint key in e.Keys)
+                            {
+                                Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(key);
+                                temp.Add(Capitalize(a.Name));
+                            }
+                            e.CachedName = String.Join(" / ", temp);
                         }
+                        break;
+                    case Timeline.Entry.EntryTypeEnum.Spawn:
+                        {
+                            List<string> temp = new List<string>();
+                            foreach (uint key in e.Keys)
+                            {
+                                Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(key);
+                                temp.Add(Capitalize(a.Singular) + " \xE0AF");
+                            }
+                            e.CachedName = String.Join(" / ", temp);
+                        }
+                        break;
+                    case Timeline.Entry.EntryTypeEnum.Targettable:
+                        e.CachedName = I18n.Translate("Timelines/SpecialTags/Targettable");
+                        break;
+                    case Timeline.Entry.EntryTypeEnum.Untargettable:
+                        e.CachedName = I18n.Translate("Timelines/SpecialTags/Untargettable");
+                        break;
+                    case Timeline.Entry.EntryTypeEnum.Timed:
+                        e.CachedName = e.Description != null ? e.Description : "???";
                         break;
                     default:
                         e.CachedName = "???";
@@ -1822,6 +1667,34 @@ namespace Lemegeton
                 }
             }
             return e.CachedName;
+        }
+
+        private string GetRotatingNameForTimelineEntry(float time, Timeline.Entry e)
+        {
+            switch (e.Type)
+            {
+                case Timeline.Entry.EntryTypeEnum.Ability:
+                    {
+                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.Keys.Count;
+                        Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Keys[index]);
+                        return Capitalize(a.Name);
+                    }
+                case Timeline.Entry.EntryTypeEnum.Spawn:
+                    {
+                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.Keys.Count;
+                        Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(e.Keys[index]);
+                        return Capitalize(a.Singular + " \xE0AF");
+                    }
+                case Timeline.Entry.EntryTypeEnum.Targettable:
+                    return I18n.Translate("Timelines/SpecialTags/Targettable");
+                case Timeline.Entry.EntryTypeEnum.Untargettable:
+                    return I18n.Translate("Timelines/SpecialTags/Untargettable");
+                case Timeline.Entry.EntryTypeEnum.Timed:
+                    return e.Description != null ? e.Description : "???";
+                default:
+                    break;
+            }
+            return "???";
         }
 
         private string GetInstanceNameForTimeline(Timeline tl)
@@ -1835,32 +1708,145 @@ namespace Lemegeton
             return tl.CachedName;
         }
 
-        private void RenderTimelineContentSettings()
+        private void RenderTimelineContentHeader()
         {
-            Timeline tl = _selectedTimeline;
+            Timeline tl = SelectedTimeline;
+            string ico;
             Vector2 fsp = ImGui.GetContentRegionAvail();
-            float topy = ImGui.GetCursorPosY();
             ImGuiStylePtr style = ImGui.GetStyle();
+            Timeline atl = _state._timeline;
+            TextureWrap tw;
+            string statustext;
+            _ui.RenderWarning(I18n.Translate("Misc/ExperimentalFeature"));
+            Vector2 startpos = ImGui.GetCursorPos();
+            if (atl != null)
+            {
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineActive);                
+                ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
+                if (ImGui.IsItemHovered() == true)
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.Text(I18n.Translate("Timelines/Status/ActiveTimeline"));
+                    ImGui.EndTooltip();
+                }
+                if (ImGui.IsItemClicked() == true)
+                {
+                    Timeline tlx = _state.GetTimeline(_state.cs.TerritoryType);
+                    if (tlx != null)
+                    {
+                        if (tlx != SelectedTimeline)
+                        {
+                            SelectedTimeline = tlx;
+                        }
+                        SelectedProfile = tlx.DefaultProfile;
+                    }
+                    else
+                    {
+                        SelectedTimeline = null;
+                    }
+                }
+                Vector2 after = ImGui.GetCursorPos();
+                string tlname = GetInstanceNameForTimeline(atl);
+                Vector2 sz = ImGui.CalcTextSize(tlname);
+                ImGui.SetCursorPos(new Vector2(tw.Width + style.ItemSpacing.X, startpos.Y + (tw.Height / 2.0f) - (sz.Y / 2.0f)));
+                ImGui.Text(tlname);
+                foreach (Timeline.Profile p in atl.SelectedProfiles)
+                {
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosY(startpos.Y);
+                    tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.ProfileActive);
+                    float basex = ImGui.GetCursorPosX();
+                    ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
+                    if (ImGui.IsItemHovered() == true)
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text(I18n.Translate("Timelines/Status/ActiveProfile"));
+                        ImGui.EndTooltip();
+                    }
+                    if (ImGui.IsItemClicked() == true)
+                    {
+                        Timeline tlx = _state.GetTimeline(_state.cs.TerritoryType);
+                        if (tlx != null)
+                        {
+                            if (tlx != SelectedTimeline)
+                            {
+                                SelectedTimeline = tlx;
+                            }
+                            SelectedProfile = p;
+                        }
+                        else
+                        {
+                            SelectedTimeline = null;
+                            SelectedProfile = null;
+                        }
+                    }
+                    tlname = p.Name;
+                    sz = ImGui.CalcTextSize(tlname);
+                    ImGui.SetCursorPos(new Vector2(basex + tw.Width + style.ItemSpacing.X, startpos.Y + (tw.Height / 2.0f) - (sz.Y / 2.0f)));
+                    ImGui.Text(tlname);
+                }
+                ImGui.SetCursorPos(after);
+            }
+            else
+            {
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineInactive);
+                statustext = I18n.Translate("Timelines/Status/InactiveTimeline");
+                ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
+                Vector2 after = ImGui.GetCursorPos();
+                Vector2 sz = ImGui.CalcTextSize(statustext);
+                ImGui.SetCursorPos(new Vector2(tw.Width + style.ItemSpacing.X, startpos.Y + (tw.Height / 2.0f) - (sz.Y / 2.0f)));
+                ImGui.Text(statustext);
+                ImGui.SetCursorPos(after);
+            }
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
             ImGui.PushItemWidth(150.0f + _adjusterXtl);
             ImGui.Text(I18n.Translate("Timelines/Timeline"));
             ImGui.SameLine();
-            string seltlname = tl != null ? GetInstanceNameForTimeline(tl) : null;
+            string seltlname = tl != null ? GetInstanceNameForTimeline(tl) : I18n.Translate("Timelines/Timeline/None");
             if (ImGui.BeginCombo("##MainMenu/Timelines/Timelines", seltlname) == true)
             {
-                foreach (KeyValuePair<ushort, Timeline> kp in _state.Timelines)
+                string name = I18n.Translate("Timelines/Timeline/None");
+                if (ImGui.Selectable(name, SelectedTimeline == null) == true)
                 {
-                    string name = GetInstanceNameForTimeline(kp.Value);
-                    if (ImGui.Selectable(name, kp.Value == _selectedTimeline) == true)
+                    SelectedTimeline = null;
+                }
+                lock (_state.AllTimelines)
+                {
+                    foreach (KeyValuePair<ushort, Timeline> kp in _state.AllTimelines)
                     {
-                        if (kp.Value != tl)
+                        name = GetInstanceNameForTimeline(kp.Value);
+                        if (ImGui.Selectable(name, kp.Value == SelectedTimeline) == true)
                         {
-                            _selectedProfile = null;
-                            _selectedEntry = null;
+                            if (kp.Value != tl)
+                            {
+                                SelectedProfile = null;
+                            }
+                            tl = SelectedTimeline = kp.Value;
                         }
-                        tl = _selectedTimeline = kp.Value;
                     }
                 }
                 ImGui.EndCombo();
+            }
+            ImGui.SameLine();
+            if (tl == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (UserInterface.IconButton(FontAwesomeIcon.SyncAlt, I18n.Translate("Timelines/ReloadTimeline")) == true)
+            {
+                Timeline ntl = _state.CheckTimelineReload(tl);
+                if (ntl != tl)
+                {
+                    if (ntl.Territory == _state.cs.TerritoryType)
+                    {
+                        _state.AutoselectTimeline(ntl.Territory);
+                    }
+                    SelectedTimeline = ntl;
+                }
+            }
+            if (tl == null)
+            {
+                ImGui.EndDisabled();
             }
             ImGui.SameLine();
             ImGui.Text(I18n.Translate("Timelines/Profile"));
@@ -1870,13 +1856,24 @@ namespace Lemegeton
             {
                 ImGui.BeginDisabled();
             }
-            if (ImGui.BeginCombo("##MainMenu/Timelines/Profiles", _selectedProfile != null ? _selectedProfile.Name : "") == true)
+            if (ImGui.BeginCombo("##MainMenu/Timelines/Profiles", SelectedProfile != null && SelectedProfile.Default == false ? SelectedProfile.Name : I18n.Translate("Timelines/Profile/Default")) == true)
             {
+                string name = I18n.Translate("Timelines/Profile/Default");
+                if (ImGui.Selectable(name, SelectedProfile == null || SelectedProfile.Default == true) == true)
+                {
+                    if (SelectedProfile != null && SelectedProfile != SelectedTimeline.DefaultProfile)
+                    {
+                        SelectedProfile = SelectedTimeline.DefaultProfile;
+                    }
+                }
                 foreach (Timeline.Profile p in tl.Profiles)
                 {
-                    if (ImGui.Selectable(p.Name, _selectedProfile == p) == true)
+                    if (ImGui.Selectable(p.Name, SelectedProfile == p) == true)
                     {
-                        _selectedProfile = p;                        
+                        if (SelectedProfile != p)
+                        {
+                            SelectedProfile = p;
+                        }
                     }
                 }
                 ImGui.EndCombo();
@@ -1885,107 +1882,112 @@ namespace Lemegeton
             {
                 ImGui.EndDisabled();
             }
-            string ico;
-            ImGui.PushFont(UiBuilder.IconFont);
-            ico = FontAwesomeIcon.Save.ToIconString();
+            string createpopupname = "Timelines/CreateProfilePopup";
+            string clonepopupname = "Timelines/CloneProfilePopup";
             ImGui.SameLine();
             if (tl == null)
             {
                 ImGui.BeginDisabled();
             }
-            string popupname = "Timelines/SaveProfilePopup";
-            if (ImGui.Button(ico) == true)
+            if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/CreateProfile")) == true)
             {
                 _newProfileName = "";
-                ImGui.OpenPopup(popupname);
+                ImGui.OpenPopup(createpopupname);
             }
-            ImGui.PopFont();
-            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+            ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/CloneProfile")) == true)
             {
-                ImGui.BeginTooltip();
-                ImGui.Text(I18n.Translate("Timelines/SaveProfile"));
-                ImGui.EndTooltip();
+                string orname = "";
+                if (_selectedProfile != null && _selectedProfile.Default == false)
+                {
+                    int i = 1;
+                    do
+                    {
+                        orname = _selectedProfile.Name + " (" + i + ")";
+                        i++;
+                    } while ((from ix in SelectedTimeline.Profiles where String.Compare(ix.Name, orname) == 0 select ix).Count() > 0);
+                }
+                _newProfileName = orname;
+                ImGui.OpenPopup(clonepopupname);
             }
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 2.0f);
-            ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 1.0f));            
-            ImGui.PushFont(UiBuilder.IconFont);
             if (tl == null)
             {
                 ImGui.EndDisabled();
             }
-            ImGui.PopStyleColor();
-            ImGui.PopStyleVar();
-            if (_selectedProfile == null)
+            ImGui.SameLine();
+            if (SelectedProfile == null || SelectedProfile.Default == true)
             {
                 ImGui.BeginDisabled();
             }
-            ico = FontAwesomeIcon.Copy.ToIconString();
-            ImGui.SameLine();
-            if (ImGui.Button(ico) == true)
+            if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/DeleteProfile")) == true)
             {
+                Log(LogLevelEnum.Debug, "Deleting profile {0}", SelectedProfile.Name);
+                SelectedTimeline.RemoveProfile(SelectedProfile, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                SelectedProfile = SelectedTimeline.DefaultProfile;
             }
-            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-            {
-                ImGui.PopFont();
-                ImGui.BeginTooltip();
-                ImGui.Text(I18n.Translate("Timelines/CloneProfile"));
-                ImGui.EndTooltip();
-                ImGui.PushFont(UiBuilder.IconFont);
-            }
-            ico = FontAwesomeIcon.Trash.ToIconString();
-            ImGui.SameLine();
-            if (ImGui.Button(ico) == true)
-            {
-            }
-            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
-            {
-                ImGui.PopFont();
-                ImGui.BeginTooltip();
-                ImGui.Text(I18n.Translate("Timelines/DeleteProfile"));
-                ImGui.EndTooltip();
-                ImGui.PushFont(UiBuilder.IconFont);
-            }
-            if (_selectedProfile == null)
+            if (SelectedProfile == null || SelectedProfile.Default == true)
             {
                 ImGui.EndDisabled();
             }
-            ImGui.PopFont();
-            if (ImGui.BeginPopup(popupname) == true)
+            if (ImGui.BeginPopup(createpopupname) == true)
             {
-                ImGui.Text(I18n.Translate("Timelines/SaveNewProfileAs"));
+                ImGui.Text(I18n.Translate("Timelines/CreateNewProfileAs"));
                 string prename = _newProfileName;
-                if (ImGui.InputText("##Pn" + popupname, ref prename, 256) == true)
+                if (ImGui.InputText("##Pn" + createpopupname, ref prename, 256) == true)
                 {
                     _newProfileName = prename;
                 }
                 ImGui.SameLine();
                 bool goodname = _newProfileName.Trim().Length > 0;
-                ImGui.PushFont(UiBuilder.IconFont);
-                ico = FontAwesomeIcon.Save.ToIconString();
                 if (goodname == false)
                 {
                     ImGui.BeginDisabled();
                 }
-                if (ImGui.Button(ico) == true)
+                if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/CreateProfile")) == true)
                 {
                     string prname = _newProfileName.Trim();
-                    Log(LogLevelEnum.Debug, "Saving new profile {0}", prname);
+                    Log(LogLevelEnum.Debug, "Creating new blank profile as {0}", prname);
                     Timeline.Profile pro = new Timeline.Profile() { Name = prname };
-                    tl.Profiles.Add(pro);
-                    // todo reactions & settings to profile
-                    _selectedProfile = pro;
+                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);                    
+                    SelectedProfile = pro;
                     ImGui.CloseCurrentPopup();
                 }
                 if (goodname == false)
                 {
                     ImGui.EndDisabled();
                 }
-                ImGui.PopFont();
-                if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+                ImGui.EndPopup();
+            }
+            if (ImGui.BeginPopup(clonepopupname) == true)
+            {
+                ImGui.Text(I18n.Translate("Timelines/CloneProfileAs"));
+                string prename = _newProfileName;
+                if (ImGui.InputText("##Pn" + clonepopupname, ref prename, 256) == true)
                 {
-                    ImGui.BeginTooltip();
-                    ImGui.Text(I18n.Translate("Timelines/SaveProfile"));
-                    ImGui.EndTooltip();
+                    _newProfileName = prename;
+                }
+                ImGui.SameLine();
+                bool goodname = _newProfileName.Trim().Length > 0;
+                if (goodname == false)
+                {
+                    ImGui.BeginDisabled();
+                }
+                if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/CloneProfile")) == true)
+                {
+                    Timeline.Profile orp = _selectedProfile != null ? _selectedProfile : SelectedTimeline.DefaultProfile;
+                    string orname = orp.Default == false ? orp.Name : I18n.Translate("Timelines/Profile/Default");
+                    string prname = _newProfileName.Trim();
+                    Log(LogLevelEnum.Debug, "Cloning profile {0} as new profile {1}", orname, prname);
+                    Timeline.Profile pro = orp.Duplicate();
+                    pro.Default = false;
+                    pro.Name = prname;
+                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                    SelectedProfile = pro;
+                    ImGui.CloseCurrentPopup();
+                }
+                if (goodname == false)
+                {
+                    ImGui.EndDisabled();
                 }
                 ImGui.EndPopup();
             }
@@ -1993,48 +1995,636 @@ namespace Lemegeton
             ImGui.SameLine();
             _adjusterXtl += (float)Math.Floor((fsp.X - ImGui.GetCursorPosX()) / 2.0f);
             ImGui.Text("");
-            ImGui.Separator();
+            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
+        }
+
+        private float RenderTimelineContentEvents()
+        {
+            float start = ImGui.GetCursorPosY();
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            ImGuiStylePtr style = ImGui.GetStyle();
             float timelineColumnWidth = 200.0f;
-            if (ImGui.BeginListBox("##TimelinesActionListbox", new Vector2(timelineColumnWidth, fsp.Y - (ImGui.GetCursorPosY() - topy) - _adjusterYtl)))
+            ImGui.PushItemWidth(timelineColumnWidth);
+            string selname = SelectedEncounter != null ? I18n.Translate("Timelines/Encounter", SelectedEncounter.Id) : "";
+            if (ImGui.BeginCombo("##TimelinesActionEncounter", selname) == true)
             {
-                if (tl != null)
+                if (SelectedTimeline != null)
                 {
-                    IEnumerable<Timeline.Entry> entries = tl.Entries;
+                    foreach (Timeline.Encounter enc in SelectedTimeline.Encounters)
+                    {
+                        string trname = I18n.Translate("Timelines/Encounter", enc.Id);
+                        if (ImGui.Selectable(trname, String.Compare(trname, selname) == 0) == true)
+                        {
+                            SelectedEncounter = enc;
+                        }
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.PopItemWidth();
+            if (ImGui.BeginListBox("##TimelinesActionListbox", new Vector2(timelineColumnWidth, avail.Y - _adjusterYtl)) == true)
+            {
+                if (SelectedEncounter != null)
+                {
+                    IEnumerable<Timeline.Entry> entries = SelectedEncounter.Entries;
                     if (_timelineActionFilter != null)
                     {
                         string tmp = _timelineActionFilter.Trim();
                         if (tmp.Length > 0)
                         {
-                            entries = from ix in tl.Entries where GetNameForTimelineEntry(ix).Contains(tmp, StringComparison.InvariantCultureIgnoreCase) == true select ix;
+                            entries = from ix in SelectedEncounter.Entries where GetFullNameForTimelineEntry(ix).Contains(tmp, StringComparison.InvariantCultureIgnoreCase) == true select ix;
                         }
                     }
+                    float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                    float alpha = (float)Math.Abs(Math.Cos(time));
                     foreach (var item in entries)
                     {
-                        string name = GetNameForTimelineEntry(item);
-                        if (ImGui.Selectable(String.Format("{0:0}", item.StartTime) + ": " + name + "##" + item.Id, item == _selectedEntry) == true)
+                        string name = GetFullNameForTimelineEntry(item);
+                        Vector2 pos1 = ImGui.GetCursorPos();
+                        string tag = String.Format("{0:0}", item.StartTime) + "\t" + name;
+                        if (ImGui.Selectable(tag + "##" + item.Id, item == SelectedEntry) == true)
                         {
-                            _selectedEntry = item;
+                            SelectedEntry = item;
+                        }
+                        Vector2 psz = ImGui.CalcTextSize(tag);
+                        if (psz.X > timelineColumnWidth && ImGui.IsItemHovered() == true)
+                        {
+                            ImGui.BeginTooltip();
+                            ImGui.Text(name);
+                            ImGui.EndTooltip();
+                        }
+                        Vector2 pos2 = ImGui.GetCursorPos();
+                        float posx = pos1.X + timelineColumnWidth - style.ItemSpacing.X;
+                        Timeline.Entry.ProfileSettings pro = _selectedProfile.GetSettingsForEntry(item);
+                        if (pro.ReactionsActive == true && pro.Reactions.Count > 0)
+                        {
+                            ImGui.PushFont(UiBuilder.IconFont);
+                            string dico = FontAwesomeIcon.Bolt.ToIconString();
+                            Vector2 icosz = ImGui.CalcTextSize(dico);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 0.0f, 0.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X + 1.0f, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 0.0f, 0.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X - 1.0f, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 0.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PopFont();
+                            posx -= icosz.X;
+                        }
+                        if (pro.ShowOverlay == false)
+                        {
+                            ImGui.PushFont(UiBuilder.IconFont);
+                            string dico = FontAwesomeIcon.EyeSlash.ToIconString();
+                            Vector2 icosz = ImGui.CalcTextSize(dico);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 0.0f, 0.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X + 1.0f, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 0.0f, 0.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X - 1.0f, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.0f, 1.0f, 1.0f, alpha));
+                            ImGui.SetCursorPos(new Vector2(posx - icosz.X, ((pos1.Y + pos2.Y) / 2.0f) - (icosz.Y / 2.0f)));
+                            ImGui.Text(dico);
+                            ImGui.PopStyleColor(1);
+                            ImGui.PopFont();
+                            posx -= icosz.X;
+                        }
+                        ImGui.SetCursorPos(pos2);
+                    }
+                }
+                ImGui.EndListBox();
+            }
+            if (SelectedTimeline == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            ImGui.PushFont(UiBuilder.IconFont);
+            string ico = FontAwesomeIcon.Search.ToIconString();
+            Vector2 sz = ImGui.CalcTextSize(ico);
+            ImGui.Text(ico);
+            ImGui.PopFont();
+            ImGui.SameLine();
+            ImGui.PushItemWidth(timelineColumnWidth - sz.X - style.ItemSpacing.X);
+            if (ImGui.InputText("##Timelines/FilterBox", ref _timelineActionFilter, 256) == true)
+            {
+            }
+            _adjusterYtl += ImGui.GetCursorPosY() - avail.Y;
+            ImGui.PopItemWidth();
+            if (SelectedTimeline == null)
+            {
+                ImGui.EndDisabled();
+            }
+            return timelineColumnWidth + style.ItemSpacing.X;
+        }
+
+        private void RenderTimelineProfileSettings()
+        {
+            bool isDefault = (SelectedProfile == null || SelectedProfile.Default == true);
+            bool tlvisible = SelectedProfile != null ? SelectedProfile.ShowOverlay : false;
+            if (isDefault == true)
+            {
+                _ui.RenderWarning(I18n.Translate("Timelines/ProfileSettings/DefaultApplied"));
+                ImGui.Text("");
+            }
+            if (ImGui.Checkbox(I18n.Translate("Timelines/ProfileSettings/ShowOverlay"), ref tlvisible) == true)
+            {
+                SelectedProfile.ShowOverlay = tlvisible;
+            }
+            bool reactact = SelectedProfile != null ? SelectedProfile.ReactionsActive : false;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/ProfileSettings/ReactionsActive"), ref reactact) == true)
+            {
+                SelectedProfile.ReactionsActive = reactact;
+            }
+            ImGui.Text("");
+            if (isDefault == false)
+            {
+                bool applych = false;
+                bool applyalways = SelectedProfile != null ? SelectedProfile.ApplyAlways : false;
+                if (ImGui.Checkbox(I18n.Translate("Timelines/ProfileSettings/ApplyAlways"), ref applyalways) == true)
+                {
+                    SelectedProfile.ApplyAlways = applyalways;
+                    applych = true;
+                }
+                bool applypro = SelectedProfile != null ? SelectedProfile.ApplyAutomatically : false;
+                if (ImGui.Checkbox(I18n.Translate("Timelines/ProfileSettings/ApplyProfileOnJob"), ref applypro) == true)
+                {
+                    SelectedProfile.ApplyAutomatically = applypro;
+                    applych = true;
+                }
+                ImGui.Text("");
+                if (SelectedProfile != null)
+                {
+                    ulong newmap = _ui.RenderJobSelector(SelectedProfile.ApplyOnJobs);
+                    if (applych == true || newmap != SelectedProfile.ApplyOnJobs)
+                    {
+                        SelectedProfile.ApplyOnJobs = newmap;
+                        if (_state._timeline != null)
+                        {
+                            _state._timeline.SelectProfiles(_state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                        }
+                    }
+                }
+                else
+                {
+                    _ui.RenderJobSelector(0xFFFFFFFFFFFFFFFF);
+                }
+            }
+        }
+
+        private void RenderTimelineEventSettings(float x)
+        {
+            ImGui.Indent(x);
+            ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX(), 0.0f));
+            Timeline.Entry.ProfileSettings pro = _selectedProfile != null ? _selectedProfile.GetSettingsForEntry(SelectedEntry) : null;
+            bool tlvisible = pro != null ? pro.ShowOverlay : false;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/EventSettings/ShowOverlay"), ref tlvisible) == true)
+            {
+                pro.ShowOverlay = tlvisible;
+            }
+            bool reactact = pro != null ? pro.ReactionsActive : false;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/EventSettings/ReactionsActive"), ref reactact) == true)
+            {
+                pro.ReactionsActive = reactact;
+            }
+            ImGui.Text("");
+            ImGui.BeginDisabled();
+            ImGui.CollapsingHeader("  " + I18n.Translate("Timelines/Reactions"), ImGuiTreeNodeFlags.Leaf);
+            ImGui.EndDisabled();
+            float xsec = RenderTimelineReactionsList(out float y);
+            if (SelectedReaction == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            RenderTimelineActionsSettings(xsec, y);
+            if (SelectedReaction == null)
+            {
+                ImGui.EndDisabled();
+            }
+            ImGui.Unindent(0.0f - x);
+        }
+
+        private float RenderTimelineReactionsList(out float ystart)
+        {
+            string createpopupname = "Timelines/CreateReactionPopup";
+            string clonepopupname = "Timelines/CloneReactionPopup";
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            float start = ImGui.GetCursorPosY();
+            if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/Reactions/NewReaction")) == true)
+            {
+                _newReactionName = "";
+                ImGui.OpenPopup(createpopupname);
+            }
+            ImGui.SameLine();
+            if (SelectedReaction == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/Reactions/CloneReaction")) == true)
+            {
+                string orname = "";
+                if (SelectedReaction != null)
+                {
+                    int i = 1;
+                    Timeline.Entry.ProfileSettings pro = _selectedProfile != null ? _selectedProfile.GetSettingsForEntry(_selectedEntry) : null;
+                    if (pro != null)
+                    {
+                        do
+                        {
+                            orname = SelectedReaction.Name + " (" + i + ")";
+                            i++;
+                        } while ((from ix in pro.Reactions where String.Compare(ix.Name, orname) == 0 select ix).Count() > 0);
+                    }
+                }
+                _newReactionName = orname;
+                ImGui.OpenPopup(clonepopupname);
+            }
+            ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/Reactions/DeleteReaction")) == true)
+            {
+                _selectedProfile.RemoveReactionFromEntry(_selectedEntry, SelectedReaction);
+                SelectedReaction = null;
+            }
+            ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.EllipsisH, I18n.Translate("Timelines/Reactions/TestReaction")) == true)
+            {
+                SelectedReaction.Execute(_state);                
+            }
+            if (SelectedReaction == null)
+            {
+                ImGui.EndDisabled();
+            }
+            float reactionColumnWidth = 200.0f;
+            ystart = ImGui.GetCursorPosY();
+            if (ImGui.BeginListBox("##Reactions", new Vector2(reactionColumnWidth, avail.Y - _adjusterYtl2)) == true)
+            {
+                Timeline.Entry.ProfileSettings pro = _selectedProfile != null ? _selectedProfile.GetSettingsForEntry(_selectedEntry) : null;
+                if (pro != null)
+                {
+                    foreach (Timeline.Reaction r in pro.Reactions)
+                    {
+                        if (ImGui.Selectable(r.Name, SelectedReaction == r) == true)
+                        {
+                            SelectedReaction = r;
+                        }
+                        Vector2 psz = ImGui.CalcTextSize(r.Name);
+                        if (psz.X > reactionColumnWidth && ImGui.IsItemHovered() == true)
+                        {
+                            ImGui.BeginTooltip();
+                            ImGui.Text(r.Name);
+                            ImGui.EndTooltip();
                         }
                     }
                 }
                 ImGui.EndListBox();
             }
+            if (ImGui.BeginPopup(createpopupname) == true)
+            {
+                ImGui.Text(I18n.Translate("Timelines/CreateNewReactionAs"));
+                string prename = _newReactionName;
+                if (ImGui.InputText("##Pn" + createpopupname, ref prename, 256) == true)
+                {
+                    _newReactionName = prename;
+                }
+                ImGui.SameLine();
+                bool goodname = _newReactionName.Trim().Length > 0;
+                if (goodname == false)
+                {
+                    ImGui.BeginDisabled();
+                }
+                if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/NewReaction")) == true)
+                {
+                    string prname = _newReactionName.Trim();
+                    Log(LogLevelEnum.Debug, "Creating new blank reaction as {0}", prname);
+                    Timeline.Reaction r = new Timeline.Reaction();
+                    r.Name = prname;
+                    _selectedProfile.AddReactionForEntry(_selectedEntry, r);
+                    SelectedReaction = r;
+                    ImGui.CloseCurrentPopup();
+                }
+                if (goodname == false)
+                {
+                    ImGui.EndDisabled();
+                }
+                ImGui.EndPopup();
+            }
+            if (ImGui.BeginPopup(clonepopupname) == true)
+            {
+                ImGui.Text(I18n.Translate("Timelines/CloneReactionAs"));
+                string prename = _newReactionName;
+                if (ImGui.InputText("##Pn" + clonepopupname, ref prename, 256) == true)
+                {
+                    _newReactionName = prename;
+                }
+                ImGui.SameLine();
+                bool goodname = _newReactionName.Trim().Length > 0;
+                if (goodname == false)
+                {
+                    ImGui.BeginDisabled();
+                }
+                if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/CloneReaction")) == true)
+                {
+                    Timeline.Reaction orp = SelectedReaction;
+                    string orname = orp.Name;
+                    string prname = _newReactionName.Trim();
+                    Log(LogLevelEnum.Debug, "Cloning reaction {0} as new reaction {1}", orname, prname);
+                    Timeline.Reaction r = orp.Duplicate();
+                    r.Name = prname;
+                    _selectedProfile.AddReactionForEntry(_selectedEntry, r);
+                    SelectedReaction = r;
+                    ImGui.CloseCurrentPopup();
+                }
+                if (goodname == false)
+                {
+                    ImGui.EndDisabled();
+                }
+                ImGui.EndPopup();
+            }
+            _adjusterYtl2 += ImGui.GetCursorPosY() - avail.Y - start;
+            ImGuiStylePtr style = ImGui.GetStyle();
+            return reactionColumnWidth + style.ItemSpacing.X;
+        }
+
+        private void RenderTimelineActionsList()
+        {
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            float start = ImGui.GetCursorPosY();
+            if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/Actions/NewAction")) == true)
+            {
+                Timeline.Action a = new Timeline.Action();
+                _selectedReaction.Actions.Add(a);
+                _selectedAction = a;
+            }
+            ImGui.SameLine();
+            if (_selectedAction == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/Actions/CloneAction")) == true)
+            {
+                Timeline.Action a = _selectedAction.Duplicate();
+                a.Id = Guid.NewGuid();
+                _selectedReaction.Actions.Add(a);
+                _selectedAction = a;
+            }
+            ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/Actions/DeleteAction")) == true)
+            {
+                if (_selectedReaction.Actions.Contains(_selectedAction) == true)
+                {
+                    _selectedReaction.Actions.Remove(_selectedAction);
+                }
+                _selectedAction = null;
+            }
+            ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.EllipsisH, I18n.Translate("Timelines/Actions/TestAction")) == true)
+            {
+                _selectedAction.Execute(_state);
+            }
+            if (_selectedAction == null)
+            {
+                ImGui.EndDisabled();
+            }
+            float actionColumnWidth = 200.0f;
+            float mid = ImGui.GetCursorPosY();
+            if (ImGui.BeginListBox("##Actions", new Vector2(actionColumnWidth, avail.Y - _adjusterYtl3)) == true)
+            {
+                if (_selectedReaction != null)
+                {
+                    foreach (Timeline.Action a in _selectedReaction.Actions)
+                    {
+                        if (ImGui.Selectable(a.Describe() + "##" + a.Id, _selectedAction == a) == true)
+                        {
+                            _selectedAction = a;
+                        }
+                    }
+                }
+                ImGui.EndListBox();
+            }
+            _adjusterYtl3 += ImGui.GetCursorPosY() - avail.Y - start;
+            ImGuiStylePtr style = ImGui.GetStyle();
+            ImGui.Indent(actionColumnWidth + style.ItemSpacing.X);
+            ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX(), mid));
+            if (_selectedAction == null)
+            {
+                ImGui.BeginDisabled();
+            }
+            RenderTimelineActionSettings();
+            if (_selectedAction == null)
+            {
+                ImGui.EndDisabled();
+            }
+            ImGui.Unindent(actionColumnWidth + style.ItemSpacing.X);
+        }
+
+        private void RenderTimelineActionsSettings(float x, float y)
+        {
+            ImGui.Indent(x);
+            ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX(), y));
+            ImGui.TextWrapped(I18n.Translate("Timelines/ReactionSettings/Triggers"));
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            ImGui.PushItemWidth(avail.X);
+            string selname = SelectedReaction != null ? I18n.Translate("Timelines/ReactionSettings/Triggers/" + SelectedReaction.Trigger.ToString()) : "";
+            if (ImGui.BeginCombo("##SelTrigger" + (SelectedReaction != null ? SelectedReaction.Id.ToString() : ""), selname) == true)
+            {
+                foreach (Timeline.Reaction.ReactionTriggerEnum rt in Enum.GetValues(typeof(Timeline.Reaction.ReactionTriggerEnum)))             
+                {
+                    switch (rt)
+                    {
+                        case Timeline.Reaction.ReactionTriggerEnum.OnCastBegin:
+                        case Timeline.Reaction.ReactionTriggerEnum.OnCastEnd:
+                            if (SelectedEntry.Type != Timeline.Entry.EntryTypeEnum.Ability)
+                            {
+                                continue;
+                            }
+                            break;
+                        case Timeline.Reaction.ReactionTriggerEnum.Targettable:
+                            if (SelectedEntry.Type != Timeline.Entry.EntryTypeEnum.Targettable)
+                            {
+                                continue;
+                            }
+                            break;
+                        case Timeline.Reaction.ReactionTriggerEnum.Untargettable:
+                            if (SelectedEntry.Type != Timeline.Entry.EntryTypeEnum.Untargettable)
+                            {
+                                continue;
+                            }
+                            break;
+                        case Timeline.Reaction.ReactionTriggerEnum.Spawn:
+                            if (SelectedEntry.Type != Timeline.Entry.EntryTypeEnum.Spawn)
+                            {
+                                continue;
+                            }
+                            break;
+                    }
+                    string name = I18n.Translate("Timelines/ReactionSettings/Triggers/" + rt.ToString());
+                    if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                    {
+                        SelectedReaction.Trigger = rt;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.PopItemWidth();
+            float ofsmin = SelectedReaction != null ? SelectedReaction.TimeWindowStart : 0.0f;
+            float ofsmax = SelectedReaction != null ? SelectedReaction.TimeWindowEnd : 0.0f;
+            if (SelectedReaction != null)
+            {
+                ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/ReactionSettings/TimeOffset"));
+                ImGui.PushItemWidth(200.0f);
+                switch (SelectedReaction.Trigger)
+                {
+                    case Timeline.Reaction.ReactionTriggerEnum.Timed:
+                        if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Timelines/ReactionSettings/TimeOffset", ref ofsmin, ref ofsmax, 0.1f, -30.0f, 30.0f) == true)
+                        {
+                            SelectedReaction.TimeWindowStart = ofsmin;
+                            SelectedReaction.TimeWindowEnd = ofsmax;
+                        }
+                        break;
+                    case Timeline.Reaction.ReactionTriggerEnum.OnCastEnd:
+                    case Timeline.Reaction.ReactionTriggerEnum.OnCastBegin:
+                    case Timeline.Reaction.ReactionTriggerEnum.Targettable:
+                    case Timeline.Reaction.ReactionTriggerEnum.Untargettable:
+                    case Timeline.Reaction.ReactionTriggerEnum.Spawn:
+                        if (ofsmin < 0.0f)
+                        {
+                            ofsmin = 0.0f;
+                            SelectedReaction.TimeWindowStart = 0.0f;
+                        }
+                        if (ofsmax < ofsmin)
+                        {
+                            ofsmax = ofsmin;
+                            SelectedReaction.TimeWindowEnd = ofsmin;
+                        }
+                        if (ImGui.DragFloatRange2(I18n.Translate("MainMenu/Settings/AutomarkerSeconds") + "##Timelines/ReactionSettings/TimeOffset", ref ofsmin, ref ofsmax, 0.1f, 0.0f, 30.0f) == true)
+                        {
+                            SelectedReaction.TimeWindowStart = ofsmin;
+                            SelectedReaction.TimeWindowEnd = ofsmax;
+                        }
+                        break;
+                }
+                ImGui.PopItemWidth();
+            }
+            ImGui.Text("");
+            ImGui.BeginDisabled();
+            ImGui.CollapsingHeader("  " + I18n.Translate("Timelines/Actions"), ImGuiTreeNodeFlags.Leaf);
+            ImGui.EndDisabled();
+            RenderTimelineActionsList();
+            ImGui.Unindent(0.0f - x);
+        }
+
+        private void RenderTimelineActionSettings()
+        {
+            ImGui.TextWrapped(I18n.Translate("Timelines/ActionTypes"));
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            ImGui.PushItemWidth(avail.X);
+            string selname = _selectedAction != null ? I18n.Translate("Timelines/ActionTypes/" + _selectedAction.ActionType.ToString()) : "";
+            if (ImGui.BeginCombo("##SelAction" + (_selectedAction != null ? _selectedAction.Id.ToString() : ""), selname) == true)
+            {
+                foreach (Timeline.Action.ActionTypeEnum at in Enum.GetValues(typeof(Timeline.Action.ActionTypeEnum)))
+                {
+                    if (at == Timeline.Action.ActionTypeEnum.Undefined)
+                    {
+                        continue;
+                    }
+                    string name = I18n.Translate("Timelines/ActionTypes/" + at.ToString());
+                    if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                    {
+                        _selectedAction.ActionType = at;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.PopItemWidth();
+            switch (_selectedAction != null ? _selectedAction.ActionType : Timeline.Action.ActionTypeEnum.Undefined)
+            {
+                case Timeline.Action.ActionTypeEnum.Notification:
+                    {
+                        ImGui.PushItemWidth(avail.X);
+                        string temp = _selectedAction.Text;
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationText"));
+                        if (ImGui.InputText("##NotificationText", ref temp, 256) == true)
+                        {
+                            _selectedAction.Text = temp;
+                        }
+                        bool tts = _selectedAction.TTS;
+                        if (ImGui.Checkbox(I18n.Translate("Timelines/NotificationTTS"), ref tts) == true)
+                        {
+                            _selectedAction.TTS = tts;
+                        }
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSeverity"));
+                        selname = I18n.Translate("Timelines/NotificationSeverity/" + _selectedAction.NotificationSeverity.ToString());
+                        if (ImGui.BeginCombo("##NotificationSeverity" + _selectedAction.Id.ToString(), selname) == true)
+                        {
+                            foreach (Notification.NotificationSeverityEnum cs in Enum.GetValues(typeof(Notification.NotificationSeverityEnum)))
+                            {
+                                string name = I18n.Translate("Timelines/NotificationSeverity/" + cs.ToString());
+                                if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                                {
+                                    _selectedAction.NotificationSeverity = cs;
+                                }
+                            }
+                            ImGui.EndCombo();
+                        }
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSoundEffect"));
+                        selname = I18n.Translate("SoundEffect/" + _selectedAction.SoundEffect.ToString());
+                        if (ImGui.BeginCombo("##NotificationSoundEffect" + _selectedAction.Id.ToString(), selname) == true)
+                        {
+                            foreach (SoundEffectEnum se in Enum.GetValues(typeof(SoundEffectEnum)))
+                            {
+                                string name = I18n.Translate("SoundEffect/" + se.ToString());
+                                if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                                {
+                                    _selectedAction.SoundEffect = se;
+                                }
+                            }
+                            ImGui.EndCombo();
+                        }
+                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationTTL"));
+                        float ttl = _selectedAction.NotificationTTL;
+                        if (ImGui.DragFloat("##NotificationTTL", ref ttl, 0.1f, 1.0f, 30.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp) == true)
+                        {
+                            _selectedAction.NotificationTTL = ttl;
+                        }
+                        ImGui.PopItemWidth();
+                    }
+                    break;
+                case Timeline.Action.ActionTypeEnum.Undefined:
+                    break;
+            }
+        }
+
+        private void RenderTimelineContentSettings()
+        {
+            RenderTimelineContentHeader();
+            Timeline tl = SelectedTimeline;
             if (tl == null)
             {
                 ImGui.BeginDisabled();
             }
-            ImGui.PushFont(UiBuilder.IconFont);
-            ico = FontAwesomeIcon.Search.ToIconString();
-            Vector2 sz = ImGui.CalcTextSize(ico);
-            ImGui.Text(ico);
-            ImGui.PopFont();
-            ImGui.SameLine();                        
-            ImGui.PushItemWidth(timelineColumnWidth - sz.X - style.ItemSpacing.X);
-            if (ImGui.InputText("##Timelines/FilterBox", ref _timelineActionFilter, 256) == true)
+            ImGui.BeginTabBar("LemmyTimelineTabs");
+            if (ImGui.BeginTabItem(I18n.Translate("Timelines/ProfileDetails")) == true)
             {
+                ImGui.BeginChild("Timelines/ProfileDetails");
+                RenderTimelineProfileSettings();
+                ImGui.EndChild();
+                ImGui.EndTabItem();
             }
-            _adjusterYtl += ImGui.GetCursorPosY() - fsp.Y;
-            ImGui.PopItemWidth();
+            if (ImGui.BeginTabItem(I18n.Translate("Timelines/EventDetails")) == true)
+            {
+                ImGui.BeginChild("Timelines/EventDetails");
+                float topx = RenderTimelineContentEvents();
+                RenderTimelineEventSettings(topx);
+                ImGui.EndChild();
+                ImGui.EndTabItem();
+            }
+            ImGui.EndTabBar();
             if (tl == null)
             {
                 ImGui.EndDisabled();
@@ -2043,44 +2633,889 @@ namespace Lemegeton
 
         private void RenderTimelineOverlaySettings()
         {
-            // todo
+            _renderTimelineOverlay = true;
+            _timelineOverlayConfig = true;
+            _ui.RenderWarning(I18n.Translate("Timelines/PreviewActive"));
+            ImGui.Text("");
+            bool tlvisible = _state.cfg.TimelineOverlayVisible;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowOverlay"), ref tlvisible) == true)
+            {
+                _state.cfg.TimelineOverlayVisible = tlvisible;
+            }
+            ImGui.Text("");
+            Vector4 barcolor = _state.cfg.TimelineOverlayBarColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarColor"), ref barcolor, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarColor = barcolor;
+            }
+            Vector4 barcolortx = _state.cfg.TimelineOverlayBarTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarTextColor"), ref barcolortx, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarTextColor = barcolortx;
+            }
+            ImGui.Text("");
+            Vector4 sooncolor = _state.cfg.TimelineOverlayBarSoonColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarSoonColor"), ref sooncolor, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarSoonColor = sooncolor;
+            }
+            Vector4 sooncolortx = _state.cfg.TimelineOverlayBarSoonTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarSoonTextColor"), ref sooncolortx, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarSoonTextColor = sooncolortx;
+            }
+            ImGui.Text("");
+            Vector4 actcolor = _state.cfg.TimelineOverlayBarActiveColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarActiveColor"), ref actcolor, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarActiveColor = actcolor;
+            }
+            Vector4 actcolortx = _state.cfg.TimelineOverlayBarActiveTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarActiveTextColor"), ref actcolortx, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarActiveTextColor = actcolortx;
+            }
+            ImGui.Text("");
+            Vector4 barbgcolor = _state.cfg.TimelineOverlayBarBgColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Timelines/Settings/BarBgColor"), ref barbgcolor, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.TimelineOverlayBarBgColor = barbgcolor;
+            }
+            ImGui.Text("");
+            bool barhead = _state.cfg.TimelineOverlayBarHead;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowBarHead"), ref barhead) == true)
+            {
+                _state.cfg.TimelineOverlayBarHead = barhead;
+            }
+            bool barname = _state.cfg.TimelineOverlayBarName;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowBarName"), ref barname) == true)
+            {
+                _state.cfg.TimelineOverlayBarName = barname;
+            }
+            bool bartime = _state.cfg.TimelineOverlayBarTime;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowBarTime"), ref bartime) == true)
+            {
+                _state.cfg.TimelineOverlayBarTime = bartime;
+            }
+            bool barcaps = _state.cfg.TimelineOverlayBarCaps;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowBarCaps"), ref barcaps) == true)
+            {
+                _state.cfg.TimelineOverlayBarCaps = barcaps;
+            }
+            bool tldebug = _state.cfg.TimelineOverlayDebug;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/Settings/ShowDebug"), ref tldebug) == true)
+            {
+                _state.cfg.TimelineOverlayDebug = tldebug;
+            }
+            Vector2 sz = ImGui.GetContentRegionAvail();
+            ImGui.PushItemWidth(sz.X);
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/BarStyle"));
+            Config.TimelineBarStyleEnum barstyle = _state.cfg.TimelineOverlayBarStyle;
+            string styletr = I18n.Translate("Timelines/Settings/BarStyles/" + barstyle);
+            if (ImGui.BeginCombo("##Timelines/Settings/BarStyle", styletr) == true)
+            {
+                foreach (string name in Enum.GetNames(typeof(Config.TimelineBarStyleEnum)))
+                {
+                    string estr = I18n.Translate("Timelines/Settings/BarStyles/" + name);
+                    if (ImGui.Selectable(estr, String.Compare(styletr, estr) == 0) == true)
+                    {
+                        Config.TimelineBarStyleEnum newstyle = (Config.TimelineBarStyleEnum)Enum.Parse(typeof(Config.TimelineBarStyleEnum), name);
+                        _state.cfg.TimelineOverlayBarStyle = newstyle;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            float timethr = _state.cfg.TimelineOverlayBarTimeThreshold;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/TimeThreshold"));
+            if (ImGui.SliderFloat("##TimeThreshold", ref timethr, 10.0f, 60.0f, "%.1f") == true)
+            {
+                _state.cfg.TimelineOverlayBarTimeThreshold = timethr;
+            }
+            float soonthr = _state.cfg.TimelineOverlayBarSoonThreshold;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/SoonThreshold"));
+            if (ImGui.SliderFloat("##SoonThreshold", ref soonthr, 0.0f, 30.0f, "%.1f") == true)
+            {
+                _state.cfg.TimelineOverlayBarSoonThreshold = soonthr;
+            }
+            float pastthr = _state.cfg.TimelineOverlayBarPastThreshold;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/PastThreshold"));
+            if (ImGui.SliderFloat("##PastThreshold", ref pastthr, 0.0f, 10.0f, "%.1f") == true)
+            {
+                _state.cfg.TimelineOverlayBarPastThreshold = pastthr;
+            }
+            float barheight = _state.cfg.TimelineOverlayBarHeight;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/BarHeight"));
+            if (ImGui.SliderFloat("##BarHeight", ref barheight, 10.0f, 60.0f, "%.1f") == true)
+            {
+                _state.cfg.TimelineOverlayBarHeight = barheight;
+            }
+            float textscale = _state.cfg.TimelineOverlayBarTextScale;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Timelines/Settings/BarTextScale"));
+            if (ImGui.SliderFloat("##BarTextScale", ref textscale, 0.5f, 3.0f, ((int)Math.Floor(textscale * 100.0f)).ToString() + " %%") == true)
+            {
+                _state.cfg.TimelineOverlayBarTextScale = textscale;
+            }
+            ImGui.PopItemWidth();
         }
 
-        private void RenderTimelineRecorderSettings()
+        private void RenderNotificationOverlaySettings()
         {
-            // todo
+            _renderNotificationOverlay = true;
+            _notificationOverlayConfig = true;
+            _ui.RenderWarning(I18n.Translate("Notifications/PreviewActive"));
+            ImGui.Text("");
+            bool olvisible = _state.cfg.NotificationOverlayVisible;
+            if (ImGui.Checkbox(I18n.Translate("Notifications/Settings/ShowOverlay"), ref olvisible) == true)
+            {
+                _state.cfg.NotificationOverlayVisible = olvisible;
+            }
+            ImGui.Text("");
+            Vector4 crittext = _state.cfg.NotificationOverlayCriticalTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/CriticalTextColor"), ref crittext, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayCriticalTextColor = crittext;
+            }
+            Vector4 critbg = _state.cfg.NotificationOverlayCriticalBgColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/CriticalBgColor"), ref critbg, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayCriticalBgColor = critbg;
+            }
+            ImGui.Text("");
+            Vector4 imptext = _state.cfg.NotificationOverlayImportantTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/ImportantTextColor"), ref imptext, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayImportantTextColor = imptext;
+            }
+            Vector4 impbg = _state.cfg.NotificationOverlayImportantBgColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/ImportantBgColor"), ref impbg, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayImportantBgColor = impbg;
+            }
+            ImGui.Text("");
+            Vector4 normtext = _state.cfg.NotificationOverlayNormalTextColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/NormalTextColor"), ref normtext, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayNormalTextColor = normtext;
+            }
+            Vector4 normbg = _state.cfg.NotificationOverlayNormalBgColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Notifications/Settings/NormalBgColor"), ref normbg, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                _state.cfg.NotificationOverlayNormalBgColor = normbg;
+            }
+            Vector2 sz = ImGui.GetContentRegionAvail();
+            bool ntorder = _state.cfg.NotificationOrderReverse;
+            ImGui.Text("");
+            if (ImGui.Checkbox(I18n.Translate("Notifications/Settings/NotificationOrderReverse"), ref ntorder) == true)
+            {
+                _state.cfg.NotificationOrderReverse = ntorder;
+            }
+            ImGui.PushItemWidth(sz.X);
+            Config.TextAlignmentEnum alignm = _state.cfg.NotificationEntryAlignment;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Notifications/Settings/TextAlignments"));
+            string styletr = I18n.Translate("Notifications/Settings/TextAlignments/" + alignm);
+            if (ImGui.BeginCombo("##Notifications/Settings/BarStyle", styletr) == true)
+            {
+                foreach (string name in Enum.GetNames(typeof(Config.TextAlignmentEnum)))
+                {
+                    string estr = I18n.Translate("Notifications/Settings/TextAlignments/" + name);
+                    if (ImGui.Selectable(estr, String.Compare(styletr, estr) == 0) == true)
+                    {
+                        Config.TextAlignmentEnum newalignm = (Config.TextAlignmentEnum)Enum.Parse(typeof(Config.TextAlignmentEnum), name);
+                        _state.cfg.NotificationEntryAlignment = newalignm;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            float ntmargin = _state.cfg.NotificationOverlayEntryMargin;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Notifications/Settings/EntryMargin"));
+            if (ImGui.SliderFloat("##NotificationMargin", ref ntmargin, 0.0f, 60.0f, "%.0f") == true)
+            {
+                _state.cfg.NotificationOverlayEntryMargin = ntmargin;
+            }
+            float ntheight = _state.cfg.NotificationOverlayEntryHeight;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Notifications/Settings/EntryHeight"));
+            if (ImGui.SliderFloat("##NotificationHeight", ref ntheight, 10.0f, 60.0f, "%.1f") == true)
+            {
+                _state.cfg.NotificationOverlayEntryHeight = ntheight;
+            }
+            float textscale = _state.cfg.NotificationOverlayTextScale;
+            ImGui.Text(Environment.NewLine + I18n.Translate("Notifications/Settings/TextScale"));
+            if (ImGui.SliderFloat("##NotificationTextScale", ref textscale, 0.5f, 3.0f, ((int)Math.Floor(textscale * 100.0f)).ToString() + " %%") == true)
+            {
+                _state.cfg.NotificationOverlayTextScale = textscale;
+            }
+            ImGui.PopItemWidth();
+        }
+
+        private float RenderTimelineDebug(ImDrawListPtr draw, float x, float y, float width, Timeline tl)
+        {
+            draw.AddRectFilled(
+                new Vector2(x, y),
+                new Vector2(x + width, y + _state.cfg.TimelineOverlayBarHeight),
+                ImGui.GetColorU32(_state.cfg.TimelineOverlayBarBgColor)
+            );
+            string text = String.Format("E {0}\t{1}\tT {2:0.000}\tS {3:0.000}\tJ {4:0.000}", tl.CurrentEncounter != null ? tl.CurrentEncounter.Id.ToString() : "(null)", tl.Status, tl.CurrentTime, tl.AutoSync, tl.LastJumpPoint);
+            ImFontPtr font = ImGui.GetFont();
+            float fontsize = ImGui.GetFontSize();
+            float scale = _state.cfg.TimelineOverlayBarTextScale;
+            Vector2 sz;
+            sz = ImGui.CalcTextSize(text);
+            sz = new Vector2(sz.X * scale, sz.Y * scale);
+            draw.AddText(
+                font,
+                fontsize * scale,
+                new Vector2(x + 10.0f, y + (_state.cfg.TimelineOverlayBarHeight / 2.0f) - (sz.Y / 2.0f)),
+                ImGui.GetColorU32(_state.cfg.TimelineOverlayBarTextColor),
+                text
+            );
+            return _state.cfg.TimelineOverlayBarHeight;
+        }
+
+        private float RenderTimelineBar(ImDrawListPtr draw, float x, float y, float width, float lastSync, float currentTime, Timeline.Entry e)
+        {
+            float progress;
+            float time;
+            float ratio = 1.0f;
+            float yoffset = _state.cfg.TimelineOverlayBarHeight;
+            bool active = false;
+            bool passed = false;
+            Vector4 maincol, textcol;
+            if (e.StartTime > currentTime)
+            {
+                float timethr = _state.cfg.TimelineOverlayBarTimeThreshold;
+                if (currentTime - lastSync < timethr && lastSync > -1.0f)
+                {
+                    timethr = e.StartTime - lastSync;
+                }
+                time = e.StartTime - currentTime;
+                if (time < _state.cfg.TimelineOverlayBarSoonThreshold && currentTime > 0.0f)
+                {
+                    maincol = _state.cfg.TimelineOverlayBarSoonColor;
+                    textcol = _state.cfg.TimelineOverlayBarSoonTextColor;
+                }
+                else
+                {
+                    maincol = _state.cfg.TimelineOverlayBarColor;
+                    textcol = _state.cfg.TimelineOverlayBarTextColor;
+                }
+                progress = Math.Clamp(1.0f - (time / timethr), 0.0f, 1.0f) * 100.0f;
+            }
+            else
+            {
+                time = e.Duration - (currentTime - e.StartTime);
+                passed = (time < 0.0f);
+                active = (passed == false);
+                if (passed == true)
+                {
+                    progress = 0.0f;
+                    ratio = 1.0f - (Math.Abs(time) / _state.cfg.TimelineOverlayBarPastThreshold);
+                    yoffset *= ratio;
+                }
+                else
+                {
+                    progress = Math.Clamp(time / e.Duration, 0.0f, 1.0f) * -100.0f;
+                }
+                maincol = _state.cfg.TimelineOverlayBarActiveColor;
+                textcol = _state.cfg.TimelineOverlayBarActiveTextColor;
+            }
+            float x1, x2, x3;
+            if (progress < 0.0f)
+            {
+                x1 = x + width;
+                x2 = x1 - (width * progress / -100.0f);
+                x3 = x;
+            }
+            else
+            {
+                x1 = x;
+                x2 = x1 + (width * progress / 100.0f);
+                x3 = x1 + width;
+            }
+            draw.AddRectFilled(
+                new Vector2(x2, y),
+                new Vector2(x3, y + _state.cfg.TimelineOverlayBarHeight),
+                ImGui.GetColorU32(new Vector4(
+                    _state.cfg.TimelineOverlayBarBgColor.X,
+                    _state.cfg.TimelineOverlayBarBgColor.Y,
+                    _state.cfg.TimelineOverlayBarBgColor.Z,
+                    _state.cfg.TimelineOverlayBarBgColor.W * ratio
+                ))
+            );
+            switch (_state.cfg.TimelineOverlayBarStyle)
+            {
+                case Config.TimelineBarStyleEnum.Solid:
+                    {
+                        draw.AddRectFilled(
+                            new Vector2(x1, y),
+                            new Vector2(x2, y + _state.cfg.TimelineOverlayBarHeight),
+                            ImGui.GetColorU32(maincol)
+                        );
+                    }
+                    break;
+                case Config.TimelineBarStyleEnum.Fancy:
+                    {
+                        Vector4 shadow = new Vector4(
+                            Math.Clamp(maincol.X * 0.5f, 0.0f, 1.0f),
+                            Math.Clamp(maincol.Y * 0.5f, 0.0f, 1.0f),
+                            Math.Clamp(maincol.Z * 0.5f, 0.0f, 1.0f),
+                            maincol.W
+                        );
+                        Vector4 hilite = new Vector4(
+                            Math.Clamp(maincol.X + 0.2f, 0.0f, 1.0f),
+                            Math.Clamp(maincol.Y + 0.2f, 0.0f, 1.0f),
+                            Math.Clamp(maincol.Z + 0.2f, 0.0f, 1.0f),
+                            maincol.W
+                        );
+                        float yt = y + (_state.cfg.TimelineOverlayBarHeight * 0.3f);
+                        draw.AddRectFilledMultiColor(
+                            new Vector2(x1, y),
+                            new Vector2(x2, yt),
+                            ImGui.GetColorU32(maincol),
+                            ImGui.GetColorU32(maincol),
+                            ImGui.GetColorU32(hilite),
+                            ImGui.GetColorU32(hilite)
+                        );
+                        draw.AddRectFilledMultiColor(
+                            new Vector2(x1, yt),
+                            new Vector2(x2, y + _state.cfg.TimelineOverlayBarHeight),
+                            ImGui.GetColorU32(hilite),
+                            ImGui.GetColorU32(hilite),
+                            ImGui.GetColorU32(shadow),
+                            ImGui.GetColorU32(shadow)
+                        );
+                    }
+                    break;
+            }
+            if (_state.cfg.TimelineOverlayBarHead == true && passed == false)
+            {
+                float xh = x2 - 15.0f;
+                float xs = x2 + 15.0f;
+                if (progress < 0.0f)
+                {
+                    xh = x2 + 15.0f;
+                    xs = x2 - 15.0f;
+                }
+                Vector4 hilite = new Vector4(
+                    Math.Clamp(maincol.X + 0.5f, 0.0f, 1.0f),
+                    Math.Clamp(maincol.Y + 0.5f, 0.0f, 1.0f),
+                    Math.Clamp(maincol.Z + 0.5f, 0.0f, 1.0f),
+                    maincol.W
+                );
+                draw.AddRectFilledMultiColor(
+                    new Vector2(xh, y),
+                    new Vector2(x2, y + _state.cfg.TimelineOverlayBarHeight),
+                    ImGui.GetColorU32(new Vector4(hilite.X, hilite.Y, hilite.Z, 0.0f)),
+                    ImGui.GetColorU32(new Vector4(hilite.X, hilite.Y, hilite.Z, 0.5f)),
+                    ImGui.GetColorU32(new Vector4(hilite.X, hilite.Y, hilite.Z, 0.5f)),
+                    ImGui.GetColorU32(new Vector4(hilite.X, hilite.Y, hilite.Z, 0.0f))
+                );
+                draw.AddRectFilledMultiColor(
+                    new Vector2(xs, y),
+                    new Vector2(x2, y + _state.cfg.TimelineOverlayBarHeight),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 0.0f)),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 0.5f)),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 0.5f)),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 0.0f))
+                );
+            }
+            draw.AddRect(
+                new Vector2(x, y), 
+                new Vector2(x + width, y + _state.cfg.TimelineOverlayBarHeight), 
+                ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, ratio)), 
+                0.0f, ImDrawFlags.None, 1.0f
+            );
+            ImFontPtr font = ImGui.GetFont();
+            float fontsize = ImGui.GetFontSize();
+            float scale = _state.cfg.TimelineOverlayBarTextScale;
+            Vector2 sz;
+            if (_state.cfg.TimelineOverlayBarName == true)
+            {
+                float trans = textcol.W;
+                float xofs = 0.0f;
+                string text = GetRotatingNameForTimelineEntry(currentTime, e);
+                if (e.Keys.Count > 1)
+                {
+                    float ttime = ((float)(DateTime.Now - _loaded).TotalSeconds / 2.0f) % 1.0f;
+                    if (ttime < 0.2f)
+                    {
+                        trans = 1.0f - ((0.2f - ttime) / 0.2f);
+                        xofs = (1.0f - trans) * (width / 10.0f);
+                    }
+                    if (ttime > 0.8f)
+                    {
+                        trans = (1.0f - ttime) / 0.2f;
+                        xofs = (1.0f - trans) * (width / -10.0f);
+                    }
+                }
+                if (passed == true)
+                {
+                    trans *= ratio;
+                    xofs += (1.0f - ratio) * (width / -10.0f);
+                }
+                if (_state.cfg.TimelineOverlayBarCaps == true)
+                {
+                    text = text.ToUpper();
+                }
+                sz = ImGui.CalcTextSize(text);
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(
+                    font,
+                    fontsize * scale,
+                    new Vector2(x + 11.0f + xofs, y + (_state.cfg.TimelineOverlayBarHeight / 2.0f) - (sz.Y / 2.0f) + 1.0f),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, trans)),
+                    text
+                );
+                draw.AddText(
+                    font,
+                    fontsize * scale,
+                    new Vector2(x + 10.0f + xofs, y + (_state.cfg.TimelineOverlayBarHeight / 2.0f) - (sz.Y / 2.0f)),
+                    ImGui.GetColorU32(new Vector4(textcol.X, textcol.Y, textcol.Z, trans)),
+                    text
+                );
+            }
+            if (_state.cfg.TimelineOverlayBarTime == true && passed == false)
+            {
+                string temp = String.Format("{0:0.0}", time);
+                sz = ImGui.CalcTextSize(temp);
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(
+                    font,
+                    fontsize * scale,
+                    new Vector2(x + width - (sz.X + 11.0f), y + (_state.cfg.TimelineOverlayBarHeight / 2.0f) - (sz.Y / 2.0f) + 1.0f),
+                    ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, textcol.W)),
+                    temp
+                );
+                draw.AddText(
+                    font,
+                    fontsize * scale,
+                    new Vector2(x + width - (sz.X + 10.0f), y + (_state.cfg.TimelineOverlayBarHeight / 2.0f) - (sz.Y / 2.0f)),
+                    ImGui.GetColorU32(textcol),
+                    temp
+                );
+            }
+            return yoffset;
+        }
+
+        private void RenderTimelineOverlay()
+        {
+            Timeline st = _state._timeline;
+            if (st == null && _timelineOverlayConfig == false)
+            { 
+                return;
+            }
+            ImGuiWindowFlags flax = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBackground;
+            if (_timelineOverlayConfig == false)
+            {
+                flax |= ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+            }
+            ImGui.SetNextWindowPos(new Vector2(
+                _state.cfg.TimelineOverlayLocation.Left,
+                _state.cfg.TimelineOverlayLocation.Top),
+                ImGuiCond.FirstUseEver
+            );
+            ImGui.SetNextWindowSize(new Vector2(
+                _state.cfg.TimelineOverlayLocation.Right - _state.cfg.TimelineOverlayLocation.Left,
+                _state.cfg.TimelineOverlayLocation.Bottom - _state.cfg.TimelineOverlayLocation.Top),
+                ImGuiCond.FirstUseEver
+            );
+            if (ImGui.Begin("TimelineOverlay", flax) == true)
+            {
+                UserInterface.KeepWindowInSight();
+                Vector2 pt = ImGui.GetWindowPos();
+                Vector2 szy = ImGui.GetWindowSize();
+                ImDrawListPtr draw = ImGui.GetWindowDrawList();
+                if (_timelineOverlayConfig == true)
+                {
+                    Timeline.Entry e = new Timeline.Entry();
+                    float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                    float y = 0.0f;
+                    float bar = 0.0f;
+                    int barnum = 1;
+                    e.StartTime = _state.cfg.TimelineOverlayBarTimeThreshold;
+                    e.Duration = 10.0f;
+                    e.Type = Timeline.Entry.EntryTypeEnum.Timed;
+                    float curTime;
+                    if (_state.cfg.TimelineOverlayDebug == true && st != null)
+                    {
+                        y += RenderTimelineDebug(draw, pt.X, pt.Y, _state.cfg.TimelineOverlayLocation.Right - _state.cfg.TimelineOverlayLocation.Left, st);
+                    }
+                    while (y < _state.cfg.TimelineOverlayLocation.Bottom - _state.cfg.TimelineOverlayLocation.Top - _state.cfg.TimelineOverlayBarHeight)
+                    {
+                        float maxtime = e.StartTime + e.Duration + _state.cfg.TimelineOverlayBarPastThreshold;
+                        curTime = (float)(((DateTime.Now - _loaded).TotalSeconds * 4.0f) + bar) % maxtime;
+                        e.Description = I18n.Translate("Timelines/PreviewTestAbilityName") + " " + barnum;
+                        y += RenderTimelineBar(
+                            draw, pt.X, pt.Y + y, _state.cfg.TimelineOverlayLocation.Right - _state.cfg.TimelineOverlayLocation.Left,
+                            -9999.0f, curTime, e
+                        );                        
+                        bar += 1.5f;
+                        barnum++;
+                    }
+                    draw.AddRect(
+                        new Vector2(_state.cfg.TimelineOverlayLocation.Left + 2.0f, _state.cfg.TimelineOverlayLocation.Top + 2.0f),
+                        new Vector2(_state.cfg.TimelineOverlayLocation.Right - 2.0f, _state.cfg.TimelineOverlayLocation.Bottom - 2.0f),
+                        ImGui.GetColorU32(new Vector4(1.0f, (float)Math.Abs(Math.Cos(time)), 0.0f, 1.0f)), 
+                        0.0f, ImDrawFlags.None, 5.0f
+                    );
+                }
+                else
+                {
+                    IEnumerable<Timeline.Entry> entries = st.PeekEntries(10, _state.cfg.TimelineOverlayBarPastThreshold, _state.cfg.TimelineOverlayBarTimeThreshold);
+                    float y = 0.0f;
+                    if (_state.cfg.TimelineOverlayDebug == true)
+                    {
+                        y += RenderTimelineDebug(draw, pt.X, pt.Y, _state.cfg.TimelineOverlayLocation.Right - _state.cfg.TimelineOverlayLocation.Left, st);
+                    }
+                    foreach (Timeline.Entry e in entries)
+                    {
+                        if (y >= _state.cfg.TimelineOverlayLocation.Bottom - _state.cfg.TimelineOverlayLocation.Top - _state.cfg.TimelineOverlayBarHeight)
+                        {
+                            break;
+                        }
+                        y += RenderTimelineBar(
+                            draw, pt.X, pt.Y + y, _state.cfg.TimelineOverlayLocation.Right - _state.cfg.TimelineOverlayLocation.Left,
+                            st.LastJumpPoint, st.CurrentTime, e
+                        );
+                    }
+                }
+                _state.cfg.TimelineOverlayLocation = new Rectangle() { Left = pt.X, Top = pt.Y, Right = pt.X + szy.X, Bottom = pt.Y + szy.Y };
+                ImGui.End();
+            }
+        }
+
+        private float RenderNotification(ImDrawListPtr draw, Notification n, float y)
+        {
+            float tm = (float)(DateTime.Now - n.SpawnTime).TotalSeconds;
+            float alpha, xofs = 0.0f;
+            float fadelengthin = 0.3f;
+            float fadelengthout = 0.5f;
+            float yscale = 1.0f;
+            float glintx = 0.0f;
+            if (tm < fadelengthin)
+            {
+                alpha = tm / fadelengthin;
+                xofs = (1.0f - alpha) * ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) / 10.0f);
+            }
+            else if (tm > n.TTL - fadelengthout)
+            {
+                alpha = (n.TTL - tm) / fadelengthout;
+                xofs = (1.0f - alpha) * ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) / 10.0f);
+                yscale = alpha;
+            }
+            else
+            {
+                alpha = 1.0f;
+            }
+            Vector4 textcol = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+            Vector4 bgcol = textcol;
+            switch (n.Severity)
+            {
+                case Notification.NotificationSeverityEnum.Critical:
+                    textcol = new Vector4(
+                        _state.cfg.NotificationOverlayCriticalTextColor.X,
+                        _state.cfg.NotificationOverlayCriticalTextColor.Y,
+                        _state.cfg.NotificationOverlayCriticalTextColor.Z,
+                        _state.cfg.NotificationOverlayCriticalTextColor.W * alpha
+                    );
+                    bgcol = new Vector4(
+                        _state.cfg.NotificationOverlayCriticalBgColor.X,
+                        _state.cfg.NotificationOverlayCriticalBgColor.Y,
+                        _state.cfg.NotificationOverlayCriticalBgColor.Z,
+                        _state.cfg.NotificationOverlayCriticalBgColor.W * alpha
+                    );
+                    break;
+                case Notification.NotificationSeverityEnum.Important:
+                    textcol = new Vector4(
+                        _state.cfg.NotificationOverlayImportantTextColor.X,
+                        _state.cfg.NotificationOverlayImportantTextColor.Y,
+                        _state.cfg.NotificationOverlayImportantTextColor.Z,
+                        _state.cfg.NotificationOverlayImportantTextColor.W * alpha
+                    );
+                    bgcol = new Vector4(
+                        _state.cfg.NotificationOverlayImportantBgColor.X,
+                        _state.cfg.NotificationOverlayImportantBgColor.Y,
+                        _state.cfg.NotificationOverlayImportantBgColor.Z,
+                        _state.cfg.NotificationOverlayImportantBgColor.W * alpha
+                    );
+                    break;
+                case Notification.NotificationSeverityEnum.Normal:
+                    textcol = new Vector4(
+                        _state.cfg.NotificationOverlayNormalTextColor.X,
+                        _state.cfg.NotificationOverlayNormalTextColor.Y,
+                        _state.cfg.NotificationOverlayNormalTextColor.Z,
+                        _state.cfg.NotificationOverlayNormalTextColor.W * alpha
+                    );
+                    bgcol = new Vector4(
+                        _state.cfg.NotificationOverlayNormalBgColor.X,
+                        _state.cfg.NotificationOverlayNormalBgColor.Y,
+                        _state.cfg.NotificationOverlayNormalBgColor.Z,
+                        _state.cfg.NotificationOverlayNormalBgColor.W * alpha
+                    );
+                    break;
+            }
+            float x = _state.cfg.NotificationOverlayLocation.Left;
+            string text = n.Text;
+            Vector2 sz = ImGui.CalcTextSize(text);
+            float scale = _state.cfg.NotificationOverlayTextScale;
+            float x1 = _state.cfg.NotificationOverlayLocation.Left;
+            float x2 = _state.cfg.NotificationOverlayLocation.Left + ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) * 0.25f);
+            float x3 = _state.cfg.NotificationOverlayLocation.Right - ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) * 0.25f);
+            float x4 = _state.cfg.NotificationOverlayLocation.Right;
+            switch (_state.cfg.NotificationEntryAlignment)
+            {
+                case Config.TextAlignmentEnum.Left:
+                    x2 = x1;
+                    x -= xofs;
+                    x += _state.cfg.NotificationOverlayEntryMargin;
+                    glintx = x1 + ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) * alpha);
+                    break;
+                case Config.TextAlignmentEnum.Center:
+                    x += ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) / 2.0f) - ((sz.X * scale) / 2.0f);
+                    glintx = ((x1 + x4) / 2.0f) + ((x4 - x1) / 2.0f * alpha);
+                    break;
+                case Config.TextAlignmentEnum.Right:
+                    x += xofs;
+                    x += (_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) - (sz.X * scale);
+                    x -= _state.cfg.NotificationOverlayEntryMargin;
+                    x3 = x4;
+                    glintx = x4 - ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) * alpha);
+                    break;
+            }
+            float fontSize = ImGui.GetFontSize() * scale;
+            Vector4 bgfade = new Vector4(bgcol.X, bgcol.Y, bgcol.Z, 0.0f);
+            if (_state.cfg.NotificationEntryAlignment != Config.TextAlignmentEnum.Left)
+            {
+                draw.AddRectFilledMultiColor(
+                    new Vector2(x2, _state.cfg.NotificationOverlayLocation.Top + y),
+                    new Vector2(x1, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgcol)
+                );
+            }
+            draw.AddRectFilledMultiColor(
+                new Vector2(x2, _state.cfg.NotificationOverlayLocation.Top + y),
+                new Vector2(x3, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                ImGui.GetColorU32(bgfade),
+                ImGui.GetColorU32(bgfade),
+                ImGui.GetColorU32(bgcol),
+                ImGui.GetColorU32(bgcol)
+            );
+            if (_state.cfg.NotificationEntryAlignment != Config.TextAlignmentEnum.Right)
+            {
+                draw.AddRectFilledMultiColor(
+                    new Vector2(x3, _state.cfg.NotificationOverlayLocation.Top + y),
+                    new Vector2(x4, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgfade),
+                    ImGui.GetColorU32(bgcol)
+                );
+            }
+            Vector4 txs = new Vector4(0.0f, 0.0f, 0.0f, textcol.W * alpha);
+            draw.AddText(
+                ImGui.GetFont(),
+                fontSize,
+                new Vector2(x - 1.0f, _state.cfg.NotificationOverlayLocation.Top + y + (_state.cfg.NotificationOverlayEntryHeight / 2.0f) - (sz.Y * scale / 2.0f)),
+                ImGui.GetColorU32(txs),
+                text
+            );
+            draw.AddText(
+                ImGui.GetFont(),
+                fontSize,
+                new Vector2(x + 1.0f, _state.cfg.NotificationOverlayLocation.Top + y + (_state.cfg.NotificationOverlayEntryHeight / 2.0f) - (sz.Y * scale / 2.0f)),
+                ImGui.GetColorU32(txs),
+                text
+            );
+            draw.AddText(
+                ImGui.GetFont(),
+                fontSize,
+                new Vector2(x, _state.cfg.NotificationOverlayLocation.Top + y + (_state.cfg.NotificationOverlayEntryHeight / 2.0f) - (sz.Y * scale / 2.0f)), 
+                ImGui.GetColorU32(textcol),
+                text
+            );
+            if (tm < fadelengthin)
+            {
+                if (_state.cfg.NotificationEntryAlignment == Config.TextAlignmentEnum.Center)
+                {
+                    float revx = glintx - ((_state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left) * alpha);
+                    draw.AddLine(
+                        new Vector2(revx, _state.cfg.NotificationOverlayLocation.Top + y),
+                        new Vector2(revx, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                        ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f - alpha, 1.0f - alpha)),
+                        20.0f
+                    );
+                    draw.AddLine(
+                        new Vector2(glintx, _state.cfg.NotificationOverlayLocation.Top + y),
+                        new Vector2(glintx, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                        ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f - alpha, 1.0f - alpha)),
+                        20.0f
+                    );
+                }
+                else
+                {
+                    draw.AddLine(
+                        new Vector2(glintx, _state.cfg.NotificationOverlayLocation.Top + y),
+                        new Vector2(glintx, _state.cfg.NotificationOverlayLocation.Top + y + _state.cfg.NotificationOverlayEntryHeight),
+                        ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f - alpha, 1.0f - alpha)),
+                        40.0f
+                    );
+                }
+            }
+            return yscale * _state.cfg.NotificationOverlayEntryHeight;
+        }
+
+        private void TextToSpeech(string text)
+        {
+            try
+            {
+                text = text.Trim();
+                if (text.Length == 0)
+                {
+                    return;
+                }
+                int temp;
+                lock (this)
+                {
+                    temp = _ttsCounter;
+                    _ttsCounter++;
+                    if (_ttsCounter > 9)
+                    {
+                        _ttsCounter = 1;
+                    }
+                }
+                string cmd =
+                    $@"Add-Type -AssemblyName System.Speech; 
+                    $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;
+                    $speak.Rate = {_state.cfg.TTSSpeed};
+                    $speak.Volume = {_state.cfg.TTSVolume};
+                    $speak.Speak(""{text}"");";
+                string path = Path.Combine(Path.GetTempPath(), String.Format("Lemegeton_ttsscript_{0}.ps1", _ttsCounter));
+                using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+                {
+                    sw.Write(cmd);
+                    ProcessStartInfo psi = new ProcessStartInfo()
+                    {
+                        FileName = @"powershell.exe",
+                        LoadUserProfile = false,
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        Arguments = $"-executionpolicy bypass -File {path}",
+                        WindowStyle = ProcessWindowStyle.Hidden
+                    };
+                    using Process p = Process.Start(psi);
+                }
+            }
+            catch (Exception ex)
+            {
+                _state.Log(LogLevelEnum.Error, ex, "Exception during TTS");
+            }
+        }
+
+        private void RenderNotificationOverlay()
+        {            
+            ImGuiWindowFlags flax = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBackground;
+            if (_notificationOverlayConfig == false)
+            {
+                flax |= ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+            }
+            ImGui.SetNextWindowPos(new Vector2(
+                _state.cfg.NotificationOverlayLocation.Left,
+                _state.cfg.NotificationOverlayLocation.Top),
+                ImGuiCond.FirstUseEver
+            );
+            ImGui.SetNextWindowSize(new Vector2(
+                _state.cfg.NotificationOverlayLocation.Right - _state.cfg.NotificationOverlayLocation.Left,
+                _state.cfg.NotificationOverlayLocation.Bottom - _state.cfg.NotificationOverlayLocation.Top),
+                ImGuiCond.FirstUseEver
+            );
+            if (ImGui.Begin("NotificationOverlay", flax) == true)
+            {
+                UserInterface.KeepWindowInSight();
+                Vector2 pt = ImGui.GetWindowPos();
+                Vector2 szy = ImGui.GetWindowSize();
+                ImDrawListPtr draw = ImGui.GetWindowDrawList();                
+                if (_notificationOverlayConfig == true)
+                {
+                    Notification n = new Notification();
+                    float y = 0.0f;
+                    n.TTL = 5.0f;
+                    int barnum = 1;
+                    DateTime dt = DateTime.Now;
+                    int ea = Enum.GetValues(typeof(Notification.NotificationSeverityEnum)).Length;
+                    while (y < _state.cfg.NotificationOverlayLocation.Bottom - _state.cfg.NotificationOverlayLocation.Top - _state.cfg.NotificationOverlayEntryHeight)
+                    {
+                        double ptime = ((dt - _loaded).TotalSeconds + (barnum * 0.5)) % n.TTL;
+                        Notification.NotificationSeverityEnum cs = (Notification.NotificationSeverityEnum)((barnum - 1) % ea);
+                        n.Severity = cs;
+                        n.Text = I18n.Translate("Notifications/TestNotification", I18n.Translate("Timelines/NotificationSeverity/" + cs));
+                        n.SpawnTime = dt.AddSeconds(0.0f - ptime);
+                        RenderNotification(draw, n, y);
+                        y += _state.cfg.NotificationOverlayEntryHeight;
+                        barnum++;
+                    }
+                    float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                    draw.AddRect(
+                        new Vector2(_state.cfg.NotificationOverlayLocation.Left + 2.0f, _state.cfg.NotificationOverlayLocation.Top + 2.0f),
+                        new Vector2(_state.cfg.NotificationOverlayLocation.Right - 2.0f, _state.cfg.NotificationOverlayLocation.Bottom - 2.0f),
+                        ImGui.GetColorU32(new Vector4(1.0f, (float)Math.Abs(Math.Cos(time)), 0.0f, 1.0f)),
+                        0.0f, ImDrawFlags.None, 5.0f
+                    );
+                }
+                else
+                {
+                    float y = 0.0f;
+                    IEnumerable<Notification> notifs;
+                    if (_state.cfg.NotificationOrderReverse == true)
+                    {
+                        notifs = Notifications; 
+                    }
+                    else
+                    {
+                        notifs = Notifications.Reverse<Notification>();
+                    }
+                    foreach (Notification n in notifs)
+                    {
+                        if (y >= _state.cfg.NotificationOverlayLocation.Bottom - _state.cfg.NotificationOverlayLocation.Top - _state.cfg.NotificationOverlayEntryHeight)
+                        {
+                            break;
+                        }
+                        if (n.FirstDisplay == true)
+                        {
+                            n.FirstDisplay = false;                            
+                            if (_state.cfg.QuickToggleSound == true)
+                            {
+                                if ((n.TTS == true || _state.cfg.TTSAllNotifications == true) && _state.cfg.TTSEnabled == true)
+                                {
+                                    TextToSpeech(n.Text);
+                                }
+                                if (n.SoundEffect != SoundEffectEnum.None)
+                                {
+                                    UIModule.PlayChatSoundEffect((uint)n.SoundEffect);
+                                }
+                            }
+                        }
+                        if (n.Text != "")
+                        {
+                            y += RenderNotification(draw, n, y);
+                        }
+                        else
+                        {
+                            n.TTL = 0.0f;
+                        }
+                    }
+                }
+                _state.cfg.NotificationOverlayLocation = new Rectangle() { Left = pt.X, Top = pt.Y, Right = pt.X + szy.X, Bottom = pt.Y + szy.Y };
+                ImGui.End();
+            }
         }
 
         private void RenderTimelineTab()
         {
             Vector2 fsz = ImGui.GetContentRegionAvail();
             ImGui.BeginChild("LemmyTimelineFrame", fsz);
-            ImGui.BeginTabBar("LemmyTimelinetabs");
-            // timelines
-            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Timelines")) == true)
-            {
-                ImGui.BeginChild("MainMenu/Timelines/Timelines");
-                RenderTimelineContentSettings();
-                ImGui.EndChild();
-                ImGui.EndTabItem();
-            }
-            // overlay
-            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Overlay")) == true)
-            {
-                ImGui.BeginChild("MainMenu/Timelines/Overlay");
-                RenderTimelineOverlaySettings();
-                ImGui.EndChild();
-                ImGui.EndTabItem();
-            }
-            // recorder
-            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines/Recorder")) == true)
-            {
-                ImGui.BeginChild("MainMenu/Timelines/Recorder");
-                RenderTimelineRecorderSettings();
-                ImGui.EndChild();
-                ImGui.EndTabItem();
-            }
-            ImGui.EndTabBar();
+            RenderTimelineContentSettings();
             ImGui.EndChild();
         }
 
@@ -2168,7 +3603,9 @@ namespace Lemegeton
                                 }
                                 Vector2 b3 = ImGui.GetCursorPos();
                                 ImGui.SetCursorPos(new Vector2(a3.X + 20, a3.Y + 2));
-                                TextureWrap t3 = contentItem.Value.Enabled == true ? (contentItem.Value.Active == true ? _misc[2] : _misc[3]) : _misc[4];
+                                TextureWrap t3 = contentItem.Value.Enabled == true ?
+                                    (contentItem.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
+                                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                                 ImGui.Image(t3.ImGuiHandle, new Vector2(20, 20));
                                 ImGui.SetCursorPos(b3);
                             }
@@ -2184,7 +3621,9 @@ namespace Lemegeton
                         }
                         Vector2 b2 = ImGui.GetCursorPos();
                         ImGui.SetCursorPos(new Vector2(a2.X + 20, a2.Y + 2));
-                        TextureWrap t2 = content.Value.Enabled == true ? (content.Value.Active == true ? _misc[2] : _misc[3]) : _misc[4];
+                        TextureWrap t2 = content.Value.Enabled == true ?
+                            (content.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
+                            : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                         ImGui.Image(t2.ImGuiHandle, new Vector2(20, 20));
                         ImGui.SetCursorPos(b2);
                     }
@@ -2200,7 +3639,10 @@ namespace Lemegeton
                 }
                 Vector2 b1 = ImGui.GetCursorPos();
                 ImGui.SetCursorPos(new Vector2(a1.X + 20, a1.Y + 2));
-                TextureWrap t1 = contentCat.Enabled == true ? (contentCat.Active == true ? _misc[2] : _misc[3]) : _misc[4];
+                
+                TextureWrap t1 = contentCat.Enabled == true ? 
+                    (contentCat.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
+                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                 ImGui.Image(t1.ImGuiHandle, new Vector2(20, 20));
                 ImGui.SetCursorPos(b1);
             }
@@ -2208,6 +3650,19 @@ namespace Lemegeton
 
         private void DrawUI()
         {
+            _renderTimelineOverlay = false;
+            _timelineOverlayConfig = false;
+            _renderNotificationOverlay = false;
+            _notificationOverlayConfig = false;
+            if (_state._timeline != null)            
+            {
+                _renderTimelineOverlay = _state._timeline.IsOverlayVisible();
+            }
+            AddNotifications();
+            if (Notifications.Count > 0)
+            {
+                _renderNotificationOverlay = true;
+            }
             _state.TrackObjects();
             _softMarkerPreview = false;
             ImFontPtr? font = I18n.GetFont();
@@ -2222,13 +3677,21 @@ namespace Lemegeton
             }
             DrawContent();
             DrawSoftmarkers();
+            if (_renderTimelineOverlay == true && _state.cfg.QuickToggleOverlays == true)
+            {
+                RenderTimelineOverlay();
+            }
+            if (_renderNotificationOverlay == true && _state.cfg.QuickToggleOverlays == true)
+            {
+                RenderNotificationOverlay();
+            }
             _state.EndDrawing();
         }
 
         private void DrawContent()
         {
             _state.NumFeaturesAutomarker = 0;
-            _state.NumFeaturesDrawing = 0;
+            _state.NumFeaturesDrawing = _state.cfg.TimelineOverlayVisible == true ? 1 : 0;
             _state.NumFeaturesSound = 0;
 #if !SANS_GOETIA
             _state.NumFeaturesHack = 0;
@@ -2263,7 +3726,7 @@ namespace Lemegeton
                 return;
             }
             float mul = (float)Math.Abs(Math.Cos(DateTime.Now.Millisecond / 1000.0f * Math.PI));
-            Vector3 temp = TranslateToScreen(
+            Vector3 temp = _ui.TranslateToScreen(
                 go.Position.X + _state.cfg.SoftmarkerOffsetWorldX,
                 go.Position.Y + _state.cfg.SoftmarkerOffsetWorldY + (_state.cfg.SoftmarkerBounce == true ? (0.5f * mul * _state.cfg.SoftmarkerScale) : 0.0f),
                 go.Position.Z + _state.cfg.SoftmarkerOffsetWorldZ
@@ -2272,7 +3735,7 @@ namespace Lemegeton
                 temp.X + _state.cfg.SoftmarkerOffsetScreenX,
                 temp.Y + _state.cfg.SoftmarkerOffsetScreenY
             );
-            TextureWrap tw = _signs[sign];
+            TextureWrap tw = _ui.GetSignIcon(sign);
             float calcWidth = tw.Width * 2.0f * _state.cfg.SoftmarkerScale;
             float calcHeight = tw.Height * 2.0f * _state.cfg.SoftmarkerScale;
             pt.X -= calcWidth / 2.0f;
@@ -2330,9 +3793,6 @@ namespace Lemegeton
             }
         }
 
-        private bool _movingShortcut = false;
-        private Vector2 _movingMouse;
-
         private void DrawLemmyShortcut()
         {
             Vector2 winSize;
@@ -2344,7 +3804,7 @@ namespace Lemegeton
                     _lemmyShortcutPopped = now.AddSeconds(2);
                     _lemmyShortcutJustPopped = false;
                 }
-                TextureWrap tw = _misc[1];
+                TextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton);
                 winSize = new Vector2(tw.Width + 10, tw.Height + 10);
                 ImGui.SetWindowSize(winSize);
                 ImGui.SetCursorPos(new Vector2(5, 5));
@@ -2394,7 +3854,7 @@ namespace Lemegeton
                 }
                 else
                 {
-                    KeepWindowInSight();
+                    UserInterface.KeepWindowInSight();
                 }
                 ImGui.End();
             }
@@ -2545,7 +4005,8 @@ namespace Lemegeton
                     _softMarkerPreview = true;
                     ImGui.PushID("SoftmarkerSettings");
                     ImGui.Indent(30.0f);
-                    ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/SoftmarkerPreviewActive") + Environment.NewLine + Environment.NewLine);
+                    _ui.RenderWarning(I18n.Translate("MainMenu/Settings/SoftmarkerPreviewActive"));
+                    ImGui.Text("");
                     Vector4 smcolor = _state.cfg.SoftmarkerTint;
                     if (ImGui.ColorEdit4(I18n.Translate("MainMenu/Settings/SoftmarkerTint"), ref smcolor, ImGuiColorEditFlags.NoInputs) == true)
                     {
@@ -2598,6 +4059,80 @@ namespace Lemegeton
                     ImGui.PopItemWidth();
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/TimelineSettings")) == true)
+            {
+                ImGui.PushID("TimelineSettings");
+                ImGui.Indent(30.0f);
+                bool tlv = _state.cfg.TimelineTabVisible;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/TimelineTabVisible"), ref tlv) == true)
+                {
+                    _state.cfg.TimelineTabVisible = tlv;
+                }
+                bool tla = _state.cfg.TimelineLocalAllowed;
+                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/TimelineLocalAllowed"), ref tla) == true)
+                {
+                    _state.cfg.TimelineLocalAllowed = tla;
+                }
+                string temp = _state.cfg.TimelineLocalFolder;
+                ImGui.Text(Environment.NewLine + I18n.Translate("MainMenu/Settings/TimelineLocalFolder"));
+                if (ImGui.InputText("##MainMenu/Settings/TimelineLocalFolder", ref temp, 256) == true)
+                {
+                    _state.cfg.TimelineLocalFolder = temp;
+                }
+                ImGui.Text("");
+                if (ImGui.Button(I18n.Translate("MainMenu/Settings/TimelineLocalReload")) == true)
+                {
+                    Log(LogLevelEnum.Debug, "Reloading all local timelines");
+                    _state.LoadLocalTimelines();
+                }
+                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/TimelineOverlaySettings")) == true)
+                {
+                    ImGui.PushID("TimelineOverlaySettings");
+                    ImGui.Indent(30.0f);
+                    RenderTimelineOverlaySettings();
+                    ImGui.Unindent(30.0f);
+                    ImGui.PopID();
+                }
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/NotificationOverlaySettings")) == true)
+            {
+                ImGui.PushID("NotificationOverlaySettings");
+                ImGui.Indent(30.0f);
+                RenderNotificationOverlaySettings();
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }
+            if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/TtsSettings")) == true)
+            {
+                ImGui.PushID("TtsSettings");
+                ImGui.Indent(30.0f);
+                bool ttse = _state.cfg.TTSEnabled;
+                if (ImGui.Checkbox(I18n.Translate("TextToSpeech/Settings/TTSEnabled"), ref ttse) == true)
+                {
+                    _state.cfg.TTSEnabled = ttse;
+                }
+                bool ttsall = _state.cfg.TTSAllNotifications;
+                if (ImGui.Checkbox(I18n.Translate("TextToSpeech/Settings/TTSAllNotifications"), ref ttsall) == true)
+                {
+                    _state.cfg.TTSAllNotifications = ttsall;
+                }
+                int ttsvol = _state.cfg.TTSVolume;
+                ImGui.Text(Environment.NewLine + I18n.Translate("TextToSpeech/Settings/TTSVolume"));
+                if (ImGui.SliderInt("##TextToSpeechVolume", ref ttsvol, 0, 100) == true)
+                {
+                    _state.cfg.TTSVolume = ttsvol;
+                }
+                int ttsspeed = _state.cfg.TTSSpeed;
+                ImGui.Text(Environment.NewLine + I18n.Translate("TextToSpeech/Settings/TTSSpeed"));
+                if (ImGui.SliderInt("##TextToSpeechSpeed", ref ttsspeed, -10, 10) == true)
+                {
+                    _state.cfg.TTSSpeed = ttsspeed;
                 }
                 ImGui.Unindent(30.0f);
                 ImGui.PopID();
@@ -2879,7 +4414,7 @@ namespace Lemegeton
             Vector2 fp = ImGui.GetCursorPos();
             ImGui.SetCursorPosY(fp.Y + 2);
             ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.3f, 0.3f, 0.3f, 1.0f));
-            ImGui.Text(Version + " - " + _state.GameVersion);
+            ImGui.Text("v" + Version + " - " + _state.GameVersion);
             ImGui.PopStyleColor();
             ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
@@ -2911,44 +4446,6 @@ namespace Lemegeton
             ImGui.SameLine();
             _adjusterX += ImGui.GetContentRegionAvail().X;
             ImGui.PopStyleColor(3);
-        }
-
-        private void KeepWindowInSight()
-        {
-            Vector2 pt = ImGui.GetWindowPos();
-            Vector2 szy = ImGui.GetWindowSize();
-            bool moved = false;
-            Vector2 szx = ImGui.GetIO().DisplaySize;
-            if (szy.X > szx.X || szy.Y > szx.Y)
-            {
-                szy.X = Math.Min(szy.X, szx.X);
-                szy.Y = Math.Min(szy.Y, szx.Y);
-                ImGui.SetWindowSize(szy);
-            }
-            if (pt.X < 0)
-            {
-                pt.X += (0.0f - pt.X) / 5.0f;
-                moved = true;
-            }
-            if (pt.Y < 0)
-            {
-                pt.Y += (0.0f - pt.Y) / 5.0f;
-                moved = true;
-            }
-            if (pt.X + szy.X > szx.X)
-            {
-                pt.X -= ((pt.X + szy.X) - szx.X) / 5.0f;
-                moved = true;
-            }
-            if (pt.Y + szy.Y > szx.Y)
-            {
-                pt.Y -= ((pt.Y + szy.Y) - szx.Y) / 5.0f;
-                moved = true;
-            }
-            if (moved == true)
-            {
-                ImGui.SetWindowPos(pt);
-            }
         }
 
         private void DrawMainWindow()
@@ -3004,13 +4501,14 @@ namespace Lemegeton
             {
                 Vector2 tenp = ImGui.GetCursorPos();
                 float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                TextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
                 ImGui.Image(
-                    _misc[9].ImGuiHandle, new Vector2(_misc[9].Width, _misc[9].Height),
+                    tw.ImGuiHandle, new Vector2(tw.Width, tw.Height),
                     new Vector2(0, 0), new Vector2(1, 1),
                     new Vector4(1.0f, 1.0f, 1.0f, 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)))
                 );
                 Vector2 anp1 = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(tenp.X + _misc[9].Width + 10, tenp.Y));
+                ImGui.SetCursorPos(new Vector2(tenp.X + tw.Width + 10, tenp.Y));
                 ImGui.TextWrapped("Downloading, please wait.." + Environment.NewLine + (dlfn != null ? dlfn : ""));
                 Vector2 anp2 = ImGui.GetCursorPos();
                 ImGui.SetCursorPos(new Vector2(tenp.X, Math.Max(anp1.Y, anp2.Y)));
@@ -3029,14 +4527,16 @@ namespace Lemegeton
                 ImGui.EndTabItem();
             }
             // timeline
-            /*
-            if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines")) == true)
+            if (_state.cfg.TimelineTabVisible == true)
             {
-                ImGui.BeginChild("MainMenu/Timelines");
-                RenderTimelineTab();
-                ImGui.EndChild();
-                ImGui.EndTabItem();
-            }*/
+                if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Timelines")) == true)
+                {
+                    ImGui.BeginChild("MainMenu/Timelines");
+                    RenderTimelineTab();
+                    ImGui.EndChild();
+                    ImGui.EndTabItem();
+                }
+            }
             // content
             if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Content")) == true)
             {
@@ -3085,7 +4585,7 @@ namespace Lemegeton
                 ImGui.EndDisabled();
             }
             RenderFooter();
-            KeepWindowInSight();
+            UserInterface.KeepWindowInSight();
             ImGui.End();
             ImGui.PopStyleColor(3);
         }
@@ -3239,7 +4739,7 @@ namespace Lemegeton
                     ImGui.CollapsingHeader("  " + I18n.Translate("Status/AtAGlance"), ImGuiTreeNodeFlags.Leaf);
                     ImGui.EndDisabled();
                     {
-                        tw = _state.StatusGotOpcodes == true ? _misc[5] : _misc[6];
+                        tw = _state.StatusGotOpcodes == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         string txt = I18n.Translate("Status/StatusGotOpcodes" + _state.StatusGotOpcodes);
@@ -3261,12 +4761,12 @@ namespace Lemegeton
                         }
                     }
                     {
-                        tw = _state.StatusMarkingFuncAvailable == true ? _misc[5] : _misc[6];
+                        tw = _state.StatusMarkingFuncAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
                         ImGui.TextWrapped(I18n.Translate("Status/StatusMarkingFuncAvailable" + _state.StatusMarkingFuncAvailable));
-                        tw = _state.StatusPostCommandAvailable == true ? _misc[5] : _misc[6];
+                        tw = _state.StatusPostCommandAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -3292,7 +4792,7 @@ namespace Lemegeton
                     }
                     {
                         tfer = _state.LastNetworkTrafficDown != DateTime.MinValue && (DateTime.Now - _state.LastNetworkTrafficDown).TotalSeconds < 60.0;
-                        tw = tfer == true ? _misc[7] : _misc[8];
+                        tw = tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected);
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -3304,7 +4804,7 @@ namespace Lemegeton
                     }
                     {
                         tfer = _state.LastNetworkTrafficUp != DateTime.MinValue && (DateTime.Now - _state.LastNetworkTrafficUp).TotalSeconds < 60.0;
-                        tw = tfer == true ? _misc[7] : _misc[8];
+                        tw = tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected);
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -3386,7 +4886,7 @@ namespace Lemegeton
 #endif
             if (complaints.Count == 0)
             {
-                tw = _misc[5];
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley);
                 ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                 ImGui.SameLine();
                 ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -3394,7 +4894,7 @@ namespace Lemegeton
             }
             else
             {
-                tw = _misc[6];
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
                 int i = 0;
                 foreach (string c in complaints)
                 {

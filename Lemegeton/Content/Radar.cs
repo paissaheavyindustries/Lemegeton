@@ -63,7 +63,7 @@ namespace Lemegeton.Content
                 }
                 Vector3 me = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
-                me = _state.plug.TranslateToScreen(me.X, me.Y, me.Z);
+                me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
                 foreach (GameObject go in _state.ot)
@@ -74,7 +74,7 @@ namespace Lemegeton.Content
                         if (bc.CurrentHp > 0 && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
                         {
                             double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
-                            Vector3 temp = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                            Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                             pt.Y = temp.Y + 10.0f;
                             string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
                             Vector2 sz = ImGui.CalcTextSize(name);
@@ -163,7 +163,7 @@ namespace Lemegeton.Content
                 uint myid = _state.cs.LocalPlayer.ObjectId;
                 Vector3 me = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
-                me = _state.plug.TranslateToScreen(me.X, me.Y, me.Z);
+                me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
                 foreach (GameObject go in _state.ot)
@@ -171,7 +171,7 @@ namespace Lemegeton.Content
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
                     {
                         double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
-                        Vector3 temp = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                        Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string name = IncludeDistance == true && go.ObjectId != myid ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
                         Vector2 sz = ImGui.CalcTextSize(name);
@@ -183,7 +183,7 @@ namespace Lemegeton.Content
                         if (ShowJobIcon == true)
                         {
                             Character chara = go as Character;
-                            jobicon = _state.plug.GetJobIcon(chara.ClassJob.Id);
+                            jobicon = _state.plug._ui.GetJobIcon(chara.ClassJob.Id);
                         }
                         if (ShowNames == true)
                         {
@@ -348,7 +348,7 @@ namespace Lemegeton.Content
                 uint myid = _state.cs.LocalPlayer.ObjectId;
                 Vector3 origme = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
-                Vector3 me = _state.plug.TranslateToScreen(origme.X, origme.Y, origme.Z);
+                Vector3 me = _state.plug._ui.TranslateToScreen(origme.X, origme.Y, origme.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
                 foreach (GameObject go in _state.ot)
@@ -363,7 +363,7 @@ namespace Lemegeton.Content
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.GatheringPoint && (isHidden == false || ShowHidden == true))
                     {
                         double dist = Vector3.Distance(origme, go.Position);
-                        Vector3 temp = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                        Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string ntmp = go.Name.ToString();
                         string name = IncludeDistance == true && go.ObjectId != myid ? String.Format("{0} ({1:0})", ntmp, dist) : String.Format("{0}", ntmp);
@@ -1143,7 +1143,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 Vector2 pt = new Vector2();
-                Vector3 temp = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                 double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
                 string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
                 Vector2 sz = ImGui.CalcTextSize(name);
@@ -1199,7 +1199,7 @@ namespace Lemegeton.Content
                     float width = distance / 40.0f;
                     width = float.Clamp(width, 0.1f, 1.0f);
                     Vector3 tx;
-                    Vector3 asp = _state.plug.TranslateToScreen(tf.X, tf.Y, tf.Z);
+                    Vector3 asp = _state.plug._ui.TranslateToScreen(tf.X, tf.Y, tf.Z);
                     List<Vector3> verts = new List<Vector3>();
                     verts.Add(tf);
                     verts.Add(tx = new Vector3(tf.X + (float)(Math.Cos(anglexz + (Math.PI / 2.0)) * width), tf.Y, tf.Z + (float)(Math.Sin(anglexz + (Math.PI / 2.0)) * width)));
@@ -1213,7 +1213,7 @@ namespace Lemegeton.Content
                     verts.Add(tf);
                     foreach (Vector3 v in verts)
                     {
-                        Vector3 vx = _state.plug.TranslateToScreen(v.X, v.Y, v.Z);
+                        Vector3 vx = _state.plug._ui.TranslateToScreen(v.X, v.Y, v.Z);
                         draw.PathLineTo(new Vector2(vx.X, vx.Y));
                     }
                     draw.PathStroke(

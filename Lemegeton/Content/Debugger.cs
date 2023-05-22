@@ -56,7 +56,7 @@ namespace Lemegeton.Content
                 }
                 Vector3 me = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
-                me = _state.plug.TranslateToScreen(me.X, me.Y, me.Z);
+                me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 18.0f / defSize;
                 foreach (GameObject go in _state.ot)
@@ -145,7 +145,7 @@ namespace Lemegeton.Content
                     sb.AppendLine(String.Format("RenderFlags: {0} Targettable: {1}", renderFlags, targettable));
                     string text = sb.ToString();
                     Vector2 sz = ImGui.CalcTextSize(text);
-                    Vector3 temp = _state.plug.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                    Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                     sz.X *= mul;
                     sz.Y *= mul;
                     pt.X = temp.X - (sz.X / 2.0f);
