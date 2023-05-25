@@ -708,16 +708,24 @@ namespace Lemegeton.Content
 
             private List<Entry> _defaultsIsland = new List<Entry>()
             {
+                // Alkonost
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12462 },
                 // alligator
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11460 },
+                // Amethyst Spriggan
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12457 },
                 // Apkallu of Paradise
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11448 },
                 // Beachcomb
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11459 },
                 // black chocobo
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 6942 },
+                // Boar of Paradise
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12459 },
                 // dodo of paradise
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11451 },
+                // Funguar
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12461 },
                 // glyptodon
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 10173 },
                 // Gold Back
@@ -740,12 +748,18 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 795 },
                 // paissa
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 3499 },
+                // Quartz Spriggan
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12456 },
                 // Star Marmot
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 262 },
                 // Tiger of Paradise
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12314 },
                 // Twinklefleece
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11458 },
+                // Weird Spriggan
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12460 },
+                // Wild Boar
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12458 },
                 // Yellow Coblyn
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11450 },
             };

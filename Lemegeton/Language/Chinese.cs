@@ -14,6 +14,11 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.1.1
+            AddEntry("Signs/Attack6", "攻击 6");
+            AddEntry("Signs/Attack7", "攻击 7");
+            AddEntry("Signs/Attack8", "攻击 8");
+            #endregion
             #region 1.0.1.0
             //AddEntry("MainMenu/Timelines", "Timelines");
             //AddEntry("Timelines/Timeline", "Timeline");
@@ -131,6 +136,9 @@ namespace Lemegeton.Language
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/StartRecordingOnCombat", "Start/resume recording automatically when combat starts");
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingAfterCombat", "Suspend recording automatically when combat ends, starting a new encounter when it is resumed");
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingAfterCombat", "Stop recording automatically when combat ends, finalizing current recording");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/ResumeRecordingOnTargettable", "Resume recording when hostiles become targettable");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingOnUntargettable", "Suspend recording when hostiles become untargettable");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingOnUntargettable", "Stop recording when hostiles become untargettable");
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/TargetFolder", "Timeline target folder");
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentStatus", "Current recorder status");
             //AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentTargetFile", "Current recorder target file");

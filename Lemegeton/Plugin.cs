@@ -40,12 +40,15 @@ using System.Net.Http;
 using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using System.Xml.Xsl;
-using System.Xml.Linq;
 
 namespace Lemegeton
 {
+    /*
+     * 1.0.1.1
+     * - added Attack 6-8 to automarker support
+     * - added new Island Sanctuary animals to radar
+     * - updated Japanese translation (PR 10, thank you 4i7!)
+     */
 
     public sealed class Plugin : IDalamudPlugin
     {
@@ -55,7 +58,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.0";
+        public string Version = "1.0.1.1";
 
         internal class Downloadable
         {

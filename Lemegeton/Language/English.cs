@@ -14,6 +14,11 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.1.1
+            AddEntry("Signs/Attack6", "Attack 6");
+            AddEntry("Signs/Attack7", "Attack 7");
+            AddEntry("Signs/Attack8", "Attack 8");
+            #endregion
             #region 1.0.1.0
             AddEntry("MainMenu/Timelines", "Timelines");
             AddEntry("Timelines/Timeline", "Timeline");

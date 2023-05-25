@@ -58,6 +58,7 @@ namespace Lemegeton.Core
         {
             None,
             Attack1, Attack2, Attack3, Attack4, Attack5,
+            Attack6, Attack7, Attack8, 
             Bind1, Bind2, Bind3,
             Ignore1, Ignore2,
             Square, Circle, Plus, Triangle,
@@ -72,6 +73,32 @@ namespace Lemegeton.Core
         {
             Roles = new Dictionary<string, SignEnum>();
             Presets = new Dictionary<string, Preset>();
+        }
+
+        public static int GetSignIndex(SignEnum sign)
+        {
+            switch (sign)
+            {
+                default:
+                case SignEnum.None: return 0;
+                case SignEnum.Attack1: return 1;
+                case SignEnum.Attack2: return 2;
+                case SignEnum.Attack3: return 3;
+                case SignEnum.Attack4: return 4;
+                case SignEnum.Attack5: return 5;
+                case SignEnum.Bind1: return 6;
+                case SignEnum.Bind2: return 7;
+                case SignEnum.Bind3: return 8;
+                case SignEnum.Ignore1: return 9;
+                case SignEnum.Ignore2: return 10;
+                case SignEnum.Square: return 11;
+                case SignEnum.Circle: return 12;
+                case SignEnum.Plus: return 13;
+                case SignEnum.Triangle: return 14;
+                case SignEnum.Attack6: return 15;
+                case SignEnum.Attack7: return 16;
+                case SignEnum.Attack8: return 17;
+            }
         }
 
         public void SetRole(string id, SignEnum sign, bool autoswap = true)

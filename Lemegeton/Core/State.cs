@@ -1489,7 +1489,7 @@ namespace Lemegeton.Core
                             {
                                 State = this,
                                 Function = _markingFuncPtr,
-                                Params = new object[] { _sigs["MarkingCtrl"], (byte)marker, go.ObjectId }
+                                Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), go.ObjectId }
                             };
                             QueueInvocation(di);
                         }
@@ -1578,6 +1578,9 @@ namespace Lemegeton.Core
                     else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack3) == false) sign = AutomarkerSigns.SignEnum.Attack3;
                     else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack4) == false) sign = AutomarkerSigns.SignEnum.Attack4;
                     else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack5) == false) sign = AutomarkerSigns.SignEnum.Attack5;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack6) == false) sign = AutomarkerSigns.SignEnum.Attack6;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack7) == false) sign = AutomarkerSigns.SignEnum.Attack7;
+                    else if (IsSoftmarkSet(AutomarkerSigns.SignEnum.Attack8) == false) sign = AutomarkerSigns.SignEnum.Attack8;
                 }
                 if (sign == AutomarkerSigns.SignEnum.BindNext)
                 {
@@ -1641,7 +1644,7 @@ namespace Lemegeton.Core
                         {
                             State = this,
                             Function = _markingFuncPtr,
-                            Params = new object[] { _sigs["MarkingCtrl"], (byte)sign, go.ObjectId },
+                            Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(sign), go.ObjectId },
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
                         QueueInvocation(di);
@@ -1659,6 +1662,9 @@ namespace Lemegeton.Core
                     case AutomarkerSigns.SignEnum.Attack3: cmd += "attack3"; break;
                     case AutomarkerSigns.SignEnum.Attack4: cmd += "attack4"; break;
                     case AutomarkerSigns.SignEnum.Attack5: cmd += "attack5"; break;
+                    case AutomarkerSigns.SignEnum.Attack6: cmd += "attack6"; break;
+                    case AutomarkerSigns.SignEnum.Attack7: cmd += "attack7"; break;
+                    case AutomarkerSigns.SignEnum.Attack8: cmd += "attack8"; break;
                     case AutomarkerSigns.SignEnum.Bind1: cmd += "bind1"; break;
                     case AutomarkerSigns.SignEnum.Bind2: cmd += "bind2"; break;
                     case AutomarkerSigns.SignEnum.Bind3: cmd += "bind3"; break;
@@ -1762,6 +1768,9 @@ namespace Lemegeton.Core
                             case 61303: marker = AutomarkerSigns.SignEnum.Attack3; return true;
                             case 61304: marker = AutomarkerSigns.SignEnum.Attack4; return true;
                             case 61305: marker = AutomarkerSigns.SignEnum.Attack5; return true;
+                            case 61306: marker = AutomarkerSigns.SignEnum.Attack6; return true;
+                            case 61307: marker = AutomarkerSigns.SignEnum.Attack7; return true;
+                            case 61308: marker = AutomarkerSigns.SignEnum.Attack8; return true;
                             case 61311: marker = AutomarkerSigns.SignEnum.Bind1; return true;
                             case 61312: marker = AutomarkerSigns.SignEnum.Bind2; return true;
                             case 61313: marker = AutomarkerSigns.SignEnum.Bind3; return true;
@@ -1778,19 +1787,21 @@ namespace Lemegeton.Core
                 return true;
             }
             nint addr = _sigs["MarkingCtrl"] + 8;
+            nint offset = 0;
+            // todo need to verify order of attack6-8 in the memory structure
             foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
             {
                 if (val == AutomarkerSigns.SignEnum.AttackNext || val == AutomarkerSigns.SignEnum.BindNext || val == AutomarkerSigns.SignEnum.IgnoreNext)
                 {
                     continue;
                 }
-                int temp = Marshal.ReadInt32(addr);
+                offset = 8 * (1 + AutomarkerSigns.GetSignIndex(val));
+                int temp = Marshal.ReadInt32(addr + offset);
                 if (temp == actorId)
                 {
                     marker = val;
                     return true;
-                }
-                addr += 8;
+                }                
             }
             marker = AutomarkerSigns.SignEnum.None;
             return true;

@@ -14,6 +14,11 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.1.1
+            AddEntry("Signs/Attack6", "攻撃 6");
+            AddEntry("Signs/Attack7", "攻撃 7");
+            AddEntry("Signs/Attack8", "攻撃 8");
+            #endregion
             #region 1.0.1.0
             AddEntry("MainMenu/Timelines", "タイムライン");
             AddEntry("Timelines/Timeline", "タイムライン");
@@ -131,6 +136,9 @@ namespace Lemegeton.Language
             AddEntry("Content/Debug/Timelines/TimelineRecorder/StartRecordingOnCombat", "戦闘開始時に自動で記録開始/再開");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingAfterCombat", "戦闘終了時に自動的に記録を中断し、再開時に新たなエンカウンターをスタートさせる");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingAfterCombat", "戦闘終了時に自動的に記録を停止し、現在の記録をファイナライズ");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/ResumeRecordingOnTargettable", "Resume recording when hostiles become targettable");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingOnUntargettable", "Suspend recording when hostiles become untargettable");
+            //AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingOnUntargettable", "Stop recording when hostiles become untargettable");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/TargetFolder", "タイムライン対象フォルダー");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentStatus", "現在の記録状態");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentTargetFile", "現在の記録対象ファイル");

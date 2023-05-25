@@ -78,6 +78,9 @@ namespace Lemegeton.Core
             _signs[AutomarkerSigns.SignEnum.Attack3] = GetTexture(61203);
             _signs[AutomarkerSigns.SignEnum.Attack4] = GetTexture(61204);
             _signs[AutomarkerSigns.SignEnum.Attack5] = GetTexture(61205);
+            _signs[AutomarkerSigns.SignEnum.Attack6] = GetTexture(61206);
+            _signs[AutomarkerSigns.SignEnum.Attack7] = GetTexture(61207);
+            _signs[AutomarkerSigns.SignEnum.Attack8] = GetTexture(61208);
             _signs[AutomarkerSigns.SignEnum.Bind1] = GetTexture(61211);
             _signs[AutomarkerSigns.SignEnum.Bind2] = GetTexture(61212);
             _signs[AutomarkerSigns.SignEnum.Bind3] = GetTexture(61213);
