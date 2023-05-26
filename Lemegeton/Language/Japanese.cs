@@ -136,9 +136,9 @@ namespace Lemegeton.Language
             AddEntry("Content/Debug/Timelines/TimelineRecorder/StartRecordingOnCombat", "戦闘開始時に自動で記録開始/再開");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingAfterCombat", "戦闘終了時に自動的に記録を中断し、再開時に新たなエンカウンターをスタートさせる");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingAfterCombat", "戦闘終了時に自動的に記録を停止し、現在の記録をファイナライズ");
-            //AddEntry("Content/Debug/Timelines/TimelineRecorder/ResumeRecordingOnTargettable", "Resume recording when hostiles become targettable");
-            //AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingOnUntargettable", "Suspend recording when hostiles become untargettable");
-            //AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingOnUntargettable", "Stop recording when hostiles become untargettable");
+            AddEntry("Content/Debug/Timelines/TimelineRecorder/ResumeRecordingOnTargettable", "敵がターゲット可能になった時に記録を再開する");
+            AddEntry("Content/Debug/Timelines/TimelineRecorder/SuspendRecordingOnUntargettable", "敵がターゲット不能になった時に記録を一時停止する");
+            AddEntry("Content/Debug/Timelines/TimelineRecorder/StopRecordingOnUntargettable", "敵がターゲット不能になった時に記録を停止する");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/TargetFolder", "タイムライン対象フォルダー");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentStatus", "現在の記録状態");
             AddEntry("Content/Debug/Timelines/TimelineRecorder/CurrentTargetFile", "現在の記録対象ファイル");
