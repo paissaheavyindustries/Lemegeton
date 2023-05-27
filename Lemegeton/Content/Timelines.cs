@@ -268,7 +268,7 @@ namespace Lemegeton.Content
                             Entry e = new Entry();
                             e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);
                             e.Type = Entry.EntryTypeEnum.Ability;
-                            e.Keys.Add(actionId);
+                            e.KeyValues.Add(actionId);
                             e.Description = String.Format("{0} ({1}): {2}", bc.Name, bc.NameId, a.Name);
                             _enc.Entries.Add(e);
                         }
@@ -362,7 +362,7 @@ namespace Lemegeton.Content
                         Entry e = new Entry();
                         e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);
                         e.Type = Entry.EntryTypeEnum.Spawn;
-                        e.Keys.Add(bc.NameId);                        
+                        e.KeyValues.Add(bc.NameId);                        
                         e.Description = String.Format("{0} ({1})", bc.Name, bc.NameId);
                         _enc.Entries.Add(e);
                     }

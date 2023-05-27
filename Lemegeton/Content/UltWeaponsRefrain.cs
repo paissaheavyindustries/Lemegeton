@@ -36,7 +36,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _gaols = new List<uint>();
             private bool _fired = false;
@@ -57,7 +57,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Gaol1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("Gaol2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Gaol3", AutomarkerSigns.SignEnum.Attack3, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()

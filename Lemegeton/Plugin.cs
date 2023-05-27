@@ -40,17 +40,16 @@ using System.Net.Http;
 using Lumina.Excel.GeneratedSheets;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using System.Xml.Linq;
 
 namespace Lemegeton
 {
     /*
-     * 1.0.1.2
-     * - improvements to timeline structure, behavior, and recorder
-     * - fixed an issue with timelines that were not recorded in Duty Finder instances
-     * - fixed an issue where unrelated markers would sometimes be assigned on clear
-     * - added a workaround for a Dalamud issue that was causing exceptions
-     * - finder no longer pings you for Island Sanctuary animals you've already captured
-     * - updated Japanese translation (PR 11, thank you 4i7!)
+     * 1.0.1.3
+     * - added ingame chat text action to timeline reactions
+     * - added ingame command action to timeline reactions
+     * - changed timeline format slightly to account for future features
+     * - fixed an issue where timeline did not get selected for a zone
      */
 
     public sealed class Plugin : IDalamudPlugin
@@ -61,7 +60,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.2";
+        public string Version = "1.0.1.3";
 
         internal class Downloadable
         {
@@ -74,10 +73,18 @@ namespace Lemegeton
 
         }
 
+        internal class ActionTypeItem
+        {
+
+            public Core.Action Instance;
+
+        }
+
         internal delegate void DownloadableCompletionDelegate(Downloadable d);
         private List<Tuple<Core.Language, string>> _fontBuilderQueue = new List<Tuple<Core.Language, string>>();
         private List<Notification> Notifications = new List<Notification>();
         private List<Notification> NotificationsQueue = new List<Notification>();
+        private List<ActionTypeItem> ActionTypes = new List<ActionTypeItem>();
         internal UserInterface _ui = new UserInterface();
         private State _state = new State();
         private Thread _mainThread = null;
@@ -203,9 +210,9 @@ namespace Lemegeton
                 if (_selectedReaction != value)
                 {
                     _selectedReaction = value;
-                    if (_selectedReaction != null && _selectedReaction.Actions.Count > 0)
+                    if (_selectedReaction != null && _selectedReaction.ActionList.Count > 0)
                     {
-                        _selectedAction = _selectedReaction.Actions[0];
+                        _selectedAction = _selectedReaction.ActionList[0];
                     }
                     else
                     {
@@ -215,7 +222,7 @@ namespace Lemegeton
             }
         }
 
-        private Timeline.Action _selectedAction = null;
+        private Core.Action _selectedAction = null;
 
         private Dictionary<string, ImFontPtr> _fonts = new Dictionary<string, ImFontPtr>();
         public List<Core.ContentCategory> _content = new List<Core.ContentCategory>();
@@ -294,6 +301,7 @@ namespace Lemegeton
             _state.Initialize();
             ApplyConfigToContent();
             ChangeLanguage(_state.cfg.Language);
+            InitializeActionTypes();
             _ui.LoadTextures();
             _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
@@ -306,6 +314,17 @@ namespace Lemegeton
                 Cs_Login(null, null);
             }
             _state.AutoselectTimeline(_state.cs.TerritoryType);
+        }
+
+        private void InitializeActionTypes()
+        {
+            foreach (Type type in Assembly.GetAssembly(typeof(Core.Action)).GetTypes().Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(Core.Action))))
+            {
+                ActionTypeItem ati = new ActionTypeItem();
+                ati.Instance = (Core.Action)Activator.CreateInstance(type);
+                ActionTypes.Add(ati);
+            }
+            ActionTypes.Sort((a, b) => a.Instance.Describe().CompareTo(b.Instance.Describe()));
         }
 
         private void ApplyVersionChanges()
@@ -367,11 +386,11 @@ namespace Lemegeton
                             break;
                     }
                     ImFontPtr font = ImGui.GetIO().Fonts.AddFontFromFileTTF(
-    tp.Item2,
-    18.0f,
-    null,
-    range
-);
+                        tp.Item2,
+                        18.0f,
+                        null,
+                        range
+                    );
                     Log(LogLevelEnum.Debug, "Font loaded from {0}, setting font to language {1}", tp.Item2, tp.Item1.LanguageName);
                     tp.Item1.Font = font;
                 }
@@ -1639,10 +1658,14 @@ namespace Lemegeton
                     case Timeline.Entry.EntryTypeEnum.Ability:
                         {
                             List<string> temp = new List<string>();
-                            foreach (uint key in e.Keys)
+                            foreach (uint key in e.KeyValues)
                             {
                                 Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(key);
-                                temp.Add(Capitalize(a.Name));
+                                string name = Capitalize(a.Name);
+                                if (temp.Contains(name) == false)
+                                {
+                                    temp.Add(name);
+                                }
                             }
                             e.CachedName = String.Join(" / ", temp);
                         }
@@ -1650,10 +1673,14 @@ namespace Lemegeton
                     case Timeline.Entry.EntryTypeEnum.Spawn:
                         {
                             List<string> temp = new List<string>();
-                            foreach (uint key in e.Keys)
+                            foreach (uint key in e.KeyValues)
                             {
                                 Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(key);
-                                temp.Add(Capitalize(a.Singular) + " \xE0AF");
+                                string name = Capitalize(a.Singular) + " \xE0AF";
+                                if (temp.Contains(name) == false)
+                                {
+                                    temp.Add(name);
+                                }
                             }
                             e.CachedName = String.Join(" / ", temp);
                         }
@@ -1681,14 +1708,14 @@ namespace Lemegeton
             {
                 case Timeline.Entry.EntryTypeEnum.Ability:
                     {
-                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.Keys.Count;
-                        Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.Keys[index]);
+                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.KeyValues.Count;
+                        Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.KeyValues[index]);
                         return Capitalize(a.Name);
                     }
                 case Timeline.Entry.EntryTypeEnum.Spawn:
                     {
-                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.Keys.Count;
-                        Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(e.Keys[index]);
+                        int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.KeyValues.Count;
+                        Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(e.KeyValues[index]);
                         return Capitalize(a.Singular + " \xE0AF");
                     }
                 case Timeline.Entry.EntryTypeEnum.Targettable:
@@ -2275,7 +2302,7 @@ namespace Lemegeton
             ImGui.SameLine();
             if (UserInterface.IconButton(FontAwesomeIcon.EllipsisH, I18n.Translate("Timelines/Reactions/TestReaction")) == true)
             {
-                SelectedReaction.Execute(_state);                
+                SelectedReaction.Execute(new Context() { State = _state });
             }
             if (SelectedReaction == null)
             {
@@ -2378,9 +2405,7 @@ namespace Lemegeton
             float start = ImGui.GetCursorPosY();
             if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/Actions/NewAction")) == true)
             {
-                Timeline.Action a = new Timeline.Action();
-                _selectedReaction.Actions.Add(a);
-                _selectedAction = a;
+                ImGui.OpenPopup("NewReactionAction");
             }
             ImGui.SameLine();
             if (_selectedAction == null)
@@ -2389,24 +2414,24 @@ namespace Lemegeton
             }
             if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/Actions/CloneAction")) == true)
             {
-                Timeline.Action a = _selectedAction.Duplicate();
+                Core.Action a = _selectedAction.Duplicate();
                 a.Id = Guid.NewGuid();
-                _selectedReaction.Actions.Add(a);
+                _selectedReaction.ActionList.Add(a);
                 _selectedAction = a;
             }
             ImGui.SameLine();
             if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/Actions/DeleteAction")) == true)
             {
-                if (_selectedReaction.Actions.Contains(_selectedAction) == true)
+                if (_selectedReaction.ActionList.Contains(_selectedAction) == true)
                 {
-                    _selectedReaction.Actions.Remove(_selectedAction);
+                    _selectedReaction.ActionList.Remove(_selectedAction);
                 }
                 _selectedAction = null;
             }
             ImGui.SameLine();
             if (UserInterface.IconButton(FontAwesomeIcon.EllipsisH, I18n.Translate("Timelines/Actions/TestAction")) == true)
             {
-                _selectedAction.Execute(_state);
+                _selectedAction.Execute(new Context() { State = _state });
             }
             if (_selectedAction == null)
             {
@@ -2418,7 +2443,7 @@ namespace Lemegeton
             {
                 if (_selectedReaction != null)
                 {
-                    foreach (Timeline.Action a in _selectedReaction.Actions)
+                    foreach (Core.Action a in _selectedReaction.ActionList)
                     {
                         if (ImGui.Selectable(a.Describe() + "##" + a.Id, _selectedAction == a) == true)
                         {
@@ -2435,13 +2460,32 @@ namespace Lemegeton
             if (_selectedAction == null)
             {
                 ImGui.BeginDisabled();
-            }
-            RenderTimelineActionSettings();
+            }            
+            RenderActionSettings(_selectedAction);
             if (_selectedAction == null)
             {
                 ImGui.EndDisabled();
             }
             ImGui.Unindent(actionColumnWidth + style.ItemSpacing.X);
+            if (ImGui.BeginPopup("NewReactionAction") == true)
+            {
+                ImGui.Text(I18n.Translate("Timelines/ActionTypes") + ":");
+                if (ImGui.BeginListBox("##NewReactionActionLb", new Vector2(200.0f, 100.0f)) == true)
+                {
+                    foreach (ActionTypeItem ati in ActionTypes)
+                    {
+                        if (ImGui.Selectable(ati.Instance.Describe()) == true)
+                        {
+                            Core.Action a = ati.Instance.Duplicate();
+                            _selectedReaction.ActionList.Add(a);
+                            _selectedAction = a;
+                            ImGui.CloseCurrentPopup();
+                        }
+                    }
+                    ImGui.EndListBox();
+                }
+                ImGui.EndPopup();
+            }
         }
 
         private void RenderTimelineActionsSettings(float x, float y)
@@ -2540,85 +2584,110 @@ namespace Lemegeton
             ImGui.Unindent(0.0f - x);
         }
 
-        private void RenderTimelineActionSettings()
+        private void RenderIngameCommandActionSettings(Action.IngameCommand n)
         {
-            ImGui.TextWrapped(I18n.Translate("Timelines/ActionTypes"));
-            Vector2 avail = ImGui.GetContentRegionAvail();
-            ImGui.PushItemWidth(avail.X);
-            string selname = _selectedAction != null ? I18n.Translate("Timelines/ActionTypes/" + _selectedAction.ActionType.ToString()) : "";
-            if (ImGui.BeginCombo("##SelAction" + (_selectedAction != null ? _selectedAction.Id.ToString() : ""), selname) == true)
+            string temp = n.Command;
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/IngameCommandText"));
+            if (ImGui.InputText("##IngameCommandText", ref temp, 256) == true)
             {
-                foreach (Timeline.Action.ActionTypeEnum at in Enum.GetValues(typeof(Timeline.Action.ActionTypeEnum)))
+                n.Command = temp;
+            }
+        }
+
+        private void RenderChatMessageActionSettings(Action.ChatMessage n)
+        {
+            string temp = n.Text;
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/ChatMessageText"));
+            if (ImGui.InputText("##ChatMessageText", ref temp, 256) == true)
+            {
+                n.Text = temp;
+            }
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/ChatMessageSeverity"));
+            string selname = I18n.Translate("Timelines/ChatMessageSeverity/" + n.ChatSeverity.ToString());
+            if (ImGui.BeginCombo("##ChatSeverity" + n.Id.ToString(), selname) == true)
+            {
+                foreach (Action.ChatMessage.ChatSeverityEnum cs in Enum.GetValues(typeof(Action.ChatMessage.ChatSeverityEnum)))
                 {
-                    if (at == Timeline.Action.ActionTypeEnum.Undefined)
-                    {
-                        continue;
-                    }
-                    string name = I18n.Translate("Timelines/ActionTypes/" + at.ToString());
+                    string name = I18n.Translate("Timelines/ChatMessageSeverity/" + cs.ToString());
                     if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
                     {
-                        _selectedAction.ActionType = at;
+                        n.ChatSeverity = cs;
                     }
                 }
                 ImGui.EndCombo();
             }
-            ImGui.PopItemWidth();
-            switch (_selectedAction != null ? _selectedAction.ActionType : Timeline.Action.ActionTypeEnum.Undefined)
+        }
+
+        private void RenderNotificationActionSettings(Action.Notification n)
+        {
+            string temp = n.Text;
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationText"));
+            if (ImGui.InputText("##NotificationText", ref temp, 256) == true)
             {
-                case Timeline.Action.ActionTypeEnum.Notification:
-                    {
-                        ImGui.PushItemWidth(avail.X);
-                        string temp = _selectedAction.Text;
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationText"));
-                        if (ImGui.InputText("##NotificationText", ref temp, 256) == true)
-                        {
-                            _selectedAction.Text = temp;
-                        }
-                        bool tts = _selectedAction.TTS;
-                        if (ImGui.Checkbox(I18n.Translate("Timelines/NotificationTTS"), ref tts) == true)
-                        {
-                            _selectedAction.TTS = tts;
-                        }
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSeverity"));
-                        selname = I18n.Translate("Timelines/NotificationSeverity/" + _selectedAction.NotificationSeverity.ToString());
-                        if (ImGui.BeginCombo("##NotificationSeverity" + _selectedAction.Id.ToString(), selname) == true)
-                        {
-                            foreach (Notification.NotificationSeverityEnum cs in Enum.GetValues(typeof(Notification.NotificationSeverityEnum)))
-                            {
-                                string name = I18n.Translate("Timelines/NotificationSeverity/" + cs.ToString());
-                                if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
-                                {
-                                    _selectedAction.NotificationSeverity = cs;
-                                }
-                            }
-                            ImGui.EndCombo();
-                        }
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSoundEffect"));
-                        selname = I18n.Translate("SoundEffect/" + _selectedAction.SoundEffect.ToString());
-                        if (ImGui.BeginCombo("##NotificationSoundEffect" + _selectedAction.Id.ToString(), selname) == true)
-                        {
-                            foreach (SoundEffectEnum se in Enum.GetValues(typeof(SoundEffectEnum)))
-                            {
-                                string name = I18n.Translate("SoundEffect/" + se.ToString());
-                                if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
-                                {
-                                    _selectedAction.SoundEffect = se;
-                                }
-                            }
-                            ImGui.EndCombo();
-                        }
-                        ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationTTL"));
-                        float ttl = _selectedAction.NotificationTTL;
-                        if (ImGui.DragFloat("##NotificationTTL", ref ttl, 0.1f, 1.0f, 30.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp) == true)
-                        {
-                            _selectedAction.NotificationTTL = ttl;
-                        }
-                        ImGui.PopItemWidth();
-                    }
-                    break;
-                case Timeline.Action.ActionTypeEnum.Undefined:
-                    break;
+                n.Text = temp;
             }
+            bool tts = n.TTS;
+            if (ImGui.Checkbox(I18n.Translate("Timelines/NotificationTTS"), ref tts) == true)
+            {
+                n.TTS = tts;
+            }
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSeverity"));
+            string selname = I18n.Translate("Timelines/NotificationSeverity/" + n.NotificationSeverity.ToString());
+            if (ImGui.BeginCombo("##NotificationSeverity" + n.Id.ToString(), selname) == true)
+            {
+                foreach (Notification.NotificationSeverityEnum cs in Enum.GetValues(typeof(Notification.NotificationSeverityEnum)))
+                {
+                    string name = I18n.Translate("Timelines/NotificationSeverity/" + cs.ToString());
+                    if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                    {
+                        n.NotificationSeverity = cs;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationSoundEffect"));
+            selname = I18n.Translate("SoundEffect/" + n.SoundEffect.ToString());
+            if (ImGui.BeginCombo("##NotificationSoundEffect" + _selectedAction.Id.ToString(), selname) == true)
+            {
+                foreach (SoundEffectEnum se in Enum.GetValues(typeof(SoundEffectEnum)))
+                {
+                    string name = I18n.Translate("SoundEffect/" + se.ToString());
+                    if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                    {
+                        n.SoundEffect = se;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            ImGui.TextWrapped(Environment.NewLine + I18n.Translate("Timelines/NotificationTTL"));
+            float ttl = n.TTL;
+            if (ImGui.DragFloat("##NotificationTTL", ref ttl, 0.1f, 1.0f, 30.0f, "%.1f", ImGuiSliderFlags.AlwaysClamp) == true)
+            {
+                n.TTL = ttl;
+            }            
+        }
+
+        private void RenderActionSettings(Core.Action a)
+        {
+            if (a == null)
+            {
+                return;
+            }
+            Vector2 avail = ImGui.GetContentRegionAvail();
+            ImGui.PushItemWidth(avail.X);
+            if (a is Action.Notification)
+            {
+                RenderNotificationActionSettings((Action.Notification)a);
+            }
+            if (a is Action.ChatMessage)
+            {
+                RenderChatMessageActionSettings((Action.ChatMessage)a);
+            }
+            if (a is Action.IngameCommand)
+            {
+                RenderIngameCommandActionSettings((Action.IngameCommand)a);
+            }
+            ImGui.PopItemWidth();
         }
 
         private void RenderTimelineContentSettings()
@@ -3054,7 +3123,7 @@ namespace Lemegeton
                 float trans = textcol.W;
                 float xofs = 0.0f;
                 string text = GetRotatingNameForTimelineEntry(currentTime, e);
-                if (e.Keys.Count > 1)
+                if (e.KeyValues.Count > 1)
                 {
                     float ttime = ((float)(DateTime.Now - _loaded).TotalSeconds / 2.0f) % 1.0f;
                     if (ttime < 0.2f)

@@ -241,7 +241,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _first = new List<uint>();
             private List<uint> _second = new List<uint>();
@@ -273,7 +273,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Tower2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Tether1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Tether2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -431,7 +431,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _first = new List<uint>();
             private List<uint> _second = new List<uint>();
@@ -455,7 +455,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Beam2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Missile1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Missile2", AutomarkerSigns.SignEnum.Ignore2, false);
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -613,7 +613,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(2000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private uint _partnerId = 0;
             private uint _currentDebuff = 0;
@@ -621,7 +621,7 @@ namespace Lemegeton.Content
             public GlitchTether(State state) : base(state)
             {
                 Enabled = false;
-                Test = new Action(() => TestFunctionality());
+                Test = new System.Action(() => TestFunctionality());
             }
 
             public void Reset()
@@ -799,7 +799,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _psCross = new List<uint>();
             private List<uint> _psSquare = new List<uint>();
@@ -819,7 +819,7 @@ namespace Lemegeton.Content
                 SetupPresets();
                 Signs.ApplyPreset("BPOG - GPOB");
                 Signs2.ApplyPreset("BPOG - BPOG");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -978,7 +978,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _stacks = new List<uint>();
             private List<uint> _spreads = new List<uint>();
@@ -999,7 +999,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -1107,7 +1107,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private List<uint> _monitors = new List<uint>();
             private bool _fired = false;
@@ -1127,7 +1127,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("None3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("None4", AutomarkerSigns.SignEnum.Attack4, false);
                 Signs.SetRole("None5", AutomarkerSigns.SignEnum.Attack5, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -1203,7 +1203,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(2000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private DirectionsEnum omegaPos = DirectionsEnum.North;
             private uint _currentAction = 0;
@@ -1219,7 +1219,7 @@ namespace Lemegeton.Content
             public DynamisDeltaDrawBossMonitor(State state) : base(state)
             {
                 Enabled = false;
-                Test = new Action(() => TestFunctionality());
+                Test = new System.Action(() => TestFunctionality());
             }
 
             public void FeedAction(uint actorId, uint actionId)
@@ -1345,7 +1345,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private Dictionary<uint, GameObject> _debuffs = new Dictionary<uint, GameObject>();
 
@@ -1356,7 +1356,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -1419,7 +1419,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
             private Dictionary<uint, uint> _debuffs = new Dictionary<uint, uint>();
@@ -1440,7 +1440,7 @@ namespace Lemegeton.Content
                 };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()
@@ -1549,14 +1549,14 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(2000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             public uint _currentAction = 0;
 
             public DynamisOmegaDrawBossMonitor(State state) : base(state)
             {
                 Enabled = false;
-                Test = new Action(() => TestFunctionality());
+                Test = new System.Action(() => TestFunctionality());
             }
 
             public void FeedAction(uint actionId)
@@ -1643,7 +1643,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
             private List<uint> _distants = new List<uint>();
@@ -1661,7 +1661,7 @@ namespace Lemegeton.Content
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             private void SetupPresets()

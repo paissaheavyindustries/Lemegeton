@@ -22,7 +22,7 @@ namespace Lemegeton.Content
             public override FeaturesEnum Features => FeaturesEnum.Hack;
 
             [AttributeOrderNumber(1000)]
-            public Action GetCurrent { get; set; }
+            public System.Action GetCurrent { get; set; }
             [AttributeOrderNumber(1001)]
             public float X { get; set; }
             [AttributeOrderNumber(1002)]
@@ -35,7 +35,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2001)]
             public bool AllowRiskyTeleport { get; set; } = false;
             [AttributeOrderNumber(2002)]
-            public Action Teleport
+            public System.Action Teleport
             {
                 get
                 {
@@ -47,7 +47,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private Action _telepoAction = null;
+            private System.Action _telepoAction = null;
             private DateTime _loaded;
 
             protected override bool ExecutionImplementation()
@@ -161,8 +161,8 @@ namespace Lemegeton.Content
             {
                 Enabled = false;
                 _loaded = DateTime.Now;
-                GetCurrent = new Action(() => GetCurrentPosition());
-                Teleport = new Action(() => PerformTeleport());
+                GetCurrent = new System.Action(() => GetCurrentPosition());
+                Teleport = new System.Action(() => PerformTeleport());
             }
 
         }        

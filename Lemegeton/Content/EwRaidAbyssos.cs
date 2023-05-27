@@ -42,7 +42,7 @@ namespace Lemegeton.Content
 
             [DebugOption]
             [AttributeOrderNumber(3000)]
-            public Action Test { get; set; }
+            public System.Action Test { get; set; }
 
             private uint _currentAction = 0;
             private uint _share1 = 0;
@@ -67,7 +67,7 @@ namespace Lemegeton.Content
                 Signs.SetRole("Spread2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("Spread3", AutomarkerSigns.SignEnum.Attack3, false);
                 Signs.SetRole("Spread4", AutomarkerSigns.SignEnum.Attack4, false);
-                Test = new Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()

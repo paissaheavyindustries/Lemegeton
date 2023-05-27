@@ -72,17 +72,19 @@ namespace Lemegeton.Core
         {
 
             internal Timeline.Reaction reaction { get; set; }
+            internal Context ctx { get; set; }
             internal float when { get; set; }
 
-            public ReactionExecution(Timeline.Reaction r, float currentTime, float timeToEvent)
+            public ReactionExecution(Context ct, Timeline.Reaction r, float currentTime, float timeToEvent)
             {
+                ctx = ct;
                 reaction = r;
                 when = currentTime + r.EffectiveTime + timeToEvent;
             }
 
-            public void Execute(State st)
+            public void Execute()
             {
-                reaction.Execute(st);
+                reaction.Execute(ctx);
             }
 
         }
@@ -525,7 +527,7 @@ namespace Lemegeton.Core
             ProcessReactions(ReactionQueue);
         }
 
-        internal void QueueReactionExecution(Timeline.Reaction r, float timeToEvent)
+        internal void QueueReactionExecution(Context ctx, Timeline.Reaction r, float timeToEvent)
         {
             if (r.Fired == true)
             {
@@ -533,7 +535,7 @@ namespace Lemegeton.Core
             }
             r.Fired = true;
             float ct = _timeline != null ? _timeline.CurrentTime : -1.0f;
-            ReactionExecution re = new ReactionExecution(r, ct, timeToEvent);
+            ReactionExecution re = new ReactionExecution(ctx, r, ct, timeToEvent);
             lock (ReactionQueue)
             {
                 ReactionQueue.Add(re);
@@ -867,7 +869,7 @@ namespace Lemegeton.Core
                 {
                     foreach (ReactionExecution re in res)
                     {
-                        re.Execute(this);
+                        re.Execute();
                     }
                     _newReactions = ReactionQueue.Count != res.Count;
                     lock (ReactionQueue)
@@ -1139,8 +1141,8 @@ namespace Lemegeton.Core
                 if (go is BattleChara)
                 {
                     BattleChara bc = (BattleChara)go;
-                    incombat = (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.InCombat) != 0;
-                    if (hostileTargettable == false && isavatar == false && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
+                    incombat = (GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.InCombat) != 0;
+                    if (hostileTargettable == false && isavatar == false && (GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                     {
                         unsafe
                         {
@@ -1823,7 +1825,6 @@ namespace Lemegeton.Core
                 return true;
             }
             nint addr = _sigs["MarkingCtrl"];            
-            // todo need to verify order of attack6-8 in the memory structure
             foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
             {
                 if (val == AutomarkerSigns.SignEnum.AttackNext || val == AutomarkerSigns.SignEnum.BindNext || val == AutomarkerSigns.SignEnum.IgnoreNext)
@@ -1840,6 +1841,19 @@ namespace Lemegeton.Core
             }
             marker = AutomarkerSigns.SignEnum.None;
             return true;
+        }
+
+        internal void PostCommand(string cmd)
+        {
+            if (_postCmdFuncptr != null)
+            {
+                DeferredInvoke di = new DeferredInvoke()
+                {
+                    State = this,
+                    CommandText = cmd
+                };
+                QueueInvocation(di);
+            }
         }
 
         internal void GetSignatures()

@@ -14,6 +14,15 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.1.3
+            AddEntry("Timelines/ActionTypes/ChatMessage", "Ingame chat message");
+            AddEntry("Timelines/ActionTypes/IngameCommand", "Ingame command");
+            AddEntry("Timelines/ChatMessageText", "Message to print to ingame chat");
+            AddEntry("Timelines/ChatMessageSeverity", "Message severity");
+            AddEntry("Timelines/IngameCommandText", "Command to execute");
+            AddEntry("Timelines/ChatMessageSeverity/Normal", "Normal");
+            AddEntry("Timelines/ChatMessageSeverity/Error", "Error");
+            #endregion
             #region 1.0.1.1
             AddEntry("Signs/Attack6", "Attack 6");
             AddEntry("Signs/Attack7", "Attack 7");

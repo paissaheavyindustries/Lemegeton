@@ -152,6 +152,13 @@ namespace Lemegeton.Core
 
         }
 
+        internal enum DirectorTypeEnum : uint
+        {
+            Init = 0x40000001,
+            FadeOut = 0x40000005,
+            BarrierDown = 0x40000006,
+        }
+
         internal OpcodeList Opcodes;
         internal State _st;
         internal StatusTracker _tracker;
@@ -260,20 +267,24 @@ namespace Lemegeton.Core
                     _st.InvokeTether(targetActorId, param3, param2);
                     break;
                 case ActorControlCategory.Director:
-                    if (param2 == 0x4000000F)
+                    if (param2 == (uint)DirectorTypeEnum.FadeOut)
                     {
                         _st._runInstance++;
+                        if (_st.cfg.RemoveMarkersAfterWipe == true)
+                        {
+                            _st._suppressCombatEndMarkRemoval = true;
+                        }
                     }
-                    if (param2 == 0x40000005 && _st.cfg.RemoveMarkersAfterWipe == true)
-                    {                        
-                        _st._suppressCombatEndMarkRemoval = true;
-                    }
-                    if (param2 == 0x40000006 && _st.cfg.RemoveMarkersAfterWipe == true)
+                    if (param2 == (uint)DirectorTypeEnum.BarrierDown)
                     {
-                        _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");
-                        _st.ClearAutoMarkers();
+                        if (_st.cfg.RemoveMarkersAfterWipe == true)
+                        {
+                            _st.Log(State.LogLevelEnum.Debug, null, "Wiped, removing markers");
+                            _st.ClearAutoMarkers();
+                        }
+                        _st.AutoselectTimeline(_st.cs.TerritoryType);
                     }
-                    if (param2 == 0x40000007)
+                    if (param2 == (uint)DirectorTypeEnum.Init)
                     {
                         _st.AutoselectTimeline(_st.cs.TerritoryType);
                     }

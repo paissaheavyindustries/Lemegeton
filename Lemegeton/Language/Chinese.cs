@@ -14,6 +14,9 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.1.3
+            //AddEntry("Timelines/ActionTypes/ChatMessage", "Ingame chat message");
+            #endregion
             #region 1.0.1.1
             AddEntry("Signs/Attack6", "攻击 6");
             AddEntry("Signs/Attack7", "攻击 7");

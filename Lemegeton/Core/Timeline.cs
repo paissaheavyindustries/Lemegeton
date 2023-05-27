@@ -127,6 +127,7 @@ namespace Lemegeton.Core
                 Undefined,
                 JumpToTime,
                 JumpToEncounter,
+                JumpToEntry,
                 SetVariable,
                 ClearVariable,
             }
@@ -150,6 +151,15 @@ namespace Lemegeton.Core
             public float ValueAsFloat(int defValue = 0)
             {
                 if (float.TryParse(Value, out float val) == true)
+                {
+                    return val;
+                }
+                return defValue;
+            }
+
+            public Guid ValueAsGuid(Guid defValue)
+            {
+                if (Guid.TryParse(Value, out Guid val) == true)
                 {
                     return val;
                 }
@@ -212,17 +222,28 @@ namespace Lemegeton.Core
             public bool Hidden { get; set; } = false;
 
             [XmlAttribute]
-            public string KeysAttr
+            public string Keys
             {
                 get
                 {
-                    return String.Join(",", Array.ConvertAll<uint, string>(Keys.ToArray(), x => x.ToString()));
+                    return String.Join(",", Array.ConvertAll<uint, string>(KeyValues.ToArray(), x => x.ToString()));
+                }
+                set
+                {
+                    KeyValues.Clear();
+                    if (value != null)
+                    {
+                        KeyValues.AddRange(
+                            Array.ConvertAll<string, uint>(
+                                value.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                                x => uint.Parse(x))
+                        );
+                    }
                 }
             }
 
-            public List<uint> Keys { get; set; } = new List<uint>();
-
-            public List<Handler> Handlers { get; set; } = new List<Handler>();
+            internal List<uint> KeyValues { get; set; } = new List<uint>();
+            public List<Handler> Handlers { get; set; } = null;
 
             internal float EndTime { get { return StartTime + Duration; } }
             internal string CachedName { get; set; } = null;
@@ -337,58 +358,6 @@ namespace Lemegeton.Core
 
         }
 
-        public class Action
-        {
-
-            public enum ActionTypeEnum
-            {
-                Undefined,
-                Notification,
-            }
-
-            internal Guid Id = Guid.NewGuid();
-            [XmlAttribute]
-            public ActionTypeEnum ActionType { get; set; } = ActionTypeEnum.Notification;
-            [XmlAttribute]
-            public Notification.NotificationSeverityEnum NotificationSeverity { get; set; } = Notification.NotificationSeverityEnum.Normal;
-            [XmlAttribute]
-            public string Text { get; set; } = "";
-            [XmlAttribute]
-            public SoundEffectEnum SoundEffect { get; set; } = SoundEffectEnum.None;
-            [XmlAttribute]
-            public float NotificationTTL { get; set; } = 5.0f;
-            [XmlAttribute]
-            public bool TTS { get; set; } = false;
-
-            public void Execute(State st)
-            {
-                switch (ActionType)
-                {
-                    case ActionTypeEnum.Notification:
-                        st.plug.AddNotification(new Notification()
-                        {
-                            Severity = NotificationSeverity,
-                            Text = Text,
-                            SoundEffect = SoundEffect,
-                            TTL = NotificationTTL,
-                            TTS = TTS
-                        });
-                        break;
-                }
-            }
-
-            public Action Duplicate()
-            {
-                return (Action)MemberwiseClone();
-            }
-
-            public string Describe()
-            {
-                return I18n.Translate("Timelines/ActionTypes/" + ActionType);
-            }
-
-        }
-
         public class Reaction
         {
 
@@ -424,23 +393,26 @@ namespace Lemegeton.Core
                 }
             }
 
-            public List<Action> Actions { get; set; } = new List<Action>();
+            [XmlElement(ElementName = "ChatMessage", Type = typeof(Lemegeton.Action.ChatMessage))]
+            [XmlElement(ElementName = "Notification", Type = typeof(Lemegeton.Action.Notification))]
+            [XmlElement(ElementName = "IngameCommand", Type = typeof(Lemegeton.Action.IngameCommand))]
+            public List<Action> ActionList { get; set; } = new List<Action>();
 
-            public void Execute(State st)
+            public void Execute(Context ctx)
             {
-                foreach (Action a in Actions)
+                foreach (Action a in ActionList)
                 {
-                    a.Execute(st);
+                    a.Execute(ctx);
                 }
             }
 
             public Reaction Duplicate()
             {
                 Reaction r = (Reaction)MemberwiseClone();
-                r.Actions = new List<Action>();
-                foreach (Action a in Actions)
+                r.ActionList = new List<Action>();
+                foreach (Action a in ActionList)
                 {
-                    r.Actions.Add(a.Duplicate());
+                    r.ActionList.Add(a.Duplicate());
                 }
                 return r;
             }
@@ -655,8 +627,8 @@ namespace Lemegeton.Core
                         if (r.Trigger != Reaction.ReactionTriggerEnum.Timed)
                         {
                             continue;
-                        }
-                        st.QueueReactionExecution(r, e.StartTime - CurrentTime);
+                        }                        
+                        st.QueueReactionExecution(new Context { State = st }, r, e.StartTime - CurrentTime);
                     }
                 }
             }
@@ -707,51 +679,81 @@ namespace Lemegeton.Core
         public void ExecuteEntry(State st, Entry e, Reaction.ReactionTriggerEnum rt, bool allowJump, bool allowSync, float syncOffset)
         {
             bool jumped = false;
-            foreach (Handler h in e.Handlers)
+            if (e.Handlers != null)
             {
-                switch (h.Type)
+                foreach (Handler h in e.Handlers)
                 {
-                    default:
-                    case Handler.HandlerTypeEnum.Undefined:
-                        break;
-                    case Handler.HandlerTypeEnum.JumpToEncounter:
-                        if (allowJump == true)
-                        {
-                            int enc = h.ValueAsInt();
-                            Encounter ec = (from ix in Encounters where ix.Id == enc select ix).FirstOrDefault();
-                            if (ec != null)
+                    switch (h.Type)
+                    {
+                        default:
+                        case Handler.HandlerTypeEnum.Undefined:
+                            break;
+                        case Handler.HandlerTypeEnum.JumpToEncounter:
+                            if (allowJump == true)
                             {
-                                st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}", ec.Id);
-                                CurrentEncounter = ec;
+                                int enc = h.ValueAsInt();
+                                Encounter ec = (from ix in Encounters where ix.Id == enc select ix).FirstOrDefault();
+                                if (ec != null)
+                                {
+                                    st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}", ec.Id);
+                                    CurrentEncounter = ec;
+                                    jumped = true;
+                                }
+                                else
+                                {
+                                    st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined", enc);
+                                }
+                            }
+                            break;
+                        case Handler.HandlerTypeEnum.JumpToTime:
+                            if (allowJump == true)
+                            {
+                                float time = h.ValueAsFloat();
+                                st.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", time);
+                                CurrentTime = time;
+                                LastJumpPoint = time;
+                                AutoSync = 0.0f;
                                 jumped = true;
                             }
-                            else
+                            break;
+                        case Handler.HandlerTypeEnum.JumpToEntry:
+                            if (allowJump == true)
                             {
-                                st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined", enc);
+                                Guid eg = h.ValueAsGuid(Guid.Empty);
+                                bool found = false;
+                                foreach (Encounter enc in Encounters)
+                                {
+                                    foreach (Entry ent in enc.Entries)
+                                    {
+                                        if (ent.Id == eg)
+                                        {
+                                            st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}, entry {1} (at {2})", enc.Id, ent.Id, ent.StartTime);
+                                            CurrentEncounter = enc;
+                                            jumped = true;
+                                            found = true;
+                                            CurrentTime = ent.StartTime;
+                                            LastJumpPoint = ent.StartTime;
+                                            AutoSync = 0.0f;
+                                        }
+                                    }
+                                }
+                                if (found == false)
+                                {
+                                    st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to entry {0} but it has not been defined", eg);
+                                }
                             }
-                        }
-                        break;
-                    case Handler.HandlerTypeEnum.JumpToTime:
-                        if (allowJump == true)
-                        {
-                            float time = h.ValueAsFloat();
-                            st.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", time);
-                            CurrentTime = time;
-                            LastJumpPoint = time;
-                            AutoSync = 0.0f;
-                            jumped = true;
-                        }
-                        break;
-                    case Handler.HandlerTypeEnum.SetVariable:
-                        string varn = h.Name != null ? h.Name : "";
-                        Variables[varn] = h.Value != null ? h.Value : "";
-                        break;
-                    case Handler.HandlerTypeEnum.ClearVariable:
-                        if (h.Name != null && Variables.ContainsKey(h.Name) == true)
-                        {
-                            Variables.Remove(h.Name);
-                        }
-                        break;
+                            break;
+                        case Handler.HandlerTypeEnum.SetVariable:
+                            string varn = h.Name != null ? h.Name : "";
+                            Variables[varn] = h.Value != null ? h.Value : "";
+                            break;
+                        case Handler.HandlerTypeEnum.ClearVariable:
+                            if (h.Name != null && Variables.ContainsKey(h.Name) == true)
+                            {
+                                Variables.Remove(h.Name);
+                            }
+                            break;
+                    }
                 }
             }
             if (jumped == false && allowSync == true)
@@ -774,8 +776,8 @@ namespace Lemegeton.Core
                     if (r.Trigger != rt)
                     {
                         continue;
-                    }
-                    st.QueueReactionExecution(r, 0.0f);
+                    }                    
+                    st.QueueReactionExecution(new Context { State = st }, r, 0.0f);
                 }
             }
         }
@@ -897,7 +899,7 @@ namespace Lemegeton.Core
                     {
                         continue;
                     }
-                    if (e.Keys.Contains(nameId) == false)
+                    if (e.KeyValues.Contains(nameId) == false)
                     {
                         continue;
                     }
@@ -967,7 +969,7 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                if (e.Keys.Contains(abilityId) == false)
+                if (e.KeyValues.Contains(abilityId) == false)
                 {
                     continue;
                 }
@@ -1010,7 +1012,7 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                if (e.Keys.Contains(abilityId) == false)
+                if (e.KeyValues.Contains(abilityId) == false)
                 {
                     continue;
                 }
