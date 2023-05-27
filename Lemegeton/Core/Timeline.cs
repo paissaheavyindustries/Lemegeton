@@ -119,6 +119,45 @@ namespace Lemegeton.Core
 
         }
 
+        public class Handler
+        {
+
+            public enum HandlerTypeEnum
+            {
+                Undefined,
+                JumpToTime,
+                JumpToEncounter,
+                SetVariable,
+                ClearVariable,
+            }
+
+            [XmlAttribute]
+            public HandlerTypeEnum Type { get; set; } = HandlerTypeEnum.Undefined;
+            [XmlAttribute]
+            public string Name { get; set; } = null;
+            [XmlAttribute]
+            public string Value { get; set; } = null;
+
+            public int ValueAsInt(int defValue = 0)
+            {
+                if (int.TryParse(Value, out int val) == true)
+                {
+                    return val;
+                }
+                return defValue;
+            }
+
+            public float ValueAsFloat(int defValue = 0)
+            {
+                if (float.TryParse(Value, out float val) == true)
+                {
+                    return val;
+                }
+                return defValue;
+            }
+
+        }
+
         public class Entry
         {
 
@@ -170,17 +209,20 @@ namespace Lemegeton.Core
             [XmlAttribute]
             public float WindowEnd { get; set; } = 1.5f;
             [XmlAttribute]
-            public bool JumpOnEvent { get; set; } = false;
-            [XmlAttribute]
-            public float JumpToTime { get; set; } = 0.0f;
-            [XmlAttribute]
-            public float JumpToEncounter { get; set; } = 0;
-            [XmlAttribute]
             public bool Hidden { get; set; } = false;
+
             [XmlAttribute]
-            public int Encounter { get; set; } = 0;
+            public string KeysAttr
+            {
+                get
+                {
+                    return String.Join(",", Array.ConvertAll<uint, string>(Keys.ToArray(), x => x.ToString()));
+                }
+            }
 
             public List<uint> Keys { get; set; } = new List<uint>();
+
+            public List<Handler> Handlers { get; set; } = new List<Handler>();
 
             internal float EndTime { get { return StartTime + Duration; } }
             internal string CachedName { get; set; } = null;
@@ -421,6 +463,7 @@ namespace Lemegeton.Core
         internal string Filename = null;
         internal DateTime LastModified = DateTime.MinValue;
 
+        internal Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
         public List<Encounter> Encounters { get; set; } = new List<Encounter>();
         internal List<Profile> Profiles { get; set; } = new List<Profile>();
         internal Profile DefaultProfile { get; set; } = new Profile() { Default = true };
@@ -661,37 +704,57 @@ namespace Lemegeton.Core
             return (from ix in CurrentEncounter.Entries where EventIsInVisibleWindow(ix, timeBackward, timeForward) == true select ix).Take(maxAmount);
         }
 
-        public void ExecuteJump(State st, Entry e)
-        {
-            if (e.JumpToEncounter > 0)
-            {
-                Encounter ec = (from ix in Encounters where ix.Id == e.JumpToEncounter select ix).FirstOrDefault();
-                if (ec != null)
-                {
-                    st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0} at {1}", ec.Id, e.JumpToTime);
-                    CurrentEncounter = ec;
-                }
-                else
-                {
-                    st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined, jumping to time {1} instead", e.JumpToEncounter, e.JumpToTime);
-                }
-            }
-            else
-            {
-                st.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", e.JumpToTime);
-            }
-            CurrentTime = e.JumpToTime;
-            LastJumpPoint = e.JumpToTime;
-            AutoSync = 0.0f;
-        }
-
         public void ExecuteEntry(State st, Entry e, Reaction.ReactionTriggerEnum rt, bool allowJump, bool allowSync, float syncOffset)
         {
-            if (e.JumpOnEvent == true && allowJump == true)
+            bool jumped = false;
+            foreach (Handler h in e.Handlers)
             {
-                ExecuteJump(st, e);
+                switch (h.Type)
+                {
+                    default:
+                    case Handler.HandlerTypeEnum.Undefined:
+                        break;
+                    case Handler.HandlerTypeEnum.JumpToEncounter:
+                        if (allowJump == true)
+                        {
+                            int enc = h.ValueAsInt();
+                            Encounter ec = (from ix in Encounters where ix.Id == enc select ix).FirstOrDefault();
+                            if (ec != null)
+                            {
+                                st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}", ec.Id);
+                                CurrentEncounter = ec;
+                                jumped = true;
+                            }
+                            else
+                            {
+                                st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined", enc);
+                            }
+                        }
+                        break;
+                    case Handler.HandlerTypeEnum.JumpToTime:
+                        if (allowJump == true)
+                        {
+                            float time = h.ValueAsFloat();
+                            st.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", time);
+                            CurrentTime = time;
+                            LastJumpPoint = time;
+                            AutoSync = 0.0f;
+                            jumped = true;
+                        }
+                        break;
+                    case Handler.HandlerTypeEnum.SetVariable:
+                        string varn = h.Name != null ? h.Name : "";
+                        Variables[varn] = h.Value != null ? h.Value : "";
+                        break;
+                    case Handler.HandlerTypeEnum.ClearVariable:
+                        if (h.Name != null && Variables.ContainsKey(h.Name) == true)
+                        {
+                            Variables.Remove(h.Name);
+                        }
+                        break;
+                }
             }
-            else if (allowSync == true)
+            if (jumped == false && allowSync == true)
             {
                 st.Log(LogLevelEnum.Debug, null, "Timeline autosync to {0} ({1} from current time {2}, entry at {3}, sync offset {4})", e.StartTime + syncOffset, (e.StartTime + syncOffset) - CurrentTime, CurrentTime, e.StartTime, syncOffset);
                 AutoSync = (e.StartTime + syncOffset) - CurrentTime;                

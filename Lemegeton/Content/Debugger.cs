@@ -121,7 +121,7 @@ namespace Lemegeton.Content
                         BattleChara bc = (BattleChara)go;
                         sb.AppendLine(String.Format("HP: {0}/{1}", bc.CurrentHp, bc.MaxHp));
                         sb.AppendLine(String.Format("Job: {0}", bc.ClassJob.Id));
-                        sb.AppendLine(String.Format("Flags: {0}", bc.StatusFlags));
+                        sb.AppendLine(String.Format("Flags: {0}", _state.GetStatusFlags(bc)));
                         if (bc.CastActionId > 0)
                         {
                             sb.AppendLine(String.Format("Casting: {0} -> {1:X8}", bc.CastActionId, bc.CastTargetObjectId));

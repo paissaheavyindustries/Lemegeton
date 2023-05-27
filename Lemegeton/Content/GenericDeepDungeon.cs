@@ -52,7 +52,7 @@ namespace Lemegeton.Content
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go.SubKind == 5 && go.IsDead == false)
                     {
                         BattleChara bc = (BattleChara)go;
-                        if (bc.CurrentHp > 0 && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
+                        if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
                         {
                             double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
                             Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
@@ -81,7 +81,7 @@ namespace Lemegeton.Content
                                     name
                                 );
                             }
-                            if (dist < 50.0f && DrawLine == true && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.OffhandOut) == 0)
+                            if (dist < 50.0f && DrawLine == true && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.OffhandOut) == 0)
                             {
                                 draw.AddLine(
                                     new Vector2(temp.X, temp.Y),

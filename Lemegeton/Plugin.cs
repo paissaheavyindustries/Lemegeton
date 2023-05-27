@@ -44,10 +44,13 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 namespace Lemegeton
 {
     /*
-     * 1.0.1.1
-     * - added Attack 6-8 to automarker support
-     * - added new Island Sanctuary animals to radar
-     * - updated Japanese translation (PR 10, thank you 4i7!)
+     * 1.0.1.2
+     * - improvements to timeline structure, behavior, and recorder
+     * - fixed an issue with timelines that were not recorded in Duty Finder instances
+     * - fixed an issue where unrelated markers would sometimes be assigned on clear
+     * - added a workaround for a Dalamud issue that was causing exceptions
+     * - finder no longer pings you for Island Sanctuary animals you've already captured
+     * - updated Japanese translation (PR 11, thank you 4i7!)
      */
 
     public sealed class Plugin : IDalamudPlugin
@@ -58,7 +61,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.1";
+        public string Version = "1.0.1.2";
 
         internal class Downloadable
         {
@@ -1706,7 +1709,22 @@ namespace Lemegeton
             {
                 TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.TerritoryType>().GetRow(tl.Territory);
                 ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>().Where(x => x.TerritoryType.Value == tt).FirstOrDefault();
-                tl.CachedName = cfc.Name;
+                if (cfc != null)
+                {
+                    tl.CachedName = cfc.Name;
+                }
+                else
+                {
+                    PlaceName pn = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.PlaceName>().GetRow(tt.PlaceName.Row);
+                    if (pn != null)
+                    {
+                        tl.CachedName = pn.Name;
+                    }
+                    else
+                    {
+                        tl.CachedName = tt.Name;
+                    }
+                }
             }
             return tl.CachedName;
         }

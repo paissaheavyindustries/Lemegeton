@@ -87,9 +87,10 @@ namespace Lemegeton.Content
                 }
             }
 
-            private uint _lastSrc = 0;
             private uint _lastActionId = 0;
+            private DateTime _lastActionTs = DateTime.Now;
             private uint _lastSpawnNameId = 0;
+            private DateTime _lastSpawnTs = DateTime.Now;
 
             private Timeline _tl = null;
             private Encounter _enc = null;
@@ -158,14 +159,19 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                _lastSrc = 0;
                 _lastActionId = 0;
+                _lastActionTs = DateTime.Now;
                 _lastSpawnNameId = 0;
+                _lastSpawnTs = DateTime.Now;
                 if (_tl != null && (_tl.Encounters.Count > 1 || _enc.Entries.Count > 0))
                 {
                     _state.Log(LogLevelEnum.Debug, null, "Writing recorded timeline to {0}", CurrentTargetFile);
                     string data = XmlSerializer<Timeline>.Serialize(_tl);
                     File.WriteAllText(CurrentTargetFile, data);                    
+                }
+                else
+                {
+                    _state.Log(LogLevelEnum.Debug, null, "No encounters or events captured, won't write timeline to {0}", CurrentTargetFile);
                 }
                 recState = RecordingStateEnum.Idle;
             }
@@ -227,29 +233,45 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (_lastSrc == src && _lastActionId == actionId)
+                if (_lastActionId == actionId && (DateTime.Now - _lastActionTs).TotalMilliseconds < 50.0)
                 {
                     return;
-                }
-                _lastSrc = src;
+                }                
                 _lastActionId = actionId;
-                if (IgnoreAutoAttacks == true && actionId == 872)
-                {
-                    return;
-                }
+                _lastActionTs = DateTime.Now;
                 GameObject go = _state.GetActorById(src);
+                if (go is Character)
+                {
+                    Character ch = (Character)go;
+                    unsafe
+                    {
+                        CharacterStruct* chs = (CharacterStruct*)ch.Address;
+                        if (chs->ModelCharaId == 0)
+                        {
+                            return;
+                        }
+                    }
+                }
                 if (go is BattleChara)
                 {
                     BattleChara bc = (BattleChara)go;
-                    if ((bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
+                    if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                     {
-                        Entry e = new Entry();
-                        e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);
-                        e.Type = Entry.EntryTypeEnum.Ability;
-                        e.Keys.Add(actionId);
                         Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(actionId);
-                        e.Description = String.Format("{0} ({1}): {2}", bc.Name, bc.NameId, a.Name);
-                        _enc.Entries.Add(e);
+                        if (IgnoreAutoAttacks == true && a.ActionCategory.Row == 1)
+                        {
+                            return;
+                        }
+                        string abname = a.Name;
+                        if (abname.Trim().Length > 0)
+                        {
+                            Entry e = new Entry();
+                            e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);
+                            e.Type = Entry.EntryTypeEnum.Ability;
+                            e.Keys.Add(actionId);
+                            e.Description = String.Format("{0} ({1}): {2}", bc.Name, bc.NameId, a.Name);
+                            _enc.Entries.Add(e);
+                        }
                     }
                 }
             }
@@ -329,12 +351,13 @@ namespace Lemegeton.Content
                 if (go is BattleChara)
                 {
                     BattleChara bc = (BattleChara)go;
-                    if (_lastSpawnNameId == bc.NameId)
+                    if (_lastSpawnNameId == bc.NameId && (DateTime.Now - _lastSpawnTs).TotalMilliseconds < 50.0)
                     {
                         return;
                     }
                     _lastSpawnNameId = bc.NameId;
-                    if ((bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.MaxHp > 0)
+                    _lastSpawnTs = DateTime.Now;
+                    if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.MaxHp > 0)
                     {
                         Entry e = new Entry();
                         e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);

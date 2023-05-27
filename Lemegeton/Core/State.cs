@@ -30,6 +30,8 @@ using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
+using Dalamud.Game.ClientState.Objects.Enums;
 
 namespace Lemegeton.Core
 {
@@ -1079,6 +1081,30 @@ namespace Lemegeton.Core
             return false;
         }
 
+        // workaround for castinfo begin broken
+        internal unsafe StatusFlags GetStatusFlags(BattleChara bc)
+        {
+            StatusFlags sf = StatusFlags.None;
+            FFXIVClientStructs.FFXIV.Client.Game.Character.Character* Struct = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)bc.Address;
+            return (
+                (Struct->IsHostile ? StatusFlags.Hostile : StatusFlags.None)
+                |
+                (Struct->InCombat ? StatusFlags.InCombat : StatusFlags.None)
+                |
+                (Struct->IsWeaponDrawn ? StatusFlags.WeaponOut : StatusFlags.None)
+                |
+                (Struct->IsOffhandDrawn ? StatusFlags.OffhandOut : StatusFlags.None)
+                |
+                (Struct->IsPartyMember ? StatusFlags.PartyMember : StatusFlags.None)
+                |
+                (Struct->IsAllianceMember ? StatusFlags.AllianceMember : StatusFlags.None)
+                |
+                (Struct->IsFriend ? StatusFlags.Friend : StatusFlags.None)
+                |
+                (bc.CastActionId > 0 ? StatusFlags.IsCasting : StatusFlags.None)
+            );
+        }
+
         internal void TrackObjects()
         {
             bool hostileTargettable = false;
@@ -1100,11 +1126,21 @@ namespace Lemegeton.Core
                     continue;
                 }
                 bool incombat = false;
+                bool isavatar = false;
+                if (go is Character)
+                {
+                    Character ch = (Character)go;
+                    unsafe
+                    {
+                        CharacterStruct* chs = (CharacterStruct*)ch.Address;
+                        isavatar = (chs->ModelCharaId == 0);
+                    }
+                }
                 if (go is BattleChara)
                 {
                     BattleChara bc = (BattleChara)go;
                     incombat = (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.InCombat) != 0;
-                    if (hostileTargettable == false && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
+                    if (hostileTargettable == false && isavatar == false && (bc.StatusFlags & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                     {
                         unsafe
                         {
@@ -1786,8 +1822,7 @@ namespace Lemegeton.Core
                 marker = AutomarkerSigns.SignEnum.None;
                 return true;
             }
-            nint addr = _sigs["MarkingCtrl"] + 8;
-            nint offset = 0;
+            nint addr = _sigs["MarkingCtrl"];            
             // todo need to verify order of attack6-8 in the memory structure
             foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
             {
@@ -1795,7 +1830,7 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                offset = 8 * (1 + AutomarkerSigns.GetSignIndex(val));
+                nint offset = 8 * (1 + AutomarkerSigns.GetSignIndex(val));
                 int temp = Marshal.ReadInt32(addr + offset);
                 if (temp == actorId)
                 {

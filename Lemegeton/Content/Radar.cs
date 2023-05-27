@@ -430,7 +430,7 @@ namespace Lemegeton.Content
                     SRank,
                     ARank,
                     BRank,
-                    RareAnimal
+                    RareAnimal,
                 }
 
                 public ObjectKind Kind { get; set; }
@@ -439,7 +439,7 @@ namespace Lemegeton.Content
                 public bool Selected { get; set; } = false;
                 public DateTime LastSeen { get; set; } = DateTime.MinValue;
                 public ushort Territory { get; set; } = 0;
-                public uint NameId { get; set; } = 0;
+                public uint NameId { get; set; } = 0;                
                 public EntryTypeEnum Type { get; set; } = EntryTypeEnum.Custom;
 
                 internal Regex Regex = null;
@@ -1365,6 +1365,14 @@ namespace Lemegeton.Content
                         }
                         if (ae.NameId > 0)
                         {
+                            if (ae.Territory == 1055)
+                            {
+                                Vector3 pos = go.Position;
+                                if (pos.X < -150.0f && pos.Z > 100.0f)
+                                {
+                                    continue;
+                                }
+                            }
                             if (go is Character)
                             {
                                 Character ch = go as Character;
