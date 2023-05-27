@@ -15,7 +15,7 @@ namespace Lemegeton.Language
         public Japanese(State st) : base(st)
         {
             #region 1.0.1.3
-            //AddEntry("Timelines/ActionTypes/ChatMessage", "Ingame chat message");
+            AddEntry("Timelines/ActionTypes/ChatMessage", "ゲーム内チャットメッセージ");
             #endregion
             #region 1.0.1.1
             AddEntry("Signs/Attack6", "攻撃 6");
