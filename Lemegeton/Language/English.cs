@@ -14,6 +14,13 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.1.4
+            AddEntry("Content/Miscellaneous/Overlays", "Overlays");
+            AddEntry("Content/Miscellaneous/Overlays/Enabled", "Enabled");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker", "DoT Tracker");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/Enabled", "Enabled");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotSettings", "Tracked damage-over-time statuses");
+            #endregion
             #region 1.0.1.3
             AddEntry("Timelines/ActionTypes/ChatMessage", "Ingame chat message");
             AddEntry("Timelines/ActionTypes/IngameCommand", "Ingame command");

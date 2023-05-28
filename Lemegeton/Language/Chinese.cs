@@ -14,8 +14,21 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.1.4
+            //AddEntry("Content/Miscellaneous/Overlays", "Overlays");
+            AddEntry("Content/Miscellaneous/Overlays/Enabled", "启用");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker", "DoT Tracker");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/Enabled", "启用");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotSettings", "Tracked damage-over-time statuses");
+            #endregion
             #region 1.0.1.3
             //AddEntry("Timelines/ActionTypes/ChatMessage", "Ingame chat message");
+            //AddEntry("Timelines/ActionTypes/IngameCommand", "Ingame command");
+            //AddEntry("Timelines/ChatMessageText", "Message to print to ingame chat");
+            //AddEntry("Timelines/ChatMessageSeverity", "Message severity");
+            //AddEntry("Timelines/IngameCommandText", "Command to execute");
+            //AddEntry("Timelines/ChatMessageSeverity/Normal", "Normal");
+            //AddEntry("Timelines/ChatMessageSeverity/Error", "Error");
             #endregion
             #region 1.0.1.1
             AddEntry("Signs/Attack6", "攻击 6");

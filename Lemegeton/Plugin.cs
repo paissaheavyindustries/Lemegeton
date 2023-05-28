@@ -45,11 +45,10 @@ using System.Xml.Linq;
 namespace Lemegeton
 {
     /*
-     * 1.0.1.3
-     * - added ingame chat text action to timeline reactions
-     * - added ingame command action to timeline reactions
-     * - changed timeline format slightly to account for future features
-     * - fixed an issue where timeline did not get selected for a zone
+     * 1.0.1.4
+     * - added a multi-target DoT tracker
+     * - fixed an issue where the global timeline overlay toggle in settings was not respected
+     * - fixed an issue where the global notification overlay toggle in settings was not respected
      */
 
     public sealed class Plugin : IDalamudPlugin
@@ -60,7 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.3";
+        public string Version = "1.0.1.4";
 
         internal class Downloadable
         {
@@ -3767,11 +3766,11 @@ namespace Lemegeton
             }
             DrawContent();
             DrawSoftmarkers();
-            if (_renderTimelineOverlay == true && _state.cfg.QuickToggleOverlays == true)
+            if (_renderTimelineOverlay == true && _state.cfg.QuickToggleOverlays == true && _state.cfg.TimelineOverlayVisible == true)
             {
                 RenderTimelineOverlay();
             }
-            if (_renderNotificationOverlay == true && _state.cfg.QuickToggleOverlays == true)
+            if (_renderNotificationOverlay == true && _state.cfg.QuickToggleOverlays == true && _state.cfg.NotificationOverlayVisible == true)
             {
                 RenderNotificationOverlay();
             }

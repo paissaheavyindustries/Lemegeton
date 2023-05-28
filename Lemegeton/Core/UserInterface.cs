@@ -17,6 +17,7 @@ namespace Lemegeton.Core
         private Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap>();
         private Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap>();
         private Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap>();
+        private Dictionary<uint, TextureWrap> _onDemand = new Dictionary<uint, TextureWrap>();
 
         internal State _state;
 
@@ -164,6 +165,23 @@ namespace Lemegeton.Core
                 }
             }
             _jobs.Clear();
+            foreach (KeyValuePair<uint, TextureWrap> kp in _onDemand)
+            {
+                if (kp.Value != null)
+                {
+                    kp.Value.Dispose();
+                }
+            }
+            _onDemand.Clear();
+        }
+
+        internal TextureWrap GetOnDemandIcon(uint iconId)
+        {
+            if (_onDemand.ContainsKey(iconId) == false)
+            {
+                _onDemand[iconId] = GetTexture(iconId);
+            }
+            return _onDemand[iconId];
         }
 
         internal TextureWrap GetMiscIcon(MiscIconEnum icon)
