@@ -15,20 +15,20 @@ namespace Lemegeton.Language
         public Japanese(State st) : base(st)
         {
             #region 1.0.1.4
-            //AddEntry("Content/Miscellaneous/Overlays", "Overlays");
+            AddEntry("Content/Miscellaneous/Overlays", "オーバーレイ");
             AddEntry("Content/Miscellaneous/Overlays/Enabled", "有効");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker", "DoT Tracker");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker", "DoTトラッカー");
             AddEntry("Content/Miscellaneous/Overlays/DotTracker/Enabled", "有効");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotSettings", "Tracked damage-over-time statuses");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotSettings", "DoTの状態を監視する");
             #endregion
             #region 1.0.1.3
             AddEntry("Timelines/ActionTypes/ChatMessage", "ゲーム内チャットメッセージ");
-            //AddEntry("Timelines/ActionTypes/IngameCommand", "Ingame command");
-            //AddEntry("Timelines/ChatMessageText", "Message to print to ingame chat");
-            //AddEntry("Timelines/ChatMessageSeverity", "Message severity");
-            //AddEntry("Timelines/IngameCommandText", "Command to execute");
-            //AddEntry("Timelines/ChatMessageSeverity/Normal", "Normal");
-            //AddEntry("Timelines/ChatMessageSeverity/Error", "Error");
+            AddEntry("Timelines/ActionTypes/IngameCommand", "ゲーム内コマンド");
+            AddEntry("Timelines/ChatMessageText", "ゲーム内チャットにメッセージを表示する");
+            AddEntry("Timelines/ChatMessageSeverity", "メッセージの重要度");
+            AddEntry("Timelines/IngameCommandText", "実行するコマンド");
+            AddEntry("Timelines/ChatMessageSeverity/Normal", "通常");
+            AddEntry("Timelines/ChatMessageSeverity/Error", "エラー");
             #endregion
             #region 1.0.1.1
             AddEntry("Signs/Attack6", "攻撃 6");
