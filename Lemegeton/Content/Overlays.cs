@@ -35,7 +35,122 @@ namespace Lemegeton.Content
         public class DotTracker : Core.ContentItem
         {
 
-            public class DotEditor : CustomPropertyInterface
+            public class DotVisualsWidget : CustomPropertyInterface
+            {
+
+                public override void Deserialize(string data)
+                {
+                    string[] temp = data.Split(";");
+                    foreach (string t in temp)
+                    {
+                        string[] item = t.Split("=", 2);
+                        switch (item[0])
+                        {
+                            case "BarWidth": _dt._visualBarWidth = float.Parse(item[1]); break;
+                            case "ItemHeight": _dt._visualItemHeight = float.Parse(item[1]); break;
+                            case "ShowBar": _dt._visualShowBar = bool.Parse(item[1]); break;
+                            case "ShowIcon": _dt._visualShowIcon = bool.Parse(item[1]); break;
+                            case "ShowTime": _dt._visualShowTime = bool.Parse(item[1]); break;
+                            case "ItemOffsetWorldX": _dt._visualItemOffsetWorldX = float.Parse(item[1]); break;
+                            case "ItemOffsetWorldY": _dt._visualItemOffsetWorldY = float.Parse(item[1]); break;
+                            case "ItemOffsetWorldZ": _dt._visualItemOffsetWorldZ = float.Parse(item[1]); break;
+                            case "ItemOffsetScreenX": _dt._visualItemOffsetScreenX = float.Parse(item[1]); break;
+                            case "ItemOffsetScreenY": _dt._visualItemOffsetScreenY = float.Parse(item[1]); break;
+                        }
+                    }
+                }
+
+                public override string Serialize()
+                {
+                    List<string> items = new List<string>();
+                    items.Add(String.Format("BarWidth={0}", _dt._visualBarWidth));
+                    items.Add(String.Format("ItemHeight={0}", _dt._visualItemHeight));
+                    items.Add(String.Format("ShowBar={0}", _dt._visualShowBar));
+                    items.Add(String.Format("ShowIcon={0}", _dt._visualShowIcon));
+                    items.Add(String.Format("ShowTime={0}", _dt._visualShowTime));
+                    items.Add(String.Format("ItemOffsetWorldX={0}", _dt._visualItemOffsetWorldX));
+                    items.Add(String.Format("ItemOffsetWorldY={0}", _dt._visualItemOffsetWorldY));
+                    items.Add(String.Format("ItemOffsetWorldZ={0}", _dt._visualItemOffsetWorldZ));
+                    items.Add(String.Format("ItemOffsetScreenX={0}", _dt._visualItemOffsetScreenX));
+                    items.Add(String.Format("ItemOffsetScreenY={0}", _dt._visualItemOffsetScreenY));
+                    return String.Join(";", items);
+                }
+
+                public override void RenderEditor(string path)
+                {
+                    Vector2 avail = ImGui.GetContentRegionAvail();
+                    string proptr = I18n.Translate(path);
+                    ImGui.Text(proptr);
+                    ImGui.PushItemWidth(avail.X);
+
+                    ImGui.Text(Environment.NewLine + I18n.Translate(path + "/BarWidth"));
+                    float barw = _dt._visualBarWidth;
+                    if (ImGui.SliderFloat("##" + path + "/BarWidth", ref barw, 50.0f, 400.0f, "%.0f") == true)
+                    {
+                        _dt._visualBarWidth = barw;
+                    }
+                    ImGui.Text(Environment.NewLine + I18n.Translate(path + "/ItemHeight"));
+                    float barh = _dt._visualItemHeight;
+                    if (ImGui.SliderFloat("##" + path + "/ItemHeight", ref barh, 10.0f, 40.0f, "%.0f") == true)
+                    {
+                        _dt._visualItemHeight = barh;
+                    }
+                    ImGui.Text("");
+                    bool shb = _dt._visualShowBar;
+                    if (ImGui.Checkbox(I18n.Translate(path + "/ShowBar"), ref shb) == true)
+                    {
+                        _dt._visualShowBar = shb;
+                    }
+                    bool shi = _dt._visualShowIcon;
+                    if (ImGui.Checkbox(I18n.Translate(path + "/ShowIcon"), ref shi) == true)
+                    {
+                        _dt._visualShowIcon = shi;
+                    }
+                    bool sht = _dt._visualShowTime;
+                    if (ImGui.Checkbox(I18n.Translate(path + "/ShowTime"), ref sht) == true)
+                    {
+                        _dt._visualShowTime = sht;
+                    }
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate(path + "/ItemOffsetWorld"));
+                    float ofsworldx = _dt._visualItemOffsetWorldX;
+                    if (ImGui.DragFloat("X##" + path + "/ItemOffsetWorldX", ref ofsworldx, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _dt._visualItemOffsetWorldX = ofsworldx;
+                    }
+                    float ofsworldy = _dt._visualItemOffsetWorldY;
+                    if (ImGui.DragFloat("Y##" + path + "/ItemOffsetWorldY", ref ofsworldy, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _dt._visualItemOffsetWorldY = ofsworldy;
+                    }
+                    float ofsworldz = _dt._visualItemOffsetWorldZ;
+                    if (ImGui.DragFloat("Z##" + path + "/ItemOffsetWorldZ", ref ofsworldz, 0.01f, -5.0f, 5.0f, "%.2f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _dt._visualItemOffsetWorldZ = ofsworldz;
+                    }
+                    ImGui.TextWrapped(Environment.NewLine + I18n.Translate(path + "/ItemOffsetScreen"));
+                    float ofsscreenx = _dt._visualItemOffsetScreenX;
+                    if (ImGui.DragFloat("X##" + path + "/ItemOffsetScreenX", ref ofsscreenx, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _dt._visualItemOffsetScreenX = ofsscreenx;
+                    }
+                    float ofsscreeny = _dt._visualItemOffsetScreenY;
+                    if (ImGui.DragFloat("Y##" + path + "/ItemOffsetScreenY", ref ofsscreeny, 1.0f, -300.0f, 300.0f, "%.0f", ImGuiSliderFlags.AlwaysClamp) == true)
+                    {
+                        _dt._visualItemOffsetScreenY = ofsscreeny;
+                    }
+                    ImGui.PopItemWidth();
+                }
+
+                private DotTracker _dt;
+
+                public DotVisualsWidget(DotTracker dt)
+                {
+                    _dt = dt;
+                }
+
+            }
+
+            public class DotSettingsWidget : CustomPropertyInterface
             {
 
                 public override void Deserialize(string data)
@@ -99,7 +214,7 @@ namespace Lemegeton.Content
 
                 private DotTracker _dt;                
 
-                public DotEditor(DotTracker dt)
+                public DotSettingsWidget(DotTracker dt)
                 {
                     _dt = dt;
                 }
@@ -129,19 +244,35 @@ namespace Lemegeton.Content
             }
 
             [AttributeOrderNumber(1000)]
-            public DotEditor DotSettings { get; set; }
+            public DotVisualsWidget DotVisuals { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public DotSettingsWidget DotSettings { get; set; }
 
             private Dictionary<uint, DotSpecification> specs = new Dictionary<uint, DotSpecification>();
             private List<DotApplication> apps = new List<DotApplication>();
             public override FeaturesEnum Features => FeaturesEnum.Drawing;
             private bool _subbed = false;
 
+            internal float _visualItemHeight { get; set; } = 20.0f;
+            internal float _visualBarWidth { get; set; } = 200.0f;
+            internal bool _visualShowTime { get; set; } = true;
+            internal bool _visualShowIcon { get; set; } = true;
+            internal bool _visualShowBar { get; set; } = true;
+
+            internal float _visualItemOffsetWorldX { get; set; } = 0.0f;
+            internal float _visualItemOffsetWorldY { get; set; } = 3.0f;
+            internal float _visualItemOffsetWorldZ { get; set; } = 0.0f;
+            internal float _visualItemOffsetScreenX { get; set; } = 0.0f;
+            internal float _visualItemOffsetScreenY { get; set; } = 0.0f;
+
             public DotTracker(State state) : base(state)
             {
                 Enabled = false;
                 OnActiveChanged += DotTracker_OnActiveChanged;
                 InitializeDotSpecs();
-                DotSettings = new DotEditor(this);
+                DotVisuals = new DotVisualsWidget(this);
+                DotSettings = new DotSettingsWidget(this);
             }
 
             private void AddDotSpec(DotSpecification spec)
@@ -176,6 +307,9 @@ namespace Lemegeton.Content
                 AddDotSpec(new DotSpecification() { Id = 1201, Job = (uint)AutomarkerPrio.PrioJobEnum.BRD }); // Stormbite
                 AddDotSpec(new DotSpecification() { Id = 118, Job = (uint)AutomarkerPrio.PrioJobEnum.DRG }); // Chaos Thrust
                 AddDotSpec(new DotSpecification() { Id = 2719, Job = (uint)AutomarkerPrio.PrioJobEnum.DRG }); // Chaotic Spring
+                AddDotSpec(new DotSpecification() { Id = 1838, Job = (uint)AutomarkerPrio.PrioJobEnum.GNB }); // Bow Shock
+                AddDotSpec(new DotSpecification() { Id = 1837, Job = (uint)AutomarkerPrio.PrioJobEnum.GNB }); // Sonic Break
+                AddDotSpec(new DotSpecification() { Id = 1866, Job = (uint)AutomarkerPrio.PrioJobEnum.MCH }); // Bioblaster
                 AddDotSpec(new DotSpecification() { Id = 246, Job = (uint)AutomarkerPrio.PrioJobEnum.MNK }); // Demolish
                 AddDotSpec(new DotSpecification() { Id = 248, Job = (uint)AutomarkerPrio.PrioJobEnum.PLD }); // Circle of Corn
                 AddDotSpec(new DotSpecification() { Id = 1228, Job = (uint)AutomarkerPrio.PrioJobEnum.SAM }); // Higanbana
@@ -195,7 +329,7 @@ namespace Lemegeton.Content
 
             private void DrawTimerBar(ImDrawListPtr draw, float x, float y, float width, float height, float timeRemaining, float timeMax, TextureWrap icon)
             {
-                float x2 = x + (width * timeRemaining / timeMax);
+                float x2 = x + (_visualShowBar == true ? (width * timeRemaining / timeMax) : 0.0f);
                 float yt = y + (height * 0.3f);
                 Vector4 maincol;
                 if (timeRemaining > 10.0f)
@@ -210,52 +344,64 @@ namespace Lemegeton.Content
                 {
                     maincol = new Vector4(1.0f, timeRemaining / 5.0f, 0.0f, 1.0f);
                 }
-                Vector4 bg = new Vector4(0.0f, 0.0f, 0.0f, 0.5f);
-                Vector4 shadow = new Vector4(
-                    Math.Clamp(maincol.X * 0.5f, 0.0f, 1.0f),
-                    Math.Clamp(maincol.Y * 0.5f, 0.0f, 1.0f),
-                    Math.Clamp(maincol.Z * 0.5f, 0.0f, 1.0f),
-                    maincol.W
-                );
-                Vector4 hilite = new Vector4(
-                    Math.Clamp(maincol.X + 0.2f, 0.0f, 1.0f),
-                    Math.Clamp(maincol.Y + 0.2f, 0.0f, 1.0f),
-                    Math.Clamp(maincol.Z + 0.2f, 0.0f, 1.0f),
-                    maincol.W
-                );
-                if (icon != null)
+                if (icon != null && _visualShowIcon == true)
                 {
                     float iw = icon.Width * (height / icon.Height);
                     float ix = x - (iw + 3.0f);
                     draw.AddImage(icon.ImGuiHandle, new Vector2(ix, y), new Vector2(ix + iw, y + height));
                 }
-                draw.AddRectFilled(
-                    new Vector2(x2, y),
-                    new Vector2(x + width, y + height),
-                    ImGui.GetColorU32(bg)
-                );
-                draw.AddRectFilledMultiColor(
-                    new Vector2(x, y),
-                    new Vector2(x2, yt),
-                    ImGui.GetColorU32(maincol),
-                    ImGui.GetColorU32(maincol),
-                    ImGui.GetColorU32(hilite),
-                    ImGui.GetColorU32(hilite)
-                );
-                draw.AddRectFilledMultiColor(
-                    new Vector2(x, yt),
-                    new Vector2(x2, y + height),
-                    ImGui.GetColorU32(hilite),
-                    ImGui.GetColorU32(hilite),
-                    ImGui.GetColorU32(shadow),
-                    ImGui.GetColorU32(shadow)
-                );
-                draw.AddText(new Vector2(x2 + 5.0f, y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), String.Format("{0:0.0}", timeRemaining));
+                if (_visualShowBar == true)
+                {
+                    Vector4 bg = new Vector4(0.0f, 0.0f, 0.0f, 0.5f);
+                    Vector4 shadow = new Vector4(
+                        Math.Clamp(maincol.X * 0.5f, 0.0f, 1.0f),
+                        Math.Clamp(maincol.Y * 0.5f, 0.0f, 1.0f),
+                        Math.Clamp(maincol.Z * 0.5f, 0.0f, 1.0f),
+                        maincol.W
+                    );
+                    Vector4 hilite = new Vector4(
+                        Math.Clamp(maincol.X + 0.2f, 0.0f, 1.0f),
+                        Math.Clamp(maincol.Y + 0.2f, 0.0f, 1.0f),
+                        Math.Clamp(maincol.Z + 0.2f, 0.0f, 1.0f),
+                        maincol.W
+                    );
+                    draw.AddRectFilled(
+                        new Vector2(x2, y),
+                        new Vector2(x + width, y + height),
+                        ImGui.GetColorU32(bg)
+                    );
+                    draw.AddRectFilledMultiColor(
+                        new Vector2(x, y),
+                        new Vector2(x2, yt),
+                        ImGui.GetColorU32(maincol),
+                        ImGui.GetColorU32(maincol),
+                        ImGui.GetColorU32(hilite),
+                        ImGui.GetColorU32(hilite)
+                    );
+                    draw.AddRectFilledMultiColor(
+                        new Vector2(x, yt),
+                        new Vector2(x2, y + height),
+                        ImGui.GetColorU32(hilite),
+                        ImGui.GetColorU32(hilite),
+                        ImGui.GetColorU32(shadow),
+                        ImGui.GetColorU32(shadow)
+                    );
+                }
+                if (_visualShowTime == true)
+                {
+                    string str = String.Format("{0:0.0}", timeRemaining);
+                    Vector2 sz = ImGui.CalcTextSize(str);
+                    draw.AddText(new Vector2(x2 + 5.0f, y + (height / 2.0f) - (sz.Y / 2.0f)), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), str);
+                }
             }
 
             protected override bool ExecutionImplementation()
             {
                 ImDrawListPtr draw;
+                if (apps.Count == 0)
+                {
+                    return false;
+                }
                 if (_state.StartDrawing(out draw) == false)
                 {
                     return false;
@@ -280,20 +426,19 @@ namespace Lemegeton.Content
                         continue;
                     }
                     Vector3 pos = _state.plug._ui.TranslateToScreen(
-                        go.Position.X,
-                        go.Position.Y + 3.0f,
-                        go.Position.Z
-                    );                    
+                        go.Position.X + _visualItemOffsetWorldX,
+                        go.Position.Y + _visualItemOffsetWorldY,
+                        go.Position.Z + _visualItemOffsetWorldZ
+                    );
+                    pos = new Vector3(pos.X + _visualItemOffsetScreenX, pos.Y + _visualItemOffsetScreenY, pos.Z);
                     if (stacks.TryGetValue(go, out float stack) == false)
                     {
                         stack = 0.0f;
                     }
                     float timeLeft = d.Duration - (float)(DateTime.Now - d.Applied).TotalSeconds;
-                    float barWidth = 200.0f;
-                    float barHeight = 20.0f;
                     DotSpecification spec = specs[d.StatusId];
-                    DrawTimerBar(draw, pos.X - (barWidth / 2.0f), pos.Y - stack, barWidth, barHeight, timeLeft, d.Duration, spec.StatusIcon);
-                    stacks[go] = stack + barHeight + 2.0f;
+                    DrawTimerBar(draw, pos.X - (_visualShowBar == true ? (_visualBarWidth / 2.0f) : 0.0f), pos.Y - (_visualItemHeight + stack), _visualBarWidth, _visualItemHeight, timeLeft, d.Duration, spec.StatusIcon);
+                    stacks[go] = stack + _visualItemHeight + 2.0f;
                 }
                 foreach (DotApplication d in exps)
                 {

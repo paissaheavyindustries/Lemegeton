@@ -14,6 +14,16 @@ namespace Lemegeton.Language
 
         public Korean(State st) : base(st)
         {
+            #region 1.0.1.5
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals", "Tracker visual configuration");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/BarWidth", "Timer bar width");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemHeight", "Tracker item height");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowBar", "Show timer bar");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowIcon", "Show status effect icon");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowTime", "Show timer value");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetWorld", "Tracker item offset in world coordinates");
+            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetScreen", "Tracker item offset in screen coordinates");
+            #endregion
             #region 1.0.1.4
             //AddEntry("Content/Miscellaneous/Overlays", "Overlays");
             //AddEntry("Content/Miscellaneous/Overlays/Enabled", "Aktiviert");
