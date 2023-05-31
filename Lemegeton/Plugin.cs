@@ -44,12 +44,6 @@ using System.Xml.Linq;
 
 namespace Lemegeton
 {
-    /*
-     * 1.0.1.4
-     * - added a multi-target DoT tracker
-     * - fixed an issue where the global timeline overlay toggle in settings was not respected
-     * - fixed an issue where the global notification overlay toggle in settings was not respected
-     */
 
     public sealed class Plugin : IDalamudPlugin
     {
@@ -59,7 +53,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.4";
+        public string Version = "1.0.1.6";
 
         internal class Downloadable
         {

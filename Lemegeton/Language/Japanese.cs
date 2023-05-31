@@ -14,6 +14,19 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.1.6
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM", "(P9s) Ball of Levin automarker");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Enabled", "有効");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/SelfMarkOnly", "自分にのみマーキングする");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs", "マーカー設定");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut2", "Number 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut4", "Number 4");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut6", "Number 6");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut8", "Number 8");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/BlueMarker", "Icemeld (Blue marker)");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Test", "Test assignment");
+            #endregion
             #region 1.0.1.5
             //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals", "Tracker visual configuration");
             //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/BarWidth", "Timer bar width");
