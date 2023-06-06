@@ -1,5 +1,6 @@
 ﻿using System;
 using Lemegeton.Core;
+using Lumina.Excel.GeneratedSheets;
 
 namespace Lemegeton.Content
 {
@@ -16,11 +17,28 @@ namespace Lemegeton.Content
             P10s = 1150,
         }
 
-        private ZoneEnum CurrentZone = ZoneEnum.None;
+        private ZoneEnum _CurrentZone = ZoneEnum.None;
+        private ZoneEnum CurrentZone
+        {
+            get
+            {
+                return _CurrentZone;
+            }
+            set
+            {
+                if (_CurrentZone != value)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Zone changing from {0} to {1}", _CurrentZone, value);
+                    _CurrentZone = value;
+                }
+            }
+        }
+
         private bool _sawFirstHeadMarker = false;
         private uint _firstHeadMarker = 0;
 
-        private const int AbilityTwoMinds = 33156;
+        private const int AbilityTwoMinds1 = 33156;
+        private const int AbilityTwoMinds2 = 33157;
 
         private const int HeadmarkerLC1 = 79;
         private const int HeadmarkerLC2 = HeadmarkerLC1 + 1;
@@ -166,7 +184,8 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
-                case AbilityTwoMinds:
+                case AbilityTwoMinds1:
+                case AbilityTwoMinds2:
                     if (CurrentZone == ZoneEnum.P9s && _levinballAM.Active == true)
                     {
                         _state.ClearAutoMarkers();
@@ -224,23 +243,30 @@ namespace Lemegeton.Content
 
         private void OnZoneChange(ushort newZone)
         {
-            if (Enum.TryParse<ZoneEnum>(newZone.ToString(), out ZoneEnum newZoneOk) == false)
+            if (Enum.TryParse<ZoneEnum>(newZone.ToString(), out ZoneEnum parsedZone) == true)
             {
-                newZoneOk = ZoneEnum.None;
-            }            
-            if (newZoneOk != ZoneEnum.None && CurrentZone == ZoneEnum.None)
+                if (Enum.IsDefined<ZoneEnum>(parsedZone) == false)
+                {
+                    parsedZone = ZoneEnum.None;
+                }
+            }
+            else
             {
-                Log(State.LogLevelEnum.Info, null, newZone + " Content available");
-                CurrentZone = newZoneOk;
+                parsedZone = ZoneEnum.None;
+            }
+            if (parsedZone != ZoneEnum.None && CurrentZone == ZoneEnum.None)
+            {
+                Log(State.LogLevelEnum.Info, null, parsedZone + " Content available");
+                CurrentZone = parsedZone;
+                _state.OnCombatChange += OnCombatChange;
                 switch (CurrentZone)
                 {
                     case ZoneEnum.P9s:
                         _levinballAM = (LevinballAM)Items["LevinballAM"];
                         break;
                 }
-                _state.OnCombatChange += OnCombatChange;
             }
-            else if (newZoneOk == ZoneEnum.None && CurrentZone != ZoneEnum.None)
+            else if (parsedZone == ZoneEnum.None && CurrentZone != ZoneEnum.None)
             {
                 Log(State.LogLevelEnum.Info, null, CurrentZone + " content unavailable");
                 CurrentZone = ZoneEnum.None;
