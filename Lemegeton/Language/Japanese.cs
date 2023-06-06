@@ -15,27 +15,27 @@ namespace Lemegeton.Language
         public Japanese(State st) : base(st)
         {
             #region 1.0.1.6
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM", "(P9s) Ball of Levin automarker");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM", "(P9s)1層 ジャンブルコンボ オートマーカー");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Enabled", "有効");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/SelfMarkOnly", "自分にのみマーキングする");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs", "マーカー設定");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut2", "Number 2");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut4", "Number 4");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut6", "Number 6");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut8", "Number 8");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/BlueMarker", "Icemeld (Blue marker)");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Test", "Test assignment");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut2", "サイコロ2");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut4", "サイコロ4");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut6", "サイコロ6");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/LimitCut8", "サイコロ8");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Signs/BlueMarker", "氷魔衝(青玉)");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/LevinballAM/Test", "割り振りテスト");
             #endregion
             #region 1.0.1.5
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals", "Tracker visual configuration");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/BarWidth", "Timer bar width");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemHeight", "Tracker item height");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowBar", "Show timer bar");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowIcon", "Show status effect icon");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowTime", "Show timer value");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetWorld", "Tracker item offset in world coordinates");
-            //AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetScreen", "Tracker item offset in screen coordinates");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals", "DoT描画設定");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/BarWidth", "DoTバーの幅");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemHeight", "DoTバーの高さ");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowBar", "DoTバーの表示");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowIcon", "ステータスエフェクトアイコンの表示");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ShowTime", "時間の表示");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetWorld", "ゲーム内座標でのDoTバー位置オフセット");
+            AddEntry("Content/Miscellaneous/Overlays/DotTracker/DotVisuals/ItemOffsetScreen", "ゲーム内座標でのDoTバー位置オフセット");
             #endregion
             #region 1.0.1.4
             AddEntry("Content/Miscellaneous/Overlays", "オーバーレイ");
@@ -636,7 +636,7 @@ namespace Lemegeton.Language
             AddEntry("Content/EndwalkerRaids/Enabled", "有効");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos", "万魔殿パンデモニウム零式：煉獄編 (6.2)");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/Enabled", "有効");
-            AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM", "P7s(3層) 魔印創成/魔印創成･極 オートマーカー");
+            AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM", "(P7s)3層 魔印創成/魔印創成･極 オートマーカー");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/Enabled", "有効");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/SelfMarkOnly", "自分にのみマーキングする");
             AddEntry("Content/EndwalkerRaids/EwRaidAbyssos/InviolateAM/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
