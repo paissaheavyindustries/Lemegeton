@@ -127,6 +127,7 @@ namespace Lemegeton.Content
                 {
                     _startTime = DateTime.Now;
                     string paff = TargetFolder.Trim();
+                    _state.PrepareFolder(paff);
                     string filename = String.Format("Lemegeton_{0}_{1}.timeline.xml", _state.cs.TerritoryType, _startTime.ToString("yyyyMMdd_HHmmss"));
                     CurrentTargetFile = Path.Combine(paff, filename);
                     _state.Log(LogLevelEnum.Debug, null, "Starting new timeline recording for {0}", CurrentTargetFile);
@@ -262,14 +263,14 @@ namespace Lemegeton.Content
                         {
                             return;
                         }
-                        string abname = a.Name;
+                        string abname = _state.plug.GetActionName(actionId);
                         if (abname.Trim().Length > 0)
                         {
                             Entry e = new Entry();
                             e.StartTime = (float)Math.Round((DateTime.Now - _startTime).TotalSeconds, 1);
                             e.Type = Entry.EntryTypeEnum.Ability;
                             e.KeyValues.Add(actionId);
-                            e.Description = String.Format("{0} ({1}): {2}", bc.Name, bc.NameId, a.Name);
+                            e.Description = String.Format("{0} ({1}): {2}", bc.Name, bc.NameId, abname);
                             _enc.Entries.Add(e);
                         }
                     }

@@ -2048,6 +2048,7 @@ namespace Lemegeton.Content
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
+                _sawFirstHeadMarker = false;
 #if !SANS_GOETIA
                 _chibiOmega = (ChibiOmega)Items["ChibiOmega"];
                 _chibiOmega.StartLooking(10.0f);

@@ -45,6 +45,15 @@ using System.Xml.Linq;
 namespace Lemegeton
 {
 
+    /* 1.0.1.8
+     * - added AM for P12s Pangenesis towers
+     * - added RSV ability name translation and EN translations
+     * - plugin now creates folders as necessary
+     * - init will no longer fail if timelines fail to load
+     * - object state flags now fall back to different methods based on different Dalamud versions, hopefully fixing CN version
+     * - fixed an issue where TOP Party Synergy AM would stop functioning in some cases
+     */
+
     public sealed class Plugin : IDalamudPlugin
     {
 
@@ -53,7 +62,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.7";
+        public string Version = "1.0.1.8";
 
         internal class Downloadable
         {
@@ -1664,6 +1673,17 @@ namespace Lemegeton
             return new string(a);
         }
 
+        internal string GetActionName(uint key)
+        {
+            Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(key);
+            string name = Capitalize(a.Name);
+            if (name.Contains("_rsv_") == true)
+            {
+                name = I18n.Translate(String.Format("RSV/Ability_{0}", key));
+            }
+            return name;
+        }
+
         private string GetFullNameForTimelineEntry(Timeline.Entry e)
         {
             if (e.CachedName == null)
@@ -1675,8 +1695,7 @@ namespace Lemegeton
                             List<string> temp = new List<string>();
                             foreach (uint key in e.KeyValues)
                             {
-                                Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(key);
-                                string name = Capitalize(a.Name);
+                                string name = GetActionName(key);
                                 if (temp.Contains(name) == false)
                                 {
                                     temp.Add(name);
@@ -1724,8 +1743,7 @@ namespace Lemegeton
                 case Timeline.Entry.EntryTypeEnum.Ability:
                     {
                         int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.KeyValues.Count;
-                        Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(e.KeyValues[index]);
-                        return Capitalize(a.Name);
+                        return Capitalize(GetActionName(e.KeyValues[index]));
                     }
                 case Timeline.Entry.EntryTypeEnum.Spawn:
                     {

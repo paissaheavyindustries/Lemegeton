@@ -257,6 +257,9 @@ namespace Lemegeton.Core
         internal event TargettableDelegate OnTargettable;
         internal event TargettableDelegate OnUntargettable;
 
+        internal unsafe delegate StatusFlags StatusFlagGetterDelegate(BattleChara bc);
+        internal StatusFlagGetterDelegate GetStatusFlags;
+
         internal void InvokeZoneChange(ushort newZone)
         {
             OnZoneChange?.Invoke(newZone);
@@ -344,27 +347,46 @@ namespace Lemegeton.Core
 
         public State()
         {
+            GetStatusFlags = GetStatusFlags1;
+        }
+
+        public void PrepareFolder(string path)
+        {
+            if (Path.Exists(path) == true)
+            {
+                return;
+            }
+            Log(LogLevelEnum.Info, null, "Creating path {0}", path);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
         }
 
         public void LoadLocalTimelines()
-        {            
-            var timelinefiles = Directory.GetFiles(cfg.TimelineLocalFolder, "*.timeline.xml").OrderBy(x => new FileInfo(x).LastWriteTime);
-            Dictionary<ushort, Timeline> tls = new Dictionary<ushort, Timeline>();
-            foreach (string fn in timelinefiles)
+        {
+            try
             {
-                Timeline tlx = LoadTimeline(fn);
-                if (tlx != null)
+                PrepareFolder(cfg.TimelineLocalFolder);
+                var timelinefiles = Directory.GetFiles(cfg.TimelineLocalFolder, "*.timeline.xml").OrderBy(x => new FileInfo(x).LastWriteTime);
+                Dictionary<ushort, Timeline> tls = new Dictionary<ushort, Timeline>();
+                foreach (string fn in timelinefiles)
                 {
-                    tls[tlx.Territory] = tlx;
+                    Timeline tlx = LoadTimeline(fn);
+                    if (tlx != null)
+                    {
+                        tls[tlx.Territory] = tlx;
+                    }
+                }
+                foreach (KeyValuePair<ushort, Timeline> tl in tls)
+                {
+                    Log(LogLevelEnum.Debug, null, "Timeline from {0} set to territory {1}", tl.Value.Filename, tl.Key);
+                    lock (AllTimelines)
+                    {
+                        AllTimelines[tl.Key] = tl.Value;
+                    }
                 }
             }
-            foreach (KeyValuePair<ushort, Timeline> tl in tls)
+            catch (Exception ex)
             {
-                Log(LogLevelEnum.Debug, null, "Timeline from {0} set to territory {1}", tl.Value.Filename, tl.Key);
-                lock (AllTimelines)
-                {
-                    AllTimelines[tl.Key] = tl.Value;
-                }
+                Log(LogLevelEnum.Error, ex, "Couldn't load timelines due to an exception");
             }
         }
         
@@ -387,7 +409,7 @@ namespace Lemegeton.Core
             }
             catch (Exception ex)
             {
-                Log(LogLevelEnum.Error, ex, "Timeline load failed");
+                Log(LogLevelEnum.Error, ex, "Timeline load failed from file {0}, exception: {1}", filename, ex.Message);
             }
             return null;
         }
@@ -1083,28 +1105,87 @@ namespace Lemegeton.Core
             return false;
         }
 
-        // workaround for castinfo begin broken
-        internal unsafe StatusFlags GetStatusFlags(BattleChara bc)
+        internal unsafe StatusFlags GetStatusFlags1(BattleChara bc)
         {
-            StatusFlags sf = StatusFlags.None;
-            FFXIVClientStructs.FFXIV.Client.Game.Character.Character* Struct = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)bc.Address;
-            return (
-                (Struct->IsHostile ? StatusFlags.Hostile : StatusFlags.None)
-                |
-                (Struct->InCombat ? StatusFlags.InCombat : StatusFlags.None)
-                |
-                (Struct->IsWeaponDrawn ? StatusFlags.WeaponOut : StatusFlags.None)
-                |
-                (Struct->IsOffhandDrawn ? StatusFlags.OffhandOut : StatusFlags.None)
-                |
-                (Struct->IsPartyMember ? StatusFlags.PartyMember : StatusFlags.None)
-                |
-                (Struct->IsAllianceMember ? StatusFlags.AllianceMember : StatusFlags.None)
-                |
-                (Struct->IsFriend ? StatusFlags.Friend : StatusFlags.None)
-                |
-                (bc.CastActionId > 0 ? StatusFlags.IsCasting : StatusFlags.None)
-            );
+            try
+            {
+                return bc.StatusFlags;
+            }
+            catch (Exception)
+            {
+                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 1, falling back to method 2..");
+                GetStatusFlags = GetStatusFlags2;
+                return GetStatusFlags2(bc);
+            }
+        }
+
+        // sometimes castinfo returns trash and dalamud throws an exception (on EN dalamud), workaround for that if the bug is still active
+        internal unsafe StatusFlags GetStatusFlags2(BattleChara bc)
+        {
+            try
+            {
+                StatusFlags sf = StatusFlags.None;
+                FFXIVClientStructs.FFXIV.Client.Game.Character.Character* Struct = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)bc.Address;
+                return (
+                    (Struct->IsHostile ? StatusFlags.Hostile : StatusFlags.None)
+                    |
+                    (Struct->InCombat ? StatusFlags.InCombat : StatusFlags.None)
+                    |
+                    (Struct->IsWeaponDrawn ? StatusFlags.WeaponOut : StatusFlags.None)
+                    |
+                    (Struct->IsOffhandDrawn ? StatusFlags.OffhandOut : StatusFlags.None)
+                    |
+                    (Struct->IsPartyMember ? StatusFlags.PartyMember : StatusFlags.None)
+                    |
+                    (Struct->IsAllianceMember ? StatusFlags.AllianceMember : StatusFlags.None)
+                    |
+                    (Struct->IsFriend ? StatusFlags.Friend : StatusFlags.None)
+                    |
+                    (bc.CastActionId > 0 ? StatusFlags.IsCasting : StatusFlags.None)
+                );
+            }
+            catch (Exception)
+            {
+                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 2, falling back to method 3..");
+                GetStatusFlags = GetStatusFlags3;
+                return GetStatusFlags3(bc);
+            }
+        }
+
+        internal unsafe StatusFlags GetStatusFlags3(BattleChara bc)
+        {
+            try
+            {
+                FFXIVClientStructs.FFXIV.Client.Game.Character.Character* Struct = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)bc.Address;
+                return (
+                    ((Struct->StatusFlags & 0x10) == 16 ? StatusFlags.Hostile : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags & 0x20) == 32 ? StatusFlags.InCombat : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags3 & 1) == 1 ? StatusFlags.WeaponOut : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags & 0x40) == 64 ? StatusFlags.OffhandOut : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags2 & 8) == 8 ? StatusFlags.PartyMember : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags2 & 0x10) == 16 ? StatusFlags.AllianceMember : StatusFlags.None)
+                    |
+                    ((Struct->StatusFlags2 & 0x20) == 32 ? StatusFlags.Friend : StatusFlags.None)
+                    |
+                    ((Struct->GetCastInfo()->ActionID > 0) ? StatusFlags.IsCasting : StatusFlags.None)
+                );
+            }
+            catch (Exception)
+            {
+                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 3, out of order..");
+                GetStatusFlags = GetStatusFlagsOutOfOrder;
+                return GetStatusFlagsOutOfOrder(bc);
+            }
+        }
+
+        internal unsafe StatusFlags GetStatusFlagsOutOfOrder(BattleChara bc)
+        {
+            return StatusFlags.None;
         }
 
         internal void TrackObjects()
