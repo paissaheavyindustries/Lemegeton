@@ -15,19 +15,19 @@ namespace Lemegeton.Language
         public Japanese(State st) : base(st)
         {
             #region 1.0.1.8
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM", "(P12s) Pangenesis automarker");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM", "(P12s)4層 パンゲネシス オートマーカー");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Enabled", "有効");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/SelfMarkOnly", "自分にのみマーキングする");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs", "マーカー設定");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/LongLight", "Long light");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/ShortLight", "Short light");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/LongDark", "Long dark");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/ShortDark", "Short dark");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/One1", "Single stack 1");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/One2", "Single stack 2");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/Nothing1", "Nothing 1");
-            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/Nothing2", "Nothing 2");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/LongLight", "光 20秒");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/ShortLight", "光 16秒");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/LongDark", "闇 20秒");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/ShortDark", "闇 16秒");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/One1", "因子1つ 1");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/One2", "因子1つ 2");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/Nothing1", "無職 1");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Signs/Nothing2", "無職 2");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Prio", "優先度設定");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Test", "割り振りテスト(優先順位を考慮する)");
             #endregion
