@@ -748,8 +748,6 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 795 },
                 // paissa
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 3499 },
-                // Quartz Spriggan
-                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12456 },
                 // Star Marmot
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 262 },
                 // Tiger of Paradise

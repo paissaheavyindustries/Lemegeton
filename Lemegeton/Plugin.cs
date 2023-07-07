@@ -45,15 +45,6 @@ using System.Xml.Linq;
 namespace Lemegeton
 {
 
-    /* 1.0.1.8
-     * - added AM for P12s Pangenesis towers
-     * - added RSV ability name translation and EN translations
-     * - plugin now creates folders as necessary
-     * - init will no longer fail if timelines fail to load
-     * - object state flags now fall back to different methods based on different Dalamud versions, hopefully fixing CN version
-     * - fixed an issue where TOP Party Synergy AM would stop functioning in some cases
-     */
-
     public sealed class Plugin : IDalamudPlugin
     {
 
@@ -62,7 +53,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.8";
+        public string Version = "1.0.1.9";
 
         internal class Downloadable
         {

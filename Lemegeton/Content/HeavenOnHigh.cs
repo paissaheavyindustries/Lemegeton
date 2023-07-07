@@ -24,7 +24,7 @@ namespace Lemegeton.Content
 
         private void OnZoneChange(ushort newZone)
         {
-            bool newZoneOk = (newZone >= 770 && newZone <= 785);
+            bool newZoneOk = ((newZone >= 770 && newZone <= 775) || (newZone >= 782 && newZone <= 785));
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");

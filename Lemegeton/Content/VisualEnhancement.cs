@@ -61,6 +61,10 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
+                    if (go.SubKind == 2)
+                    {
+                        continue;
+                    }                    
                     bool isTargettable;
                     unsafe
                     {

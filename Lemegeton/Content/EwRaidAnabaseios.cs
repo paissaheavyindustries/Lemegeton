@@ -261,7 +261,7 @@ namespace Lemegeton.Content
                         {
                             _ones.Add(actorId);
                         }
-                        return;
+                        break;
                 }
                 if (_longLight == 0 || _shortLight == 0 || _longDark == 6 || _shortDark == 8 || _ones.Count < 2 || _fired == true)
                 {
