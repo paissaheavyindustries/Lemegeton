@@ -247,7 +247,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (chs->ModelCharaId == 0)
+                        if (chs->CharacterData.ModelCharaId == 0)
                         {
                             return;
                         }
@@ -343,7 +343,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (chs->ModelCharaId == 0)
+                        if (chs->CharacterData.ModelCharaId == 0)
                         {
                             return;
                         }

@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Interface.Internal;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
@@ -179,7 +180,7 @@ namespace Lemegeton.Content
                         sz.Y *= mul;
                         pt.X = temp.X - (sz.X / 2.0f);
                         float bottomy = pt.Y;
-                        TextureWrap jobicon = null;
+                        IDalamudTextureWrap jobicon = null;
                         if (ShowJobIcon == true)
                         {
                             Character chara = go as Character;

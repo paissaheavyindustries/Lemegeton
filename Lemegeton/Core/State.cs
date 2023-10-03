@@ -26,12 +26,16 @@ using System.Reflection;
 using System.IO;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.GeneratedSheets;
-using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
+using Character = Dalamud.Game.ClientState.Objects.Types.Character;
+using BattleChara = Dalamud.Game.ClientState.Objects.Types.BattleChara;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Plugin.Services;
+using Dalamud.Interface.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 
 namespace Lemegeton.Core
 {
@@ -101,7 +105,7 @@ namespace Lemegeton.Core
 
             private unsafe void InvokeCommand()
             {
-                GameGui gg = State.gg;
+                IGameGui gg = State.gg;
                 AtkUnitBase* ptr = (AtkUnitBase*)gg.GetAddonByName("ChatLog", 1);
                 if (ptr != null && ptr->IsVisible == true)
                 {
@@ -152,18 +156,19 @@ namespace Lemegeton.Core
         }
 
         internal DalamudPluginInterface pi { get; init; }
-        internal GameNetwork gn { get; init; }
-        internal ChatGui cg { get; init; }
-        internal CommandManager cm { get; init; }
-        internal ObjectTable ot { get; init; }
-        internal GameGui gg { get; init; }
-        internal ClientState cs { get; init; }
-        internal DataManager dm { get; init; }
-        internal Condition cd { get; init; }
-        internal Framework fw { get; init; }
-        internal SigScanner ss { get; init; }
-        internal PartyList pl { get; init; }
-        internal TargetManager tm { get; init; }
+        internal IGameNetwork gn { get; init; }
+        internal IChatGui cg { get; init; }
+        internal ICommandManager cm { get; init; }
+        internal IObjectTable ot { get; init; }
+        internal IGameGui gg { get; init; }
+        internal IClientState cs { get; init; }
+        internal IDataManager dm { get; init; }
+        internal ITextureProvider tp { get; init; }
+        internal ICondition cd { get; init; }
+        internal IFramework fw { get; init; }
+        internal ISigScanner ss { get; init; }
+        internal IPartyList pl { get; init; }
+        internal ITargetManager tm { get; init; }
 
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
@@ -496,7 +501,7 @@ namespace Lemegeton.Core
             {
                 LoadLocalTimelines();
             }
-            Cs_TerritoryChanged(null, cs.TerritoryType);
+            Cs_TerritoryChanged(cs.TerritoryType);
         }
 
         private void GetGameVersion()
@@ -533,7 +538,7 @@ namespace Lemegeton.Core
             fw.Update -= FrameworkUpdate;
         }
 
-        private void FrameworkUpdate(Framework framework)
+        private void FrameworkUpdate(IFramework framework)
         {
             if (_inCombat == true)
             {
@@ -601,13 +606,10 @@ namespace Lemegeton.Core
             ClearReactionQueue();
         }
 
-        private void Cs_TerritoryChanged(object sender, ushort e)
+        private void Cs_TerritoryChanged(ushort e)
         {
             _timeline = null;
-            if (sender != null)
-            {
-                AutoselectTimeline(e);
-            }
+            AutoselectTimeline(e);
             InvokeZoneChange(e);
         }
 
@@ -1215,8 +1217,8 @@ namespace Lemegeton.Core
                     Character ch = (Character)go;
                     unsafe
                     {
-                        CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        isavatar = (chs->ModelCharaId == 0);
+                        CharacterStruct* chs = (CharacterStruct*)ch.Address;                        
+                        isavatar = (chs->CharacterData.ModelCharaId == 0);
                     }
                 }
                 if (go is BattleChara)

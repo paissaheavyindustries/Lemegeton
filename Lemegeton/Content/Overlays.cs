@@ -23,6 +23,7 @@ using System.ComponentModel;
 using Dalamud.Interface;
 using System.ComponentModel.Design;
 using Lumina.Excel.GeneratedSheets;
+using Dalamud.Interface.Internal;
 
 namespace Lemegeton.Content
 {
@@ -239,7 +240,7 @@ namespace Lemegeton.Content
                 public string CachedName { get; set; } = null;
                 public bool Tracking { get; set; } = true;
 
-                public TextureWrap StatusIcon { get; set; } = null;
+                public IDalamudTextureWrap StatusIcon { get; set; } = null;
 
             }
 
@@ -327,7 +328,7 @@ namespace Lemegeton.Content
                 AddDotSpec(new DotSpecification() { Id = 3359, Job = 0 }); // Sustained Damage (Variant donjon Spirit Dart action)
             }
 
-            private void DrawTimerBar(ImDrawListPtr draw, float x, float y, float width, float height, float timeRemaining, float timeMax, TextureWrap icon)
+            private void DrawTimerBar(ImDrawListPtr draw, float x, float y, float width, float height, float timeRemaining, float timeMax, IDalamudTextureWrap icon)
             {
                 float x2 = x + (_visualShowBar == true ? (width * timeRemaining / timeMax) : 0.0f);
                 float yt = y + (height * 0.3f);

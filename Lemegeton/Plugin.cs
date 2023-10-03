@@ -38,9 +38,10 @@ using System.Text.RegularExpressions;
 using static Lemegeton.Core.AutomarkerPrio;
 using System.Net.Http;
 using Lumina.Excel.GeneratedSheets;
-using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System.Xml.Linq;
+using Dalamud.Plugin.Services;
+using Dalamud.Interface.Internal;
 
 namespace Lemegeton
 {
@@ -253,18 +254,19 @@ namespace Lemegeton
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] GameNetwork gameNetwork,
-            [RequiredVersion("1.0")] ChatGui chatGui,
-            [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] ObjectTable objectTable,
-            [RequiredVersion("1.0")] GameGui gameGui,
-            [RequiredVersion("1.0")] ClientState clientState,
-            [RequiredVersion("1.0")] DataManager dataManager,
-            [RequiredVersion("1.0")] Condition condition,
-            [RequiredVersion("1.0")] Framework framework,
-            [RequiredVersion("1.0")] SigScanner sigScanner,
-            [RequiredVersion("1.0")] PartyList partylist,
-            [RequiredVersion("1.0")] TargetManager targetManager
+            [RequiredVersion("1.0")] IGameNetwork gameNetwork,
+            [RequiredVersion("1.0")] IChatGui chatGui,
+            [RequiredVersion("1.0")] ICommandManager commandManager,
+            [RequiredVersion("1.0")] IObjectTable objectTable,
+            [RequiredVersion("1.0")] IGameGui gameGui,
+            [RequiredVersion("1.0")] IClientState clientState,
+            [RequiredVersion("1.0")] IDataManager dataManager,
+            [RequiredVersion("1.0")] ITextureProvider textureProvider,
+            [RequiredVersion("1.0")] ICondition condition,
+            [RequiredVersion("1.0")] IFramework framework,
+            [RequiredVersion("1.0")] ISigScanner sigScanner,
+            [RequiredVersion("1.0")] IPartyList partylist,
+            [RequiredVersion("1.0")] ITargetManager targetManager
         )
         {
             _state = new State()
@@ -277,6 +279,7 @@ namespace Lemegeton
                 gg = gameGui,
                 cs = clientState,
                 dm = dataManager,
+                tp = textureProvider,
                 cd = condition,
                 fw = framework,
                 ss = sigScanner,
@@ -304,7 +307,7 @@ namespace Lemegeton
             _state.cs.Logout += Cs_Logout;
             if (_state.cs.IsLoggedIn == true)
             {
-                Cs_Login(null, null);
+                Cs_Login();
             }
             _state.AutoselectTimeline(_state.cs.TerritoryType);
         }
@@ -401,7 +404,7 @@ namespace Lemegeton
             }
         }
 
-        private void Cs_Login(object sender, EventArgs e)
+        private void Cs_Login()
         {
             lock (this)
             {
@@ -413,7 +416,7 @@ namespace Lemegeton
             }
         }
 
-        private void Cs_Logout(object sender, EventArgs e)
+        private void Cs_Logout()
         {
             lock (this)
             {
@@ -431,7 +434,7 @@ namespace Lemegeton
             I18n.OnFontDownload -= I18n_OnFontDownload;
             _state.cs.Logout -= Cs_Logout;
             _state.cs.Login -= Cs_Login;
-            Cs_Logout(null, null);
+            Cs_Logout();
             _state.Uninitialize();
             _stopEvent.Set();
             _state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts;
@@ -1459,13 +1462,13 @@ namespace Lemegeton
                 ImGui.Text(proptr);
                 if (kp.Value != AutomarkerSigns.SignEnum.None)
                 {
-                    TextureWrap tw = _ui.GetSignIcon(kp.Value);
+                    IDalamudTextureWrap tw = _ui.GetSignIcon(kp.Value);
                     ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     ImGui.SameLine();
                 }
                 else
                 {
-                    TextureWrap tw = _ui.GetSignIcon(AutomarkerSigns.SignEnum.Attack1);
+                    IDalamudTextureWrap tw = _ui.GetSignIcon(AutomarkerSigns.SignEnum.Attack1);
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X);
                 }
                 if (ImGui.BeginCombo("##" + proppath, signtr) == true)
@@ -1787,7 +1790,7 @@ namespace Lemegeton
             Vector2 fsp = ImGui.GetContentRegionAvail();
             ImGuiStylePtr style = ImGui.GetStyle();
             Timeline atl = _state._timeline;
-            TextureWrap tw;
+            IDalamudTextureWrap tw;
             string statustext;
             _ui.RenderWarning(I18n.Translate("Misc/ExperimentalFeature"));
             Vector2 startpos = ImGui.GetCursorPos();
@@ -3717,7 +3720,7 @@ namespace Lemegeton
                                 }
                                 Vector2 b3 = ImGui.GetCursorPos();
                                 ImGui.SetCursorPos(new Vector2(a3.X + 20, a3.Y + 2));
-                                TextureWrap t3 = contentItem.Value.Enabled == true ?
+                                IDalamudTextureWrap t3 = contentItem.Value.Enabled == true ?
                                     (contentItem.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
                                     : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                                 ImGui.Image(t3.ImGuiHandle, new Vector2(20, 20));
@@ -3735,7 +3738,7 @@ namespace Lemegeton
                         }
                         Vector2 b2 = ImGui.GetCursorPos();
                         ImGui.SetCursorPos(new Vector2(a2.X + 20, a2.Y + 2));
-                        TextureWrap t2 = content.Value.Enabled == true ?
+                        IDalamudTextureWrap t2 = content.Value.Enabled == true ?
                             (content.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
                             : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                         ImGui.Image(t2.ImGuiHandle, new Vector2(20, 20));
@@ -3753,8 +3756,8 @@ namespace Lemegeton
                 }
                 Vector2 b1 = ImGui.GetCursorPos();
                 ImGui.SetCursorPos(new Vector2(a1.X + 20, a1.Y + 2));
-                
-                TextureWrap t1 = contentCat.Enabled == true ? 
+
+                IDalamudTextureWrap t1 = contentCat.Enabled == true ? 
                     (contentCat.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
                     : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
                 ImGui.Image(t1.ImGuiHandle, new Vector2(20, 20));
@@ -3849,7 +3852,7 @@ namespace Lemegeton
                 temp.X + _state.cfg.SoftmarkerOffsetScreenX,
                 temp.Y + _state.cfg.SoftmarkerOffsetScreenY
             );
-            TextureWrap tw = _ui.GetSignIcon(sign);
+            IDalamudTextureWrap tw = _ui.GetSignIcon(sign);
             float calcWidth = tw.Width * 2.0f * _state.cfg.SoftmarkerScale;
             float calcHeight = tw.Height * 2.0f * _state.cfg.SoftmarkerScale;
             pt.X -= calcWidth / 2.0f;
@@ -3918,7 +3921,7 @@ namespace Lemegeton
                     _lemmyShortcutPopped = now.AddSeconds(2);
                     _lemmyShortcutJustPopped = false;
                 }
-                TextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton);
+                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton);
                 winSize = new Vector2(tw.Width + 10, tw.Height + 10);
                 ImGui.SetWindowSize(winSize);
                 ImGui.SetCursorPos(new Vector2(5, 5));
@@ -4615,7 +4618,7 @@ namespace Lemegeton
             {
                 Vector2 tenp = ImGui.GetCursorPos();
                 float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
-                TextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
+                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
                 ImGui.Image(
                     tw.ImGuiHandle, new Vector2(tw.Width, tw.Height),
                     new Vector2(0, 0), new Vector2(1, 1),
@@ -4838,7 +4841,7 @@ namespace Lemegeton
 
         private void RenderStatusTab()
         {
-            TextureWrap tw;
+            IDalamudTextureWrap tw;
             bool tfer;
             ImGuiStylePtr style = ImGui.GetStyle();
             float textofsx = (style.ItemSpacing.X / 2.0f);

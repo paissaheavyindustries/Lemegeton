@@ -134,7 +134,7 @@ namespace Lemegeton.Content
                         unsafe
                         {
                             CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                            sb.AppendLine(String.Format("ObjectKind: {0} ModelId: {1}", go.ObjectKind, chs->ModelCharaId));
+                            sb.AppendLine(String.Format("ObjectKind: {0} ModelId: {1}", go.ObjectKind, chs->CharacterData.ModelCharaId));
                         }
                     }
                     else

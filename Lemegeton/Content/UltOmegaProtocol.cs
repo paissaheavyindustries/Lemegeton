@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
 using ImGuiNET;
+using Character = Dalamud.Game.ClientState.Objects.Types.Character;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 
 namespace Lemegeton.Content
 {
@@ -176,17 +178,18 @@ namespace Lemegeton.Content
                     {
                         Character bc = (Character)go;
                         CharacterStruct* bcs = (CharacterStruct*)bc.Address;
+                        CharacterData cd = bcs->CharacterData;
                         if (
                             // normal mode beetle, useful for testing
-                            (bcs->ModelCharaId == 327 && ApplyP1 == true)
+                            (cd.ModelCharaId == 327 && ApplyP1 == true)
                             ||
                             // p1 beetle omega
-                            (bcs->ModelCharaId == 3771 && bcs->Health == 8557964 && ApplyP1 == true)
+                            (cd.ModelCharaId == 3771 && cd.Health == 8557964 && ApplyP1 == true)
                         )
                         {
                             GameObjectStruct* gos = (GameObjectStruct*)go.Address;
                             float scale = SizeP1.CurrentValue / 100.0f;
-                            bcs->ModelScale = scale;
+                            cd.ModelScale = scale;
                             gos->Scale = scale;
                             if (_omegaFoundAt == DateTime.MinValue)
                             {
@@ -197,15 +200,15 @@ namespace Lemegeton.Content
                         }
                         else if (
                             // normal mode beetle, useful for testing
-                            (bcs->ModelCharaId == 327 && ApplyP3 == true)
+                            (cd.ModelCharaId == 327 && ApplyP3 == true)
                             ||
                             // p3 not-really-final omega
-                            (bcs->ModelCharaId == 3775 && bcs->Health == 11125976 && ApplyP3 == true)
+                            (cd.ModelCharaId == 3775 && cd.Health == 11125976 && ApplyP3 == true)
                         )
                         {
                             GameObjectStruct* gos = (GameObjectStruct*)go.Address;
                             float scale = SizeP3.CurrentValue / 100.0f;
-                            bcs->ModelScale = scale;
+                            cd.ModelScale = scale;
                             gos->Scale = scale;
                             if (_omegaFoundAt == DateTime.MinValue)
                             {

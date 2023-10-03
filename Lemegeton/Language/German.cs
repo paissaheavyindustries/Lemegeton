@@ -14,6 +14,46 @@ namespace Lemegeton.Language
 
         public German(State st) : base(st)
         {
+            #region 1.0.2.0
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM", "(P12s) Caloric Theory 1 automarker");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Enabled", "Aktiviert");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/AsSoftmarker", "Show as client-side soft markers");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs1", "Initial marker configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs1/InitialWind1", "Initial flare 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs1/InitialWind2", "Initial flare 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2", "First fire configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Fire1", "Fire stack 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Fire2", "Fire stack 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Fire3", "Fire stack 3");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Fire4", "Fire stack 4");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Wind1", "Wind 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Wind2", "Wind 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Wind3", "Wind 3");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs2/Wind4", "Wind 4");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs3", "Second fire configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs3/Fire1", "Fire share 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs3/Fire2", "Fire share 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs3/OldFire1", "Fire stack 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Signs3/OldFire2", "Fire stack 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Prio", "Priority configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Test", "Test random assignment");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM", "(P12s) Caloric Theory 2 automarker");
+            AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Enabled", "Aktiviert");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/AsSoftmarker", "Show as client-side soft markers");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs", "Marker configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Fire1", "Initial flare");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind1", "Wind 1");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind2", "Wind 2");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind3", "Wind 3");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind4", "Wind 4");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind5", "Wind 5");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind6", "Wind 6");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Signs/Wind7", "Wind 7");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Prio", "Priority configuration");
+            //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory2AM/Test", "Test random assignment");
+            #endregion
             #region 1.0.1.8
             //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM", "(P12s) Pangenesis automarker");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/PangenesisAM/Enabled", "Aktiviert");

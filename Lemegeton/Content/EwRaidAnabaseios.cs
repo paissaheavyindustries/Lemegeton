@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lemegeton.Core;
-using Lumina.Excel.GeneratedSheets;
 
 namespace Lemegeton.Content
 {
@@ -47,10 +46,14 @@ namespace Lemegeton.Content
         private const int AbilityPalladianGrasp2 = 33563;
         private const int AbilityPalladianGrasp3 = 33564;
         private const int AbilityPalladianGrasp4 = 33565;
+        private const int AbilityCrushHelm = 33559;
+        private const int AbilityCT2FireExplosion = 33598;
 
         private const int StatusUnstableSystem = 3593;
         private const int StatusUmbralTilt = 3576;
         private const int StatusAstralTilt = 3577;
+        private const int StatusPyrefaction = 3590;
+        private const int StatusAtmosfaction = 3591;
 
         private const int HeadmarkerLC1 = 79;
         private const int HeadmarkerLC2 = HeadmarkerLC1 + 1;
@@ -64,6 +67,8 @@ namespace Lemegeton.Content
 
         private LevinballAM _levinballAM;
         private PangenesisAM _pankoAM;
+        private CaloricTheory1AM _ct1AM;
+        private CaloricTheory2AM _ct2AM;
 
         #region LevinballAM
 
@@ -302,6 +307,212 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region CaloricTheory1AM
+
+        public class CaloricTheory1AM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs1 { get; set; }
+
+            [AttributeOrderNumber(1001)]
+            public AutomarkerSigns Signs2 { get; set; }
+
+            [AttributeOrderNumber(1002)]
+            public AutomarkerSigns Signs3 { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private List<uint> _wind1 = new List<uint>();
+            private List<uint> _wind2 = new List<uint>();
+            private List<uint> _wind3 = new List<uint>();
+            private List<uint> _fire2 = new List<uint>();
+            private List<uint> _fire3 = new List<uint>();
+            internal int _firedStage = 0;
+
+            public CaloricTheory1AM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs1 = new AutomarkerSigns();
+                Signs2 = new AutomarkerSigns();
+                Signs3 = new AutomarkerSigns();
+                Prio = new AutomarkerPrio() { Priority = AutomarkerPrio.PrioTypeEnum.PartyListOrder };
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs1.SetRole("InitialWind1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs1.SetRole("InitialWind2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs2.SetRole("Fire1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs2.SetRole("Fire2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs2.SetRole("Fire3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs2.SetRole("Fire4", AutomarkerSigns.SignEnum.Attack4, false);
+                Signs2.SetRole("Wind1", AutomarkerSigns.SignEnum.None, false);
+                Signs2.SetRole("Wind2", AutomarkerSigns.SignEnum.None, false);
+                Signs2.SetRole("Wind3", AutomarkerSigns.SignEnum.None, false);
+                Signs2.SetRole("Wind4", AutomarkerSigns.SignEnum.None, false);
+                Signs3.SetRole("Fire1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs3.SetRole("Fire2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs3.SetRole("OldFire1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs3.SetRole("OldFire2", AutomarkerSigns.SignEnum.Bind2, false);
+                Test = new System.Action(() => Signs2.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _firedStage = 0;
+                _wind1.Clear();
+                _wind2.Clear();
+                _wind3.Clear();
+                _fire2.Clear();
+                _fire3.Clear();
+            }
+
+            private void ReadyForMarkers1()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers 1");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _windsGo = pty.GetByActorIds(_wind1);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                Prio.SortByPriority(_windsGo);
+                ap.Assign(Signs1.Roles["InitialWind1"], _windsGo[0].GameObject);
+                ap.Assign(Signs1.Roles["InitialWind2"], _windsGo[1].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _firedStage = 1;
+            }
+
+            private void ReadyForMarkers2()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers 2");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _firesGo = pty.GetByActorIds(_fire2);
+                List<Party.PartyMember> _windsGo = pty.GetByActorIds(_wind2);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                Prio.SortByPriority(_firesGo);
+                Prio.SortByPriority(_windsGo);
+                ap.Assign(Signs1.Roles["Fire1"], _firesGo[0].GameObject);
+                ap.Assign(Signs1.Roles["Fire2"], _firesGo[1].GameObject);
+                ap.Assign(Signs1.Roles["Fire3"], _firesGo[2].GameObject);
+                ap.Assign(Signs1.Roles["Fire4"], _firesGo[3].GameObject);
+                ap.Assign(Signs1.Roles["Wind1"], _windsGo[0].GameObject);
+                ap.Assign(Signs1.Roles["Wind2"], _windsGo[1].GameObject);
+                ap.Assign(Signs1.Roles["Wind3"], _windsGo[2].GameObject);
+                ap.Assign(Signs1.Roles["Wind4"], _windsGo[3].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _firedStage = 2;
+            }
+
+            private void ReadyForMarkers3()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers 3");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _newFiresGo = pty.GetByActorIds(_fire3);
+                List<Party.PartyMember> _oldFiresGo = pty.GetByActorIds(_fire2);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                Prio.SortByPriority(_newFiresGo);
+                Prio.SortByPriority(_oldFiresGo);
+                ap.Assign(Signs1.Roles["Fire1"], _newFiresGo[0].GameObject);
+                ap.Assign(Signs1.Roles["Fire2"], _newFiresGo[1].GameObject);
+                ap.Assign(Signs1.Roles["OldFire1"], _oldFiresGo[0].GameObject);
+                ap.Assign(Signs1.Roles["OldFire2"], _oldFiresGo[1].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _firedStage = 3;
+            }
+
+        }
+
+        #endregion
+
+        #region CaloricTheory2AM
+
+        public class CaloricTheory2AM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private uint _fireTarget = 0;
+            internal bool _fired = false;
+
+            public CaloricTheory2AM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Prio = new AutomarkerPrio() { Priority = AutomarkerPrio.PrioTypeEnum.PartyListOrder };
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("Fire1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Wind1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("Wind2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("Wind3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("Wind4", AutomarkerSigns.SignEnum.Attack4, false);
+                Signs.SetRole("Wind5", AutomarkerSigns.SignEnum.Attack5, false);
+                Signs.SetRole("Wind6", AutomarkerSigns.SignEnum.Attack6, false);
+                Signs.SetRole("Wind7", AutomarkerSigns.SignEnum.Attack7, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
+                _fireTarget = 0;
+            }
+
+            internal void FeedCastBegin(uint actorId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered action on {1:X}", actorId);
+                _fireTarget = actorId;
+                if (_fireTarget == 0)
+                {
+                    return;
+                }
+                ReadyForMarkers();
+            }
+
+            private void ReadyForMarkers()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _windsGo = (from px in pty.Members where px.ObjectId != _fireTarget select px).ToList();
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                Prio.SortByPriority(_windsGo);
+                ap.Assign(Signs.Roles["Wind1"], _windsGo[0].GameObject);
+                ap.Assign(Signs.Roles["Wind2"], _windsGo[1].GameObject);
+                ap.Assign(Signs.Roles["Wind3"], _windsGo[2].GameObject);
+                ap.Assign(Signs.Roles["Wind4"], _windsGo[3].GameObject);
+                ap.Assign(Signs.Roles["Wind5"], _windsGo[4].GameObject);
+                ap.Assign(Signs.Roles["Wind6"], _windsGo[5].GameObject);
+                ap.Assign(Signs.Roles["Wind7"], _windsGo[6].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+        }
+
+        #endregion
+
         public EwRaidAnabaseios(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -335,6 +546,21 @@ namespace Lemegeton.Content
                         _pankoAM.FeedStatus(statusId, dest, duration, stacks);
                     }
                     break;
+                case StatusAtmosfaction:
+                    if (CurrentZone == ZoneEnum.P12s && gained == false)
+                    {
+                        if (_ct1AM.Active == true && _ct1AM._firedStage > 0)
+                        {
+                            _state.ClearAutoMarkers();
+                            _ct1AM._firedStage = 0;
+                        }
+                        if (_ct2AM.Active == true && _ct2AM._fired == true)
+                        {
+                            _state.ClearAutoMarkers();
+                            _ct2AM._fired = false;
+                        }
+                    }
+                    break;
             }
         }
 
@@ -357,6 +583,12 @@ namespace Lemegeton.Content
                     {
                         _state.ClearAutoMarkers();
                         _pankoAM._fired = false;
+                    }
+                    break;
+                case AbilityCT2FireExplosion:
+                    if (CurrentZone == ZoneEnum.P12s && _ct2AM.Active == true)
+                    {
+                        _ct2AM.FeedCastBegin(dest);
                     }
                     break;
             }
@@ -435,6 +667,8 @@ namespace Lemegeton.Content
                         break;
                     case ZoneEnum.P12s:
                         _pankoAM = (PangenesisAM)Items["PangenesisAM"];
+                        _ct1AM = (CaloricTheory1AM)Items["CaloricTheory1AM"];
+                        _ct2AM = (CaloricTheory2AM)Items["CaloricTheory2AM"];
                         break;
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using Dalamud.Interface;
+using Dalamud.Interface.Internal;
 using ImGuiNET;
 using ImGuiScene;
 using System;
@@ -12,12 +13,12 @@ namespace Lemegeton.Core
     internal class UserInterface
     {
 
-        private Dictionary<MiscIconEnum, TextureWrap> _misc = new Dictionary<MiscIconEnum, TextureWrap>();
-        private Dictionary<AutomarkerSigns.SignEnum, TextureWrap> _signs = new Dictionary<AutomarkerSigns.SignEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, TextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, TextureWrap>();
-        private Dictionary<uint, TextureWrap> _onDemand = new Dictionary<uint, TextureWrap>();
+        private Dictionary<MiscIconEnum, IDalamudTextureWrap> _misc = new Dictionary<MiscIconEnum, IDalamudTextureWrap>();
+        private Dictionary<AutomarkerSigns.SignEnum, IDalamudTextureWrap> _signs = new Dictionary<AutomarkerSigns.SignEnum, IDalamudTextureWrap>();
+        private Dictionary<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap>();
+        private Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap>();
+        private Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap>();
+        private Dictionary<uint, IDalamudTextureWrap> _onDemand = new Dictionary<uint, IDalamudTextureWrap>();
 
         internal State _state;
 
@@ -125,7 +126,7 @@ namespace Lemegeton.Core
 
         internal void UnloadTextures()
         {
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, TextureWrap> kp in _signs)
+            foreach (KeyValuePair<AutomarkerSigns.SignEnum, IDalamudTextureWrap> kp in _signs)
             {
                 if (kp.Value != null)
                 {
@@ -133,7 +134,7 @@ namespace Lemegeton.Core
                 }
             }
             _signs.Clear();
-            foreach (KeyValuePair<MiscIconEnum, TextureWrap> kp in _misc)
+            foreach (KeyValuePair<MiscIconEnum, IDalamudTextureWrap> kp in _misc)
             {
                 if (kp.Value != null)
                 {
@@ -141,7 +142,7 @@ namespace Lemegeton.Core
                 }
             }
             _misc.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioTrinityEnum, TextureWrap> kp in _trinity)
+            foreach (KeyValuePair<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap> kp in _trinity)
             {
                 if (kp.Value != null)
                 {
@@ -149,7 +150,7 @@ namespace Lemegeton.Core
                 }
             }
             _trinity.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioRoleEnum, TextureWrap> kp in _roles)
+            foreach (KeyValuePair<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap> kp in _roles)
             {
                 if (kp.Value != null)
                 {
@@ -157,7 +158,7 @@ namespace Lemegeton.Core
                 }
             }
             _roles.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioJobEnum, TextureWrap> kp in _jobs)
+            foreach (KeyValuePair<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap> kp in _jobs)
             {
                 if (kp.Value != null)
                 {
@@ -165,7 +166,7 @@ namespace Lemegeton.Core
                 }
             }
             _jobs.Clear();
-            foreach (KeyValuePair<uint, TextureWrap> kp in _onDemand)
+            foreach (KeyValuePair<uint, IDalamudTextureWrap> kp in _onDemand)
             {
                 if (kp.Value != null)
                 {
@@ -175,7 +176,7 @@ namespace Lemegeton.Core
             _onDemand.Clear();
         }
 
-        internal TextureWrap GetOnDemandIcon(uint iconId)
+        internal IDalamudTextureWrap GetOnDemandIcon(uint iconId)
         {
             if (_onDemand.ContainsKey(iconId) == false)
             {
@@ -184,7 +185,7 @@ namespace Lemegeton.Core
             return _onDemand[iconId];
         }
 
-        internal TextureWrap GetMiscIcon(MiscIconEnum icon)
+        internal IDalamudTextureWrap GetMiscIcon(MiscIconEnum icon)
         {
             if (_misc.ContainsKey(icon) == true)
             {
@@ -193,7 +194,7 @@ namespace Lemegeton.Core
             return null;
         }
 
-        internal TextureWrap GetSignIcon(AutomarkerSigns.SignEnum icon)
+        internal IDalamudTextureWrap GetSignIcon(AutomarkerSigns.SignEnum icon)
         {
             if (_signs.ContainsKey(icon) == true)
             {
@@ -212,12 +213,12 @@ namespace Lemegeton.Core
             return new Vector3(tenp.X, tenp.Y, (float)z);
         }
 
-        internal TextureWrap? GetTexture(uint id)
+        internal IDalamudTextureWrap? GetTexture(uint id)
         {
-            return _state.dm.GetImGuiTextureIcon(id);
+            return _state.tp.GetIcon(id, Dalamud.Plugin.Services.ITextureProvider.IconFlags.None);
         }
 
-        internal static ImGuiMouseButton ImageButton(TextureWrap tw, bool enabled, string tooltip)
+        internal static ImGuiMouseButton ImageButton(IDalamudTextureWrap tw, bool enabled, string tooltip)
         {
             if (enabled == true)
             {
@@ -244,7 +245,7 @@ namespace Lemegeton.Core
             return (ImGuiMouseButton)(-1);
         }
 
-        internal TextureWrap GetJobIcon(uint jobId)
+        internal IDalamudTextureWrap GetJobIcon(uint jobId)
         {
             AutomarkerPrio.PrioJobEnum job = (AutomarkerPrio.PrioJobEnum)jobId;
             if (_jobs.ContainsKey(job) == true)
@@ -385,7 +386,7 @@ namespace Lemegeton.Core
             return "???";
         }
 
-        private TextureWrap? RetrieveOrderableIcon<T>(T item)
+        private IDalamudTextureWrap? RetrieveOrderableIcon<T>(T item)
         {
             if (item is PrioRoleEnum)
             {
@@ -420,7 +421,7 @@ namespace Lemegeton.Core
             Vector2 icosize = new Vector2(30, 30);
             Vector2 pt = ImGui.GetCursorPos();
             string text = TranslateOrderableItem(item);
-            TextureWrap? icon = RetrieveOrderableIcon(item);
+            IDalamudTextureWrap? icon = RetrieveOrderableIcon(item);
             float icospace = 0.0f;
             if (icon != null)
             {
@@ -613,7 +614,7 @@ namespace Lemegeton.Core
         internal void RenderWarning(string text)
         {
             Vector2 tenp = ImGui.GetCursorPos();
-            TextureWrap tw = GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
+            IDalamudTextureWrap tw = GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
             ImGui.Image(
                 tw.ImGuiHandle, new Vector2(tw.Width, tw.Height)
             );
