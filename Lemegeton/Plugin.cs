@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.1.9";
+        public string Version = "1.0.2.1";
 
         internal class Downloadable
         {
@@ -2236,7 +2236,7 @@ namespace Lemegeton
                 ImGui.Text("");
                 if (SelectedProfile != null)
                 {
-                    ulong newmap = _ui.RenderJobSelector(SelectedProfile.ApplyOnJobs);
+                    ulong newmap = _ui.RenderJobSelector(SelectedProfile.ApplyOnJobs, true);
                     if (applych == true || newmap != SelectedProfile.ApplyOnJobs)
                     {
                         SelectedProfile.ApplyOnJobs = newmap;
@@ -2248,7 +2248,7 @@ namespace Lemegeton
                 }
                 else
                 {
-                    _ui.RenderJobSelector(0xFFFFFFFFFFFFFFFF);
+                    _ui.RenderJobSelector(0xFFFFFFFFFFFFFFFF, true);
                 }
             }
         }

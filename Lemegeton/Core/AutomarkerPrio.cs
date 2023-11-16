@@ -67,6 +67,7 @@ namespace Lemegeton.Core
             BLM = 25,
             SMN = 27, 
             RDM = 35,
+            BLU = 36,
         }
 
         public PrioTypeEnum Priority { get; set; } = PrioTypeEnum.Job;

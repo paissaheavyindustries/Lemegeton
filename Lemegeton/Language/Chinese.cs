@@ -14,6 +14,27 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.2.1
+            //AddEntry("Job/BLU", "Blue Mage");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) Tenstrike Trio automarker");
+            AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/AsSoftmarker", "显示客户端软标记");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1", "Hatches");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Hatch1", "Hatch 1");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Hatch2", "Hatch 2");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Hatch3", "Hatch 3");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Nonhatch1", "Non-hatch 1");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Nonhatch2", "Non-hatch 2");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs1/Nonhatch3", "Non-hatch 3");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs2", "Earthshakers");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs2/Shaker1", "Earthshaker 1");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs2/Shaker2", "Earthshaker 2");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs2/Shaker3", "Earthshaker 3");
+            //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Signs2/Shaker4", "Earthshaker 4");
+            AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Prio", "优先级设置");
+            AddEntry("Content/Ultimate/UltUcob/TenstrikeAm/Test", "测试标记");
+            #endregion
             #region 1.0.2.0
             //AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM", "(P12s) Caloric Theory 1 automarker");
             AddEntry("Content/EndwalkerRaids/EwRaidAnabaseios/CaloricTheory1AM/Enabled", "启用");

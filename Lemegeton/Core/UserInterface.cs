@@ -122,6 +122,7 @@ namespace Lemegeton.Core
             _jobs[AutomarkerPrio.PrioJobEnum.BLM] = GetTexture(62125);
             _jobs[AutomarkerPrio.PrioJobEnum.SMN] = GetTexture(62127);
             _jobs[AutomarkerPrio.PrioJobEnum.RDM] = GetTexture(62135);
+            _jobs[AutomarkerPrio.PrioJobEnum.BLU] = GetTexture(62136);
         }
 
         internal void UnloadTextures()
@@ -272,7 +273,7 @@ namespace Lemegeton.Core
             }
         }
 
-        internal ulong RenderJobSelector(ulong bitmap)
+        internal ulong RenderJobSelector(ulong bitmap, bool allowLimited)
         {
             ImGuiStylePtr style = ImGui.GetStyle();
             float wid = ImGui.GetWindowWidth();
@@ -284,6 +285,10 @@ namespace Lemegeton.Core
                 PrioJobEnum.BRD, PrioJobEnum.MCH, PrioJobEnum.DNC,
                 PrioJobEnum.BLM, PrioJobEnum.SMN, PrioJobEnum.RDM,
             });
+            if (allowLimited == true)
+            {
+                jobList.Add(PrioJobEnum.BLU);
+            }
             int numjobs = jobList.Count;
             foreach (AutomarkerPrio.PrioJobEnum p in jobList)
             {
@@ -327,6 +332,10 @@ namespace Lemegeton.Core
                             bitmap = SetJob(bitmap, PrioJobEnum.BLM, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.SMN, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.RDM, selected == false);
+                            if (allowLimited == true)
+                            {
+                                bitmap = SetJob(bitmap, PrioJobEnum.BLU, selected == false);
+                            }
                             break;
                     }
                 }

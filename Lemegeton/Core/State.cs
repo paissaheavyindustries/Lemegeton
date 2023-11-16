@@ -1148,38 +1148,7 @@ namespace Lemegeton.Core
             }
             catch (Exception)
             {
-                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 2, falling back to method 3..");
-                GetStatusFlags = GetStatusFlags3;
-                return GetStatusFlags3(bc);
-            }
-        }
-
-        internal unsafe StatusFlags GetStatusFlags3(BattleChara bc)
-        {
-            try
-            {
-                FFXIVClientStructs.FFXIV.Client.Game.Character.Character* Struct = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)bc.Address;
-                return (
-                    ((Struct->StatusFlags & 0x10) == 16 ? StatusFlags.Hostile : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags & 0x20) == 32 ? StatusFlags.InCombat : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags3 & 1) == 1 ? StatusFlags.WeaponOut : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags & 0x40) == 64 ? StatusFlags.OffhandOut : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags2 & 8) == 8 ? StatusFlags.PartyMember : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags2 & 0x10) == 16 ? StatusFlags.AllianceMember : StatusFlags.None)
-                    |
-                    ((Struct->StatusFlags2 & 0x20) == 32 ? StatusFlags.Friend : StatusFlags.None)
-                    |
-                    ((Struct->GetCastInfo()->ActionID > 0) ? StatusFlags.IsCasting : StatusFlags.None)
-                );
-            }
-            catch (Exception)
-            {
-                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 3, out of order..");
+                Log(LogLevelEnum.Error, null, "Accessing status flags failed on method 2, out of order..");
                 GetStatusFlags = GetStatusFlagsOutOfOrder;
                 return GetStatusFlagsOutOfOrder(bc);
             }
