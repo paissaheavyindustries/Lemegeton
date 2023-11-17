@@ -16,20 +16,26 @@ namespace Lemegeton.Content
         private const int AbilityChainLighting = 0x26c7;
         private const int AbilityTenstrikeTrio = 9958;
         private const int AbilityGigaflare = 9942;
+        private const int AbilityTwistingDive = 9906;
         private const int StatusThunderstruck = 466;
         private const int HeadmarkerEarthshaker = 28;
         private const int HeadmarkerHatch = 76;
+        private const int HeadmarkerLunarDive = 77;
+        private const int HeadmarkerCauterize = 14;
+        private const int HeadmarkerMegaflareDive = 29;
 
         private bool ZoneOk = false;
 
         private ChainLightningAm _chainLightningAm;
         private TenstrikeAm _tenstrikeAm;
+        private GrandOctetAm _grandOctetAm;
 
         private enum PhaseEnum
         {
             Start,
             Tenstrike,
-            GrandOctet,            
+            GrandOctet,
+            Adds,
         }
 
         private PhaseEnum _CurrentPhase = PhaseEnum.Start;
@@ -255,6 +261,84 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region GrandOctetAm
+
+        public class GrandOctetAm : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs1 { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private List<uint> _marked = new List<uint>();
+
+            public GrandOctetAm(State state) : base(state)
+            {
+                Enabled = false;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs1 = new AutomarkerSigns();
+                Signs1.SetRole("TwistingDive", AutomarkerSigns.SignEnum.Triangle, false);
+                Test = new System.Action(() => Signs1.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _marked.Clear();
+            }
+
+            internal void FeedHeadmarker(uint actorId, uint headMarkerId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+
+                Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
+                switch (headMarkerId)
+                {
+                    case HeadmarkerLunarDive:
+                    case HeadmarkerCauterize:
+                    case HeadmarkerMegaflareDive:
+                        _marked.Add(actorId);
+                        if (_marked.Count != 7)
+                        {
+                            return;
+                        }
+                        DecideTwistingDive();
+                        break;
+                }
+            }
+
+            internal void DecideTwistingDive()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for Twisting Dive automarker");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _markedPty = pty.GetByActorIds(_marked);
+                List<Party.PartyMember> _unmarkedGo = new List<Party.PartyMember>(
+                    from ix in pty.Members where _markedPty.Contains(ix) == false select ix
+                );
+                if (_unmarkedGo.Count != 1)
+                {
+                    // Someone probably died and/or got raised in the middle of Octet.
+                    // Cannot properly determine Twisting Dive target.
+                    return;
+                }
+
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs1.Roles["TwistingDive"], _unmarkedGo[0].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+            }
+
+        }
+
         public UltUcob(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -281,6 +365,10 @@ namespace Lemegeton.Content
             if (CurrentPhase == PhaseEnum.Tenstrike)
             {
                 _tenstrikeAm.FeedHeadmarker(dest, markerId);
+            }
+            if (CurrentPhase == PhaseEnum.GrandOctet)
+            {
+                _grandOctetAm.FeedHeadmarker(dest, markerId);
             }
         }
 
@@ -311,6 +399,17 @@ namespace Lemegeton.Content
                         _state.ClearAutoMarkers();
                     }
                     CurrentPhase = PhaseEnum.GrandOctet;
+                }
+            }
+            if (actionId == AbilityTwistingDive)
+            {
+                if (CurrentPhase == PhaseEnum.GrandOctet)
+                {
+                    if (_grandOctetAm.Active == true)
+                    {
+                        _state.ClearAutoMarkers();
+                    }
+                    CurrentPhase = PhaseEnum.Adds;
                 }
             }
         }
@@ -344,6 +443,7 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _tenstrikeAm = (TenstrikeAm)Items["TenstrikeAm"];
+                _grandOctetAm = (GrandOctetAm)Items["GrandOctetAm"];
                 _state.OnCombatChange += OnCombatChange;
             }
             else if (newZoneOk == false && ZoneOk == true)

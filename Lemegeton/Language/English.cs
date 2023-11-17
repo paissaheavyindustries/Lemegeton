@@ -14,6 +14,14 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region x.y.z.p
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs1", "Marker configuration");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs1/TwistingDive", "Dive Target");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "Test random assignment");
             #region 1.0.2.1
             AddEntry("Job/BLU", "Blue Mage");
             AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) Tenstrike Trio automarker");
@@ -195,7 +203,7 @@ namespace Lemegeton.Language
             AddEntry("Timelines/Reactions/DeleteReaction", "Delete reaction");
             AddEntry("Timelines/Reactions/TestReaction", "Test reaction");
             AddEntry("Timelines/CreateNewReactionAs", "Create new reaction as..");
-            AddEntry("Timelines/CloneReactionAs", "Clone reaction as..");            
+            AddEntry("Timelines/CloneReactionAs", "Clone reaction as..");
             AddEntry("Timelines/Actions", "Actions");
             AddEntry("Timelines/Status/ActiveTimeline", "Currently active timeline");
             AddEntry("Timelines/Status/ActiveProfile", "Currently active profile");
