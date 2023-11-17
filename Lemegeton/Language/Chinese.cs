@@ -14,6 +14,15 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.2.2
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/AsSoftmarker", "显示客户端软标记");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs/TwistingDive", "Dive target");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "测试标记");
+            #endregion
             #region 1.0.2.1
             //AddEntry("Job/BLU", "Blue Mage");
             //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) Tenstrike Trio automarker");

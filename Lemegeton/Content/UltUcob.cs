@@ -267,7 +267,7 @@ namespace Lemegeton.Content
         {
 
             [AttributeOrderNumber(1000)]
-            public AutomarkerSigns Signs1 { get; set; }
+            public AutomarkerSigns Signs { get; set; }
 
             [DebugOption]
             [AttributeOrderNumber(2500)]
@@ -283,9 +283,9 @@ namespace Lemegeton.Content
             {
                 Enabled = false;
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
-                Signs1 = new AutomarkerSigns();
-                Signs1.SetRole("TwistingDive", AutomarkerSigns.SignEnum.Triangle, false);
-                Test = new System.Action(() => Signs1.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+                Signs = new AutomarkerSigns();
+                Signs.SetRole("TwistingDive", AutomarkerSigns.SignEnum.Triangle, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
             public override void Reset()
@@ -333,7 +333,7 @@ namespace Lemegeton.Content
                 }
 
                 AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                ap.Assign(Signs1.Roles["TwistingDive"], _unmarkedGo[0].GameObject);
+                ap.Assign(Signs.Roles["TwistingDive"], _unmarkedGo[0].GameObject);
                 _state.ExecuteAutomarkers(ap, Timing);
             }
 

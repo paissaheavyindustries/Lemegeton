@@ -14,6 +14,15 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.2.2
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "有効");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/SelfMarkOnly", "自分にのみマーキングする");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/AsSoftmarker", "クライアント側のソフトマーカーとして表示する");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs/TwistingDive", "Dive target");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "Test random assignment");
+            #endregion
             #region 1.0.2.1
             AddEntry("Job/BLU", "青魔道士");
             AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) 連撃の三重奏 オートマーカー");

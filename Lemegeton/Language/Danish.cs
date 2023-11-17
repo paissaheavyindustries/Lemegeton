@@ -14,6 +14,15 @@ namespace Lemegeton.Language
 
         public Danish(State st) : base(st)
         {
+            #region 1.0.2.2
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "Aktiveret");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/SelfMarkOnly", "Kun selvmarkering");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/AsSoftmarker", "Vis som klientbaserede bløde markører");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs/TwistingDive", "Dive target");
+            AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "Test tildeling");
+            #endregion
             #region 1.0.2.1
             AddEntry("Job/BLU", "Blue Mage");
             //AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) Tenstrike Trio automarker");

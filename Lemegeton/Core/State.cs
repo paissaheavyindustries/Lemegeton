@@ -280,7 +280,7 @@ namespace Lemegeton.Core
             Timeline tl = _timeline;
             if (tl != null)
             {
-                tl.FeedEventCastBegin(this, GetActorById(dest), actionId, castTime);
+                tl.FeedEventCastBegin(this, GetActorById(src), GetActorById(dest), actionId, castTime);
             }
             OnCastBegin?.Invoke(src, dest, actionId, castTime, rotation);
         }
@@ -290,7 +290,7 @@ namespace Lemegeton.Core
             Timeline tl = _timeline;
             if (tl != null)
             {
-                tl.FeedEventCastEnd(this, GetActorById(dest), actionId);
+                tl.FeedEventCastEnd(this, GetActorById(src), GetActorById(dest), actionId);
             }
             OnAction?.Invoke(src, dest, actionId);
         }

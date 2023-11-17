@@ -23,11 +23,13 @@ namespace Lemegeton.Action
         {
             ctx.State.plug.AddNotification(new Core.Notification()
             {
+                Notif = this,
                 Severity = this.NotificationSeverity,
                 Text = this.Text,
                 SoundEffect = this.SoundEffect,
                 TTL = this.TTL,
-                TTS = this.TTS
+                TTS = this.TTS,
+                ctx = ctx,                
             });
         }
 

@@ -19,14 +19,14 @@ namespace Lemegeton.Action
         public string Text { get; set; } = "";
 
         public override void Execute(Context ctx)
-        {
+        {            
             switch (ChatSeverity)
             {
                 case ChatSeverityEnum.Normal:
-                    ctx.State.cg.Print(Text);
+                    ctx.State.cg.Print(ctx.ParseText(this, Text));
                     break;
                 case ChatSeverityEnum.Error:
-                    ctx.State.cg.PrintError(Text);
+                    ctx.State.cg.PrintError(ctx.ParseText(this, Text));
                     break;
             }
         }

@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.2.1";
+        public string Version = "1.0.2.2";
 
         internal class Downloadable
         {
@@ -3371,7 +3371,7 @@ namespace Lemegeton
                     break;
             }
             float x = _state.cfg.NotificationOverlayLocation.Left;
-            string text = n.Text;
+            string text = n.ctx != null ? n.ctx.ParseText(n.Notif, n.Text) : n.Text;
             Vector2 sz = ImGui.CalcTextSize(text);
             float scale = _state.cfg.NotificationOverlayTextScale;
             float x1 = _state.cfg.NotificationOverlayLocation.Left;
@@ -3605,7 +3605,7 @@ namespace Lemegeton
                             {
                                 if ((n.TTS == true || _state.cfg.TTSAllNotifications == true) && _state.cfg.TTSEnabled == true)
                                 {
-                                    TextToSpeech(n.Text);
+                                    TextToSpeech(n.ctx != null ? n.ctx.ParseText(n.Notif, n.Text) : n.Text);
                                 }
                                 if (n.SoundEffect != SoundEffectEnum.None)
                                 {

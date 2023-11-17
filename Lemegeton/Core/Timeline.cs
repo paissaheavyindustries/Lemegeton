@@ -676,7 +676,7 @@ namespace Lemegeton.Core
             return (from ix in CurrentEncounter.Entries where EventIsInVisibleWindow(ix, timeBackward, timeForward) == true select ix).Take(maxAmount);
         }
 
-        public void ExecuteEntry(State st, Entry e, Reaction.ReactionTriggerEnum rt, bool allowJump, bool allowSync, float syncOffset)
+        public void ExecuteEntry(Context ctx, Entry e, Reaction.ReactionTriggerEnum rt, bool allowJump, bool allowSync, float syncOffset)
         {
             bool jumped = false;
             if (e.Handlers != null)
@@ -695,13 +695,13 @@ namespace Lemegeton.Core
                                 Encounter ec = (from ix in Encounters where ix.Id == enc select ix).FirstOrDefault();
                                 if (ec != null)
                                 {
-                                    st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}", ec.Id);
+                                    ctx.State.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}", ec.Id);
                                     CurrentEncounter = ec;
                                     jumped = true;
                                 }
                                 else
                                 {
-                                    st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined", enc);
+                                    ctx.State.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to encounter {0} but it has not been defined", enc);
                                 }
                             }
                             break;
@@ -709,7 +709,7 @@ namespace Lemegeton.Core
                             if (allowJump == true)
                             {
                                 float time = h.ValueAsFloat();
-                                st.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", time);
+                                ctx.State.Log(LogLevelEnum.Debug, null, "Timeline jumping to time {0}", time);
                                 CurrentTime = time;
                                 LastJumpPoint = time;
                                 AutoSync = 0.0f;
@@ -727,7 +727,7 @@ namespace Lemegeton.Core
                                     {
                                         if (ent.Id == eg)
                                         {
-                                            st.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}, entry {1} (at {2})", enc.Id, ent.Id, ent.StartTime);
+                                            ctx.State.Log(LogLevelEnum.Debug, null, "Timeline jumping to encounter {0}, entry {1} (at {2})", enc.Id, ent.Id, ent.StartTime);
                                             CurrentEncounter = enc;
                                             jumped = true;
                                             found = true;
@@ -739,7 +739,7 @@ namespace Lemegeton.Core
                                 }
                                 if (found == false)
                                 {
-                                    st.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to entry {0} but it has not been defined", eg);
+                                    ctx.State.Log(LogLevelEnum.Debug, null, "Timeline tried to jump to entry {0} but it has not been defined", eg);
                                 }
                             }
                             break;
@@ -758,7 +758,7 @@ namespace Lemegeton.Core
             }
             if (jumped == false && allowSync == true)
             {
-                st.Log(LogLevelEnum.Debug, null, "Timeline autosync to {0} ({1} from current time {2}, entry at {3}, sync offset {4})", e.StartTime + syncOffset, (e.StartTime + syncOffset) - CurrentTime, CurrentTime, e.StartTime, syncOffset);
+                ctx.State.Log(LogLevelEnum.Debug, null, "Timeline autosync to {0} ({1} from current time {2}, entry at {3}, sync offset {4})", e.StartTime + syncOffset, (e.StartTime + syncOffset) - CurrentTime, CurrentTime, e.StartTime, syncOffset);
                 AutoSync = (e.StartTime + syncOffset) - CurrentTime;                
             }
             if (e.ReactionsActive() == false)
@@ -776,8 +776,8 @@ namespace Lemegeton.Core
                     if (r.Trigger != rt)
                     {
                         continue;
-                    }                    
-                    st.QueueReactionExecution(new Context { State = st }, r, 0.0f);
+                    }
+                    ctx.State.QueueReactionExecution(ctx, r, 0.0f);
                 }
             }
         }
@@ -903,7 +903,9 @@ namespace Lemegeton.Core
                     {
                         continue;
                     }
-                    ExecuteEntry(st, e, Reaction.ReactionTriggerEnum.Spawn, true, true, 0.0f);
+                    Context ctx = new Context { State = st };
+                    ctx.SourceName = go.Name.ToString();
+                    ExecuteEntry(ctx, e, Reaction.ReactionTriggerEnum.Spawn, true, true, 0.0f);
                 }
             }
         }
@@ -917,7 +919,8 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                ExecuteEntry(st, e, Reaction.ReactionTriggerEnum.Targettable, true, true, 0.0f);
+                Context ctx = new Context { State = st };
+                ExecuteEntry(ctx, e, Reaction.ReactionTriggerEnum.Targettable, true, true, 0.0f);
             }
         }
 
@@ -930,16 +933,17 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                ExecuteEntry(st, e, Reaction.ReactionTriggerEnum.Untargettable, true, true, 0.0f);
+                Context ctx = new Context { State = st };
+                ExecuteEntry(ctx, e, Reaction.ReactionTriggerEnum.Untargettable, true, true, 0.0f);
             }
         }
 
-        public void FeedEventCastBegin(State st, GameObject go, uint abilityId, float castTime)
+        public void FeedEventCastBegin(State st, GameObject src, GameObject dest, uint abilityId, float castTime)
         {
             uint nameId = 0;
-            if (go is Character)
+            if (dest is Character)
             {
-                Character ch = (Character)go;
+                Character ch = (Character)dest;
                 nameId = ch.NameId;
             }
             IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.OnCastBegin, nameId, 0, abilityId);
@@ -973,16 +977,20 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                ExecuteEntry(st, e, Reaction.ReactionTriggerEnum.OnCastBegin, false, true, 0.0f - castTime);
+                Context ctx = new Context { State = st };
+                ctx.SourceName = src.Name.ToString();
+                ctx.EffectName = st.plug.GetActionName(abilityId);
+                ctx.DestName = dest.Name.ToString();
+                ExecuteEntry(ctx, e, Reaction.ReactionTriggerEnum.OnCastBegin, false, true, 0.0f - castTime);
             }
         }
 
-        public void FeedEventCastEnd(State st, GameObject go, uint abilityId)
+        public void FeedEventCastEnd(State st, GameObject src, GameObject dest, uint abilityId)
         {
             uint nameId = 0;
-            if (go is Character)
+            if (dest is Character)
             {
-                Character ch = (Character)go;
+                Character ch = (Character)dest;
                 nameId = ch.NameId;
             }
             IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.OnCastEnd, nameId, 0, abilityId);
@@ -1016,7 +1024,11 @@ namespace Lemegeton.Core
                 {
                     continue;
                 }
-                ExecuteEntry(st, e, Reaction.ReactionTriggerEnum.OnCastEnd, true, true, 0.0f);
+                Context ctx = new Context { State = st };
+                ctx.SourceName = src.Name.ToString();
+                ctx.EffectName = st.plug.GetActionName(abilityId);
+                ctx.DestName = dest.Name.ToString();
+                ExecuteEntry(ctx, e, Reaction.ReactionTriggerEnum.OnCastEnd, true, true, 0.0f);
             }
         }
 

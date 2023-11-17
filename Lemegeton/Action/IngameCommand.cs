@@ -12,7 +12,7 @@ namespace Lemegeton.Action
 
         public override void Execute(Context ctx)
         {
-            ctx.State.PostCommand(Command);
+            ctx.State.PostCommand(ctx.ParseText(this, Command));
         }
 
     }
