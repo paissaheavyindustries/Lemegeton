@@ -339,6 +339,8 @@ namespace Lemegeton.Content
 
         }
 
+        #endregion
+
         public UltUcob(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;

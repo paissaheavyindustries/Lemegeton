@@ -22,6 +22,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs1", "Marker configuration");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs1/TwistingDive", "Dive Target");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "Test random assignment");
+            #endregion
             #region 1.0.2.1
             AddEntry("Job/BLU", "Blue Mage");
             AddEntry("Content/Ultimate/UltUcob/TenstrikeAm", "(P3) Tenstrike Trio automarker");
