@@ -17,6 +17,8 @@ namespace Lemegeton.Content
         private const int AbilityTenstrikeTrio = 9958;
         private const int AbilityGigaflare = 9942;
         private const int AbilityTwistingDive = 9906;
+        private const int AbilityFireballTether = 9912;
+        private const int AbilityFireballCast = 9925;
         private const int StatusThunderstruck = 466;
         private const int HeadmarkerEarthshaker = 28;
         private const int HeadmarkerHatch = 76;
@@ -26,6 +28,7 @@ namespace Lemegeton.Content
 
         private bool ZoneOk = false;
 
+        private FireballAm _fireballAm;
         private ChainLightningAm _chainLightningAm;
         private TenstrikeAm _tenstrikeAm;
         private GrandOctetAm _grandOctetAm;
@@ -54,6 +57,81 @@ namespace Lemegeton.Content
                 }
             }
         }
+
+        #region FireballAm
+
+        public class FireballAm : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private uint _fireballTarget;
+
+            public FireballAm(State state) : base(state)
+            {
+                Enabled = false;
+                AsSoftmarker = true; // Client-side only marker by default.
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs = new AutomarkerSigns();
+                Signs.SetRole("FireballTarget", AutomarkerSigns.SignEnum.Triangle, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fireballTarget = 0;
+            }
+
+            internal void FeedAction(uint actorId, uint actionId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
+                switch (actionId)
+                {
+                    case AbilityFireballTether:
+                        _fireballTarget = actorId;
+                        Party.PartyMember fireballGo = _state.GetPartyMembers().GetByActorId(_fireballTarget);
+
+                        Log(State.LogLevelEnum.Debug, null, "Ready for automarker.");
+                        AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                        ap.Assign(Signs.Roles["FireballTarget"], fireballGo.GameObject);
+                        _state.ExecuteAutomarkers(ap, Timing);
+                        break;
+                    case AbilityFireballCast:
+                        ClearFireballMarker();
+                        break;
+                }
+            }
+
+            internal void ClearFireballMarker()
+            {
+                if (_fireballTarget == 0)
+                {
+                    return;
+                }
+
+                Log(State.LogLevelEnum.Debug, null, "Clearing automarkers.");
+                Party.PartyMember fireballGo = _state.GetPartyMembers().GetByActorId(_fireballTarget);
+                _state.ClearMarkerOn(fireballGo.GameObject, true, true);
+            }
+
+        }
+
+        #endregion
 
         #region ChainLightningAm
 
@@ -388,6 +466,10 @@ namespace Lemegeton.Content
             {
                 _chainLightningAm.FeedAction(dest, actionId);
             }
+            if (actionId == AbilityFireballTether || actionId == AbilityFireballCast)
+            {
+                _fireballAm.FeedAction(dest, actionId);
+            }
             if (actionId == AbilityTenstrikeTrio)
             {
                 CurrentPhase = PhaseEnum.Tenstrike;
@@ -443,6 +525,7 @@ namespace Lemegeton.Content
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
+                _fireballAm = (FireballAm)Items["FireballAm"];
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _tenstrikeAm = (TenstrikeAm)Items["TenstrikeAm"];
                 _grandOctetAm = (GrandOctetAm)Items["GrandOctetAm"];
