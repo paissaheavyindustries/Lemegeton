@@ -2,7 +2,6 @@
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
-using static Lemegeton.Content.UltOmegaProtocol;
 using System.Collections;
 
 namespace Lemegeton.Content
@@ -16,15 +15,15 @@ namespace Lemegeton.Content
         private const int AbilityChainLighting = 0x26c7;
         private const int AbilityTenstrikeTrio = 9958;
         private const int AbilityGigaflare = 9942;
-        private const int AbilityTwistingDive = 9906;
-        private const int AbilityFireballTether = 9912;
+        private const int AbilityTwistingDive = 0x2A;
         private const int AbilityFireballCast = 9925;
         private const int StatusThunderstruck = 466;
-        private const int HeadmarkerEarthshaker = 28;
-        private const int HeadmarkerHatch = 76;
-        private const int HeadmarkerLunarDive = 77;
-        private const int HeadmarkerCauterize = 14;
-        private const int HeadmarkerMegaflareDive = 29;
+        private const int HeadmarkerHatch = 0x76;
+        private const int HeadmarkerEarthshaker = 0x28;
+        private const int HeadmarkerLunarDive = 0x77;
+        private const int HeadmarkerCauterize = 0x14;
+        private const int HeadmarkerMegaflareDive = 0x29;
+        private const int TetherFireball = 5;
 
         private bool ZoneOk = false;
 
@@ -92,38 +91,32 @@ namespace Lemegeton.Content
                 _fireballTarget = 0;
             }
 
-            internal void FeedAction(uint actorId, uint actionId)
+            internal void FeedTether(uint actorId, uint actionId)
             {
                 if (Active == false)
                 {
                     return;
                 }
 
-                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
-                switch (actionId)
-                {
-                    case AbilityFireballTether:
-                        _fireballTarget = actorId;
-                        Party.PartyMember fireballGo = _state.GetPartyMembers().GetByActorId(_fireballTarget);
+                Log(State.LogLevelEnum.Debug, null, "Registered tether {0} on {1:X}", actionId, actorId);
+                _fireballTarget = actorId;
+                Party.PartyMember fireballGo = _state.GetPartyMembers().GetByActorId(_fireballTarget);
 
-                        Log(State.LogLevelEnum.Debug, null, "Ready for automarker.");
-                        AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                        ap.Assign(Signs.Roles["FireballTarget"], fireballGo.GameObject);
-                        _state.ExecuteAutomarkers(ap, Timing);
-                        break;
-                    case AbilityFireballCast:
-                        ClearFireballMarker();
-                        break;
-                }
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarker.");
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["FireballTarget"], fireballGo.GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
             }
 
-            internal void ClearFireballMarker()
+            internal void FeedAction(uint actorId, uint actionId)
             {
-                if (_fireballTarget == 0)
+                if (Active == false || _fireballTarget == 0)
                 {
                     return;
                 }
 
+                // If the target currently has lightning when the fire tether resolves, it will also clear that marker on them.
+                // Possible enhancement on the future to add this compatability.
                 Log(State.LogLevelEnum.Debug, null, "Clearing automarkers.");
                 Party.PartyMember fireballGo = _state.GetPartyMembers().GetByActorId(_fireballTarget);
                 _state.ClearMarkerOn(fireballGo.GameObject, true, true);
@@ -273,6 +266,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
+
                 Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
                 switch (headMarkerId)
                 {
@@ -435,9 +429,18 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
+            _state.OnTether += OnTether;
             _state.OnHeadMarker += OnHeadMarker;
             _state.OnAction += _state_OnAction;
             _state.OnStatusChange += _state_OnStatusChange;
+        }
+
+        private void OnTether(uint src, uint dest, uint tetherId)
+        {
+            if (tetherId == TetherFireball)
+            {
+                _fireballAm.FeedTether(dest, tetherId);
+            }
         }
 
         private void OnHeadMarker(uint dest, uint markerId)
@@ -466,7 +469,7 @@ namespace Lemegeton.Content
             {
                 _chainLightningAm.FeedAction(dest, actionId);
             }
-            if (actionId == AbilityFireballTether || actionId == AbilityFireballCast)
+            if (actionId == AbilityFireballCast)
             {
                 _fireballAm.FeedAction(dest, actionId);
             }
@@ -500,6 +503,7 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
+            _state.OnTether -= OnTether;
             _state.OnHeadMarker -= OnHeadMarker;
             _state.OnStatusChange -= _state_OnStatusChange;
             _state.OnAction -= _state_OnAction;
