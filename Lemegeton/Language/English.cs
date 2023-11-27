@@ -14,6 +14,13 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            AddEntry("Content/Ultimate/UltUcob/FireballAm", "(P2) Fireball automarker");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs/FireballTarget", "Fireball target");
+            AddEntry("Content/Ultimate/UltUcob/FireballAm/Test", "Test random assignment");
             #region 1.0.2.2
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "Enabled");
