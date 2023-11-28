@@ -179,6 +179,8 @@ namespace Lemegeton.Core
                 Timed,
                 Ability,
                 Spawn,
+                StatusGain,
+                StatusLoss
             }
 
             public class ProfileSettings

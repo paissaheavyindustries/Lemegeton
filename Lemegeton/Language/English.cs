@@ -14,6 +14,23 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.2.3
+            AddEntry("Content/Criterion", "Criterion Dungeons");
+            AddEntry("Content/Criterion/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo", "Another Aloalo Island");
+            AddEntry("Content/Criterion/EwCritAloalo/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/SpringCrystal", "Spring Crystals safe spot indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/SpringCrystal/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/SpringCrystal/SafeSpotColor", "Safe spot indicator color");
+            AddEntry("Content/Criterion/EwCritAloalo/SpringCrystal/Test", "Test on player");
+            AddEntry("Content/Criterion/EwCritAloalo/LalaRotation", "Lala rotation indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/LalaRotation/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/LalaRotation/SafeZoneColor", "Safe zone indicator color");
+            AddEntry("Content/Criterion/EwCritAloalo/LalaRotation/Test", "Test on player with random direction");
+            AddEntry("Content/Criterion/EwCritAloalo/PlayerRotation", "Unseen shield rotation indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/PlayerRotation/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/PlayerRotation/IndicatorColor", "Shield indicator color");
+            AddEntry("Content/Criterion/EwCritAloalo/PlayerRotation/Test", "Test random direction");
             AddEntry("Content/Ultimate/UltUcob/FireballAm", "(P2) Fireball automarker");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/SelfMarkOnly", "Self-marking only");
@@ -21,6 +38,9 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs/FireballTarget", "Fireball target");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/Test", "Test random assignment");
+            AddEntry("Content/Debug/Debugger/EventLogger/IncludeLocation", "Include location information");
+            AddEntry("Content/Debug/Debugger/EventLogger/ResolveNames", "Resolve action and status names");
+            #endregion
             #region 1.0.2.2
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm", "(P3) Grand Octet Twintania Dive automarker");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "Enabled");

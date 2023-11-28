@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.2.2";
+        public string Version = "1.0.2.3";
 
         internal class Downloadable
         {
@@ -101,6 +101,8 @@ namespace Lemegeton
         private string _timelineActionFilter = "";
         private bool _newNotifications = false;
         private int _ttsCounter = 1;
+
+        private List<Timeline> _lastEncounters = new List<Timeline>();
 
         private bool _movingShortcut = false;
         private Vector2 _movingMouse;
@@ -1674,6 +1676,17 @@ namespace Lemegeton
             if (name.Contains("_rsv_") == true)
             {
                 name = I18n.Translate(String.Format("RSV/Ability_{0}", key));
+            }
+            return name;
+        }
+
+        internal string GetStatusName(uint key)
+        {
+            Lumina.Excel.GeneratedSheets.Status a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Status>().GetRow(key);
+            string name = Capitalize(a.Name);
+            if (name.Contains("_rsv_") == true)
+            {
+                name = I18n.Translate(String.Format("RSV/Status_{0}", key));
             }
             return name;
         }

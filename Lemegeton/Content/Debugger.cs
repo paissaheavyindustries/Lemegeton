@@ -427,6 +427,11 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3003)]
             public string CurrentLogFilename { get; private set; } = "";
 
+            [AttributeOrderNumber(4000)]
+            public bool IncludeLocation { get; set; } = false;
+            [AttributeOrderNumber(4001)]
+            public bool ResolveNames { get; set; } = false;
+
             private bool _subbed = false;
 
             public EventLogger(State state) : base(state)
@@ -529,7 +534,42 @@ namespace Lemegeton.Content
 
             private string FormatGameObject(GameObject go)
             {
-                return go == null ? "null" : String.Format("{0}({1} - {2}) at {3}", go.ObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"));
+                if (IncludeLocation == true)
+                {
+                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3} pos {4},{5},{6} rot {7}", go.ObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"),
+                        go.Position.X, go.Position.Y, go.Position.Z, go.Rotation
+                    );
+                }
+                else
+                {
+                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3}", go.ObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"));
+                }
+            }
+
+            private string FormatStatusId(uint statusId)
+            {
+                if (ResolveNames == true)
+                {
+                    string name = _state.plug.GetStatusName(statusId).Trim();
+                    return String.Format("{0} ({1})", statusId, name.Length > 0 ? name : "(null)");
+                }
+                else
+                {
+                    return String.Format("{0}", statusId);
+                }
+            }
+
+            private string FormatActionId(uint actionId)
+            {
+                if (ResolveNames == true)
+                {
+                    string name = _state.plug.GetActionName(actionId).Trim();
+                    return String.Format("{0} ({1})", actionId, name.Length > 0 ? name : "(null)");
+                }
+                else
+                {
+                    return String.Format("{0}", actionId);
+                }
             }
 
             private void LogEventToFile(string msg)
@@ -582,7 +622,7 @@ namespace Lemegeton.Content
                 string fmt = "InvokeEventPlay: {0:X8} {1} {2} {3} {4} {5} {6} {7}";
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, actor, eventId, scene, flags, param1, param2, param3, param4);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(actor), eventId, scene, flags, param1, param2, param3, param4);
                 }
                 if (LogToFile == true)
                 {
@@ -640,7 +680,7 @@ namespace Lemegeton.Content
                 GameObject dstgo = _state.GetActorById(dest);
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, srcgo, dstgo, tetherId);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), tetherId);
                 }
                 if (LogToFile == true)
                 {
@@ -676,11 +716,11 @@ namespace Lemegeton.Content
                 GameObject dstgo = _state.GetActorById(dest);
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, srcgo, dstgo, gained == true ? "Gained" : "Lost", statusId, duration, stacks);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", FormatStatusId(statusId), duration, stacks);
                 }
                 if (LogToFile == true)
                 {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", statusId, duration, stacks));
+                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", FormatStatusId(statusId), duration, stacks));
                 }
             }
 
@@ -694,7 +734,7 @@ namespace Lemegeton.Content
                 GameObject dstgo = _state.GetActorById(dest);
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, dstgo, markerId);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(dstgo), markerId);
                 }
                 if (LogToFile == true)
                 {
@@ -725,16 +765,16 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeCastBegin {0} -> {1}: {2} in {3} s (rot {4})";
+                string fmt = "InvokeCastBegin {0} -> {1}: {2} in {3} s";
                 GameObject srcgo = _state.GetActorById(src);
                 GameObject dstgo = _state.GetActorById(dest);
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, _state.GetActorById(src), _state.GetActorById(dest), actionId, castTime, rotation);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId), castTime);
                 }
                 if (LogToFile == true)
                 {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), actionId, castTime, rotation));
+                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId), castTime));
                 }
             }
 
@@ -749,11 +789,11 @@ namespace Lemegeton.Content
                 GameObject dstgo = _state.GetActorById(dest);
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, _state.GetActorById(src), _state.GetActorById(dest), actionId);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId));
                 }
                 if (LogToFile == true)
                 {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), actionId));
+                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId)));
                 }
             }
 
@@ -766,7 +806,7 @@ namespace Lemegeton.Content
                 string fmt = "CombatantAdded {0}";
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, go);
+                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go));
                 }
                 if (LogToFile == true)
                 {
