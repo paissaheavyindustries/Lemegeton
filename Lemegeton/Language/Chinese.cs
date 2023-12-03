@@ -14,6 +14,18 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.2.4
+            //AddEntry("Content/Criterion/EwCritAloalo/PlayerMarch", "Planar Tactics rotation indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/PlayerMarch/Enabled", "启用");
+            //AddEntry("Content/Criterion/EwCritAloalo/PlayerMarch/IndicatorColor", "Direction indicator color");
+            //AddEntry("Content/Criterion/EwCritAloalo/PlayerMarch/Test", "Test random direction");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticeReload", "Statice bullet reload indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticeReload/Enabled", "启用");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticeReload/LoadedColor", "Loaded chamber color");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticeReload/MisloadedColor", "Misloaded chamber color");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticeReload/UnloadedColor", "Unloaded chamber color");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticeReload/Test", "Test random bullets on player");
+            #endregion
             #region 1.0.2.3
             //AddEntry("Content/Criterion", "Criterion Dungeons");
             AddEntry("Content/Criterion/Enabled", "启用");

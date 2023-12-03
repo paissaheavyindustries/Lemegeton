@@ -36,12 +36,45 @@ namespace Lemegeton.Content
         private const int AbilityArcaneBlightE = 34957;
         private const int AbilityArcaneBlightS = 34955;
         private const int AbilityArcaneBlightW = 34958;
+        private const int AbilityPlanarTactics = 34968;
+        private const int AbilityInfernoTheorem = 34990;
+        private const int AbilityLockedAndLoaded = 35109;
+        private const int AbilityMisload = 35110;
+        private const int AbilityTrickReload = 35146;
+        private const int AbilityTrapshooting1 = 36122;
+        private const int AbilityTrapshooting2 = 35161;
+        private const int AbilityTriggerHappy = 35147;
 
         private bool ZoneOk = false;
 
         private SpringCrystal _springCrystal;
         private LalaRotation _lalaRotation;
         private PlayerRotation _playerRotation;
+        private PlayerMarch _playerMarch;
+        private StaticeReload _staticeReload;
+
+        private enum PhaseEnum
+        {
+            Lala_Inferno,
+            Lala_Planar,
+        }
+
+        private PhaseEnum _CurrentPhase = PhaseEnum.Lala_Inferno;
+        private PhaseEnum CurrentPhase
+        {
+            get
+            {
+                return _CurrentPhase;
+            }
+            set
+            {
+                if (_CurrentPhase != value)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Moving to phase {0}", value);
+                    _CurrentPhase = value;
+                }
+            }
+        }
 
         #region SpringCrystal
 
@@ -117,26 +150,26 @@ namespace Lemegeton.Content
                     if ((float)Math.Abs(go.Rotation) > 0.1f)
                     {
                         // east-west
-                        _points.Add(new PointF(-15.0f, go.Position.Z - 5.0f));
-                        _points.Add(new PointF(-15.0f, go.Position.Z + 5.0f));
-                        _points.Add(new PointF(15.0f, go.Position.Z - 5.0f));
-                        _points.Add(new PointF(15.0f, go.Position.Z + 5.0f));
+                        _points.Add(new PointF(-15.0f, go.Position.Z - 10.0f));
+                        _points.Add(new PointF(-15.0f, go.Position.Z + 10.0f));
+                        _points.Add(new PointF(15.0f, go.Position.Z - 10.0f));
+                        _points.Add(new PointF(15.0f, go.Position.Z + 10.0f));
                     }
                     else
                     {
                         // north-south
-                        _points.Add(new PointF(go.Position.X - 5.0f, -15.0f));
-                        _points.Add(new PointF(go.Position.X + 5.0f, -15.0f));
-                        _points.Add(new PointF(go.Position.X - 5.0f, 15.0f));
-                        _points.Add(new PointF(go.Position.X + 5.0f, 15.0f));
+                        _points.Add(new PointF(go.Position.X - 10.0f, -15.0f));
+                        _points.Add(new PointF(go.Position.X + 10.0f, -15.0f));
+                        _points.Add(new PointF(go.Position.X - 10.0f, 15.0f));
+                        _points.Add(new PointF(go.Position.X + 10.0f, 15.0f));
                     }
                 }
                 foreach (PointF pt in _points)
                 {
-                    Vector3 p1 = new Vector3(pt.X - 2.5f, y, pt.Y - 2.5f);
-                    Vector3 p2 = new Vector3(pt.X + 2.5f, y, pt.Y - 2.5f);
-                    Vector3 p3 = new Vector3(pt.X + 2.5f, y, pt.Y + 2.5f);
-                    Vector3 p4 = new Vector3(pt.X - 2.5f, y, pt.Y + 2.5f);
+                    Vector3 p1 = new Vector3(pt.X - 5.0f, y, pt.Y - 5.0f);
+                    Vector3 p2 = new Vector3(pt.X + 5.0f, y, pt.Y - 5.0f);
+                    Vector3 p3 = new Vector3(pt.X + 5.0f, y, pt.Y + 5.0f);
+                    Vector3 p4 = new Vector3(pt.X - 5.0f, y, pt.Y + 5.0f);
                     Vector3 t1 = _state.plug._ui.TranslateToScreen(p1.X, p1.Y, p1.Z);
                     Vector3 t2 = _state.plug._ui.TranslateToScreen(p2.X, p2.Y, p2.Z);
                     Vector3 t3 = _state.plug._ui.TranslateToScreen(p3.X, p3.Y, p3.Z);
@@ -235,7 +268,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained);
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1}", statusId, gained);
                 if (gained == true)
                 {
                     _lalaStatus = statusId;
@@ -615,6 +648,360 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region PlayerMarch
+
+        public class PlayerMarch : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 IndicatorColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 0.5f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private enum DirectionEnum
+            {
+                None,
+                Front,
+                Left,
+                Right,
+                Back
+            }
+
+            private uint _playerTimes = 0;
+            private uint _playerHeadmarker = 0;
+
+            public PlayerMarch(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _playerTimes = 0;
+                _playerHeadmarker = 0;                
+            }
+
+            public void TestFunctionality()
+            {
+                if (_playerTimes > 0)
+                {
+                    Reset();                    
+                    return;
+                }
+                _state.InvokeZoneChange(1179);
+                Random r = new Random();
+                _playerTimes = (uint)(r.Next(0, 2) == 0 ? StatusPlayerThree : StatusPlayerFive);
+                _playerHeadmarker = (uint)(r.Next(0, 2) == 0 ? HeadmarkerPlayerCW : HeadmarkerPlayerCCW);
+                Log(State.LogLevelEnum.Debug, null, "Testing with {0} {1}", _playerTimes, _playerHeadmarker);
+            }
+
+            internal void FeedStatus(uint actorId, uint statusId, bool gained)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, actorId);
+                if (gained == true)
+                {
+                    switch (statusId)
+                    {
+                        case StatusPlayerThree:
+                        case StatusPlayerFive:
+                            _playerTimes = statusId;
+                            break;
+                    }                    
+                }
+                else
+                {
+                    _playerTimes = 0;                    
+                    _playerHeadmarker = 0;                    
+                }
+            }
+
+            internal void FeedHeadmarker(uint actorId, uint headMarkerId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                {
+                    return;
+                }
+                _playerHeadmarker = headMarkerId;                
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_playerTimes == 0 || _playerHeadmarker == 0)
+                {
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                DirectionEnum sz = DirectionEnum.None;
+                if (
+                   (_playerHeadmarker == HeadmarkerPlayerCW && _playerTimes == StatusPlayerThree)
+                   ||
+                   (_playerHeadmarker == HeadmarkerPlayerCCW && _playerTimes == StatusPlayerFive)
+                )
+                {
+                    sz = DirectionEnum.Left;
+                }
+                if (
+                   (_playerHeadmarker == HeadmarkerPlayerCCW && _playerTimes == StatusPlayerThree)
+                   ||
+                   (_playerHeadmarker == HeadmarkerPlayerCW && _playerTimes == StatusPlayerFive)
+                )
+                {
+                    sz = DirectionEnum.Right;
+                }
+                if (sz == DirectionEnum.None)
+                {
+                    return true;
+                }
+                GameObject go = _state.cs.LocalPlayer;
+                Vector3 t1, t2;
+                Vector3 p1 = go.Position;
+                Vector3 p2, p3, p4, p5;
+                double heading = (go.Rotation * -1.0f) + (Math.PI / 2.0f);
+                switch (sz)
+                {
+                    case DirectionEnum.Left:
+                        heading -= (Math.PI / 2.0f);
+                        break;
+                    case DirectionEnum.Right:
+                        heading += (Math.PI / 2.0f);
+                        break;
+                    default:
+                        return true;
+                }
+                float time = (float)(DateTime.Now - DateTime.Today).TotalMilliseconds / 200.0f;
+                float ang = (float)Math.Abs(Math.Cos(time));
+                float ex = 1.0f + (float)(Math.Sin(ang) * 0.5f);
+                p2 = new Vector3(p1.X + (float)Math.Cos(heading) * ex, p1.Y, p1.Z + (float)Math.Sin(heading) * ex);
+                p3 = new Vector3(p1.X + (float)Math.Cos(heading) * (ex + 1.5f), p1.Y, p1.Z + (float)Math.Sin(heading) * (ex + 1.5f));
+                heading += Math.PI;
+                p4 = new Vector3(p3.X + (float)Math.Cos(heading - (Math.PI / 4.0f)) * 0.5f, p3.Y, p3.Z + (float)Math.Sin(heading - (Math.PI / 4.0f)) * 0.5f);
+                p5 = new Vector3(p3.X + (float)Math.Cos(heading + (Math.PI / 4.0f)) * 0.5f, p3.Y, p3.Z + (float)Math.Sin(heading + (Math.PI / 4.0f)) * 0.5f);
+                t1 = _state.plug._ui.TranslateToScreen(p2.X, p2.Y, p2.Z);
+                t2 = _state.plug._ui.TranslateToScreen(p3.X, p3.Y, p3.Z);
+                draw.AddLine(
+                    new Vector2(t1.X, t1.Y),
+                    new Vector2(t2.X, t2.Y),
+                    ImGui.GetColorU32(IndicatorColor),
+                    4.0f
+                );
+                t1 = _state.plug._ui.TranslateToScreen(p4.X, p4.Y, p4.Z);
+                draw.AddLine(
+                    new Vector2(t1.X, t1.Y),
+                    new Vector2(t2.X, t2.Y),
+                    ImGui.GetColorU32(IndicatorColor),
+                    4.0f
+                );
+                t1 = _state.plug._ui.TranslateToScreen(p5.X, p5.Y, p5.Z);
+                draw.AddLine(
+                    new Vector2(t1.X, t1.Y),
+                    new Vector2(t2.X, t2.Y),
+                    ImGui.GetColorU32(IndicatorColor),
+                    4.0f
+                );
+                return true;
+            }
+
+        }
+
+        #endregion
+
+        #region StaticeReload
+
+        public class StaticeReload : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1100)]
+            public Vector4 LoadedColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 0.85f);
+            [AttributeOrderNumber(1101)]
+            public Vector4 MisloadedColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.85f);
+            [AttributeOrderNumber(1101)]
+            public Vector4 UnloadedColor { get; set; } = new Vector4(0.0f, 0.0f, 0.0f, 0.85f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private enum BulletStateEnum
+            {
+                Unknown,
+                Misload,
+                Load
+            }
+
+            private uint _staticeId = 0;
+            private BulletStateEnum[] _bullets = new BulletStateEnum[8];
+            private int _bulletIndex = 0;
+            private int _bulletsSpent = 0;
+
+            public StaticeReload(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+                ResetBullets();
+            }
+
+            private void ResetBullets()
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    _bullets[i] = BulletStateEnum.Unknown;
+                }
+                _bulletIndex = 0;
+                _bulletsSpent = 0;
+            }
+
+            internal void EatBullets(int bullets)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                _bulletsSpent += bullets;
+                if (_bulletsSpent == 8)
+                {
+                    Reset();
+                }
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _staticeId = 0;
+                ResetBullets();
+            }
+
+            public void TestFunctionality()
+            {
+                if (_staticeId > 0)
+                {
+                    if (_bulletsSpent < 4)
+                    {
+                        EatBullets(4);
+                    }
+                    else
+                    {
+                        Reset();
+                    }
+                    return;
+                }
+                _staticeId = _state.cs.LocalPlayer.ObjectId;
+                _state.InvokeZoneChange(1179);
+                Random r = new Random();
+                for (int i = 0; i < 8; i++)
+                {
+                    _bullets[i] = (BulletStateEnum)(1 + r.Next(0, 2));
+                }
+                Log(State.LogLevelEnum.Debug, null, "Testing");
+            }
+
+            internal void FeedAbility(uint actorId, uint abilityId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (abilityId == AbilityLockedAndLoaded)
+                {
+                    _staticeId = actorId;
+                    _bullets[_bulletIndex] = BulletStateEnum.Load;
+                    _bulletIndex++;
+                }
+                if (abilityId == AbilityMisload)
+                {
+                    _staticeId = actorId;
+                    _bullets[_bulletIndex] = BulletStateEnum.Misload;
+                    _bulletIndex++;
+                }
+                if (abilityId == AbilityTrickReload)
+                {
+                    Reset();
+                    _staticeId = actorId;
+                }
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_staticeId == 0)
+                {
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                int bulletsToDraw = 8 - _bulletsSpent;
+                GameObject go = _state.GetActorById(_staticeId);
+                Vector3 pos = new Vector3(go.Position.X, go.Position.Y + 3.0f, go.Position.Z);
+                Vector3 t1 = _state.plug._ui.TranslateToScreen(pos.X, pos.Y, pos.Z);
+                float radius = 15.0f;
+                float x = t1.X - (radius * 2.0f * 4.0f) + radius;
+                for (int i = 0; i < 8; i++)
+                {
+                    BulletStateEnum bs = _bullets[i];
+                    float yofs = (i == 0 || i == 7) ? radius * 1.5f : 0.0f;
+                    float xofs;
+                    switch (i)
+                    {
+                        case 0:
+                            xofs = (radius * 0.5f);
+                            break;
+                        case 7:
+                            xofs = (radius * -0.5f);
+                            break;
+                        default:
+                            xofs = 0.0f;
+                            break;
+                    }
+                    if (_bulletsSpent > i)
+                    {
+                        bs = BulletStateEnum.Unknown;
+                    }
+                    switch (bs)
+                    {
+                        case BulletStateEnum.Load:
+                            draw.AddCircleFilled(new Vector2(x + xofs, t1.Y + yofs), radius, ImGui.GetColorU32(LoadedColor), 10);
+                            break;
+                        case BulletStateEnum.Misload:
+                            draw.AddCircleFilled(new Vector2(x + xofs, t1.Y + yofs), radius, ImGui.GetColorU32(MisloadedColor), 10);
+                            break;
+                        case BulletStateEnum.Unknown:
+                            draw.AddCircleFilled(new Vector2(x + xofs, t1.Y + yofs), radius, ImGui.GetColorU32(UnloadedColor), 10);
+                            break;
+                    }
+                    x += radius * 2.0f;
+                }
+                return true;
+            }
+
+        }
+
+        #endregion
+
         public EwCritAloalo(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -636,6 +1023,25 @@ namespace Lemegeton.Content
             _state.OnCastBegin += _state_OnCastBegin;
             _state.OnCombatantAdded += _state_OnCombatantAdded;
             _state.OnCombatantRemoved += _state_OnCombatantRemoved;
+            _state.OnAction += _state_OnAction;
+        }
+
+        private void _state_OnAction(uint src, uint dest, ushort actionId)
+        {
+            switch (actionId)
+            {
+                case AbilityLockedAndLoaded:
+                case AbilityMisload:                
+                    _staticeReload.FeedAbility(dest, actionId);
+                    break;
+                case AbilityTrapshooting1:
+                case AbilityTrapshooting2:
+                    _staticeReload.EatBullets(1);
+                    break;
+                case AbilityTriggerHappy:
+                    _staticeReload.EatBullets(6);
+                    break;
+            }
         }
 
         private void _state_OnCombatantRemoved(uint actorId, nint addr)
@@ -673,6 +1079,15 @@ namespace Lemegeton.Content
                 case AbilityArcaneBlightW:
                     _lalaRotation.FeedAction(src, actionId);
                     break;
+                case AbilityInfernoTheorem:
+                    CurrentPhase = PhaseEnum.Lala_Inferno;
+                    break;
+                case AbilityPlanarTactics:
+                    CurrentPhase = PhaseEnum.Lala_Planar;
+                    break;
+                case AbilityTrickReload:
+                    _staticeReload.FeedAbility(dest, actionId);
+                    break;
             }
         }
 
@@ -686,7 +1101,14 @@ namespace Lemegeton.Content
                     break;
                 case HeadmarkerPlayerCW:
                 case HeadmarkerPlayerCCW:
-                    _playerRotation.FeedHeadmarker(dest, markerId);
+                    if (CurrentPhase == PhaseEnum.Lala_Inferno)
+                    {
+                        _playerRotation.FeedHeadmarker(dest, markerId);
+                    }
+                    if (CurrentPhase == PhaseEnum.Lala_Planar)
+                    {
+                        _playerMarch.FeedHeadmarker(dest, markerId);
+                    }
                     break;
             }
         }
@@ -704,18 +1126,27 @@ namespace Lemegeton.Content
                 case StatusFrontUnseen:
                 case StatusBackUnseen:
                 case StatusLeftUnseen:
-                case StatusRightUnseen:
-                    _playerRotation.FeedStatus(dest, statusId, gained);
+                case StatusRightUnseen:                    
+                    if (CurrentPhase == PhaseEnum.Lala_Inferno)
+                    {
+                        _playerRotation.FeedStatus(dest, statusId, gained);
+                    }
+                    if (CurrentPhase == PhaseEnum.Lala_Planar)
+                    {
+                        _playerMarch.FeedStatus(dest, statusId, gained);
+                    }
                     break;
             }
         }
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnStatusChange -= _state_OnStatusChange;
             _state.OnHeadMarker -= _state_OnHeadMarker;
+            _state.OnStatusChange -= _state_OnStatusChange;
             _state.OnCastBegin -= _state_OnCastBegin;
             _state.OnCombatantAdded -= _state_OnCombatantAdded;
+            _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
+            _state.OnAction -= _state_OnAction;
         }
 
         private void OnCombatChange(bool inCombat)
@@ -740,6 +1171,8 @@ namespace Lemegeton.Content
                 _springCrystal = (SpringCrystal)Items["SpringCrystal"];
                 _lalaRotation = (LalaRotation)Items["LalaRotation"];
                 _playerRotation = (PlayerRotation)Items["PlayerRotation"];
+                _playerMarch = (PlayerMarch)Items["PlayerMarch"];
+                _staticeReload = (StaticeReload)Items["StaticeReload"];
                 _state.OnCombatChange += OnCombatChange;
             }
             else if (newZoneOk == false && ZoneOk == true)
