@@ -2070,6 +2070,7 @@ namespace Lemegeton.Content
                 _omegaAm = (DynamisOmegaAM)Items["DynamisOmegaAM"];
                 _state.OnCombatChange += OnCombatChange;
                 _state.OnDirectorUpdate += OnDirectorUpdate;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

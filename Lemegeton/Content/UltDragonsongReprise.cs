@@ -521,11 +521,12 @@ namespace Lemegeton.Content
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
-                _meteorAm = (MeteorAM)Items["MeteorAM"];
+                _meteorAm = (MeteorAM)Items["MeteorAM"];                
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _dothAm = (DothAM)Items["DothAM"];
                 _wrothAm = (WrothAM)Items["WrothAM"];
                 _state.OnCombatChange += OnCombatChange;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

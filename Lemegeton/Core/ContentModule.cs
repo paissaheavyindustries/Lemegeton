@@ -75,6 +75,7 @@ namespace Lemegeton.Core
                 {
                     _active = value;
                     OnActiveChanged?.Invoke(value);
+                    Log(State.LogLevelEnum.Debug, null, "Active changed to {0}", _active);
                     foreach (ContentModule cm in Children)
                     {
                         cm.Active = (_active == true && cm.Enabled == true);
@@ -96,6 +97,7 @@ namespace Lemegeton.Core
                 {
                     _enabled = value;
                     OnEnabledChanged?.Invoke(value);
+                    Log(State.LogLevelEnum.Debug, null, "Enabled changed to {0}", _enabled);
                     Active = ((_owner == null || _owner.Active == true) && Enabled == true);
                 }
             }

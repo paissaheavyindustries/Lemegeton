@@ -1174,6 +1174,7 @@ namespace Lemegeton.Content
                 _playerMarch = (PlayerMarch)Items["PlayerMarch"];
                 _staticeReload = (StaticeReload)Items["StaticeReload"];
                 _state.OnCombatChange += OnCombatChange;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

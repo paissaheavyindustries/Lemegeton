@@ -275,6 +275,7 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _inviolateAm = (InviolateAM)Items["InviolateAM"];
                 _state.OnCombatChange += OnCombatChange;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

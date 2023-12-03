@@ -175,6 +175,7 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _gaolAm = (GaolAM)Items["GaolAM"];
                 _state.OnCombatChange += OnCombatChange;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

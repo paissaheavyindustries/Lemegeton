@@ -534,6 +534,7 @@ namespace Lemegeton.Content
                 _tenstrikeAm = (TenstrikeAm)Items["TenstrikeAm"];
                 _grandOctetAm = (GrandOctetAm)Items["GrandOctetAm"];
                 _state.OnCombatChange += OnCombatChange;
+                LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {

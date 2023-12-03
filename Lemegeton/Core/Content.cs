@@ -21,6 +21,14 @@ namespace Lemegeton.Core
             }
         }
 
+        public void LogItems()
+        {
+            foreach (KeyValuePair<string, ContentItem> kp in Items)
+            {
+                kp.Value.Log(LogLevelEnum.Info, null, "Active = {0}, Enabled = {1}", kp.Value.Active, kp.Value.Enabled);
+            }
+        }
+
         public Content(State st) : base(st)
         {
             Items = new Dictionary<string, ContentItem>();

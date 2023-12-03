@@ -671,6 +671,7 @@ namespace Lemegeton.Content
                         _ct2AM = (CaloricTheory2AM)Items["CaloricTheory2AM"];
                         break;
                 }
+                LogItems();
             }
             else if (parsedZone == ZoneEnum.None && CurrentZone != ZoneEnum.None)
             {
