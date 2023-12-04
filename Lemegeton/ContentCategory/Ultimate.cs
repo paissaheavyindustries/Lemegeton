@@ -23,6 +23,7 @@ namespace Lemegeton.ContentCategory
             Dictionary<string, Core.Content> items = new Dictionary<string, Core.Content>();
             items["UltUcob"] = new UltUcob(st);
             items["UltWeaponsRefrain"] = new UltWeaponsRefrain(st);
+            items["UltAlexander"] = new UltAlexander(st);
             items["UltDragonsongReprise"] = new UltDragonsongReprise(st);
             items["UltOmegaProtocol"] = new UltOmegaProtocol(st);
             return items;
