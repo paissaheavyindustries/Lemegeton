@@ -32,6 +32,8 @@ namespace Lemegeton.Content
         private const int AbilityFinalWord = 18557;
         private const int AbilityFateProjectionAlpha = 18555;
         private const int AbilityFateProjectionBeta = 19219;
+        private const int AbilitySacrament = 18569;
+        private const int AbilityRadiantSacrament = 18566;
 
         private const int StatusCompressedWater = 2142;
         private const int StatusCompressedLightning = 2143;
@@ -829,6 +831,21 @@ namespace Lemegeton.Content
                 }
             }
 
+            internal void FeedAbility(uint abilityId)
+            {
+                if (Active == false || _fired == false)
+                {
+                    return;
+                }                
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0}", abilityId);
+                if (abilityId == AbilitySacrament)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                    _state.ClearAutoMarkers();
+                    _fired = false;
+                }
+            }
+
         }
 
         #endregion
@@ -903,6 +920,21 @@ namespace Lemegeton.Content
                 if (_clones.Count == 8 && _fired == false)
                 {
                     PerformMarking();
+                }
+            }
+
+            internal void FeedAbility(uint abilityId)
+            {
+                if (Active == false || _fired == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0}", abilityId);
+                if (abilityId == AbilityRadiantSacrament)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                    _state.ClearAutoMarkers();
+                    _fired = false;
                 }
             }
 
@@ -1039,6 +1071,14 @@ namespace Lemegeton.Content
             if (actionId == AbilityJudgmentCrystal && CurrentPhase == PhaseEnum.Inception)
             {
                 _crystalAm.FeedAbility(actionId);
+            }
+            if (actionId == AbilitySacrament && CurrentPhase == PhaseEnum.FateAlpha)
+            {
+                _fateAlphaAm.FeedAbility(actionId);
+            }
+            if (actionId == AbilityRadiantSacrament && CurrentPhase == PhaseEnum.FateBeta)
+            {
+                _fateBetaAm.FeedAbility(actionId);
             }
         }
 
