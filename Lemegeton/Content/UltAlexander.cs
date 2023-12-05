@@ -12,6 +12,7 @@ using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System.Diagnostics;
 using System.Threading;
+using static Lemegeton.Content.UltAlexander;
 
 namespace Lemegeton.Content
 {
@@ -64,6 +65,8 @@ namespace Lemegeton.Content
         private InceptionAM _inceptionAm;
         private WormholeAM _wormholeAm;
         private FinalWordAM _finalWordAm;
+        private FateAlphaAM _fateAlphaAm;
+        private FateBetaAM _fateBetaAm;
 
         private enum PhaseEnum
         {
@@ -749,6 +752,164 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region FateAlphaAM
+
+        public class FateAlphaAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private bool _fired = false;
+            private List<uint> _clones = new List<uint>();            
+
+            public FateAlphaAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("SharedSentence", AutomarkerSigns.SignEnum.Plus, false);
+                Signs.SetRole("Defamation", AutomarkerSigns.SignEnum.Circle, false);
+                Signs.SetRole("Aggravated1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("Aggravated2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("Aggravated3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("Nothing1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Nothing2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("Nothing3", AutomarkerSigns.SignEnum.Bind3, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
+                _clones.Clear();                
+            }
+
+            private void PerformMarking()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                Party.PartyMember _sharedGo = pty.GetByActorId(_clones[7]);
+                Party.PartyMember _defamGo = pty.GetByActorId(_clones[6]);
+                List<Party.PartyMember> _aggroGo = pty.GetByActorIds(new uint[] { _clones[3], _clones[4], _clones[5] });
+                List<Party.PartyMember> _nothingGo = pty.GetByActorIds(new uint[] { _clones[0], _clones[1], _clones[2] });
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["SharedSentence"], _sharedGo.GameObject);
+                ap.Assign(Signs.Roles["Defamation"], _defamGo.GameObject);
+                ap.Assign(Signs.Roles["Aggravated1"], _aggroGo[0].GameObject);
+                ap.Assign(Signs.Roles["Aggravated2"], _aggroGo[1].GameObject);
+                ap.Assign(Signs.Roles["Aggravated3"], _aggroGo[2].GameObject);
+                ap.Assign(Signs.Roles["Nothing1"], _nothingGo[0].GameObject);
+                ap.Assign(Signs.Roles["Nothing2"], _nothingGo[1].GameObject);
+                ap.Assign(Signs.Roles["Nothing3"], _nothingGo[2].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+            internal void FeedTether(uint actorId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered tether on {0:X}", actorId);
+                _clones.Add(actorId);
+                if (_clones.Count == 8 && _fired == false)
+                {
+                    PerformMarking();
+                }
+            }
+
+        }
+
+        #endregion
+
+        #region FateBetaAM
+
+        public class FateBetaAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private bool _fired = false;
+            private List<uint> _clones = new List<uint>();
+
+            public FateBetaAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("LightRestraining", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("DarkRestraining", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("LightHouseArrest", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("DarkHouseArrest", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("LightShared", AutomarkerSigns.SignEnum.Plus, false);
+                Signs.SetRole("DarkNothing", AutomarkerSigns.SignEnum.Square, false);
+                Signs.SetRole("LightBeacon", AutomarkerSigns.SignEnum.Circle, false);
+                Signs.SetRole("DarkBeacon", AutomarkerSigns.SignEnum.Triangle, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
+                _clones.Clear();
+            }
+
+            private void PerformMarking()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["LightRestraining"], pty.GetByActorId(_clones[0]).GameObject);
+                ap.Assign(Signs.Roles["DarkRestraining"], pty.GetByActorId(_clones[1]).GameObject);
+                ap.Assign(Signs.Roles["LightHouseArrest"], pty.GetByActorId(_clones[2]).GameObject);
+                ap.Assign(Signs.Roles["DarkHouseArrest"], pty.GetByActorId(_clones[3]).GameObject);
+                ap.Assign(Signs.Roles["LightShared"], pty.GetByActorId(_clones[4]).GameObject);
+                ap.Assign(Signs.Roles["DarkNothing"], pty.GetByActorId(_clones[5]).GameObject);
+                ap.Assign(Signs.Roles["LightBeacon"], pty.GetByActorId(_clones[6]).GameObject);
+                ap.Assign(Signs.Roles["DarkBeacon"], pty.GetByActorId(_clones[7]).GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+            internal void FeedTether(uint actorId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered tether on {0:X}", actorId);
+                _clones.Add(actorId);
+                if (_clones.Count == 8 && _fired == false)
+                {
+                    PerformMarking();
+                }
+            }
+
+        }
+
+        #endregion
+
         public UltAlexander(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -887,6 +1048,14 @@ namespace Lemegeton.Content
             {
                 _crystalAm.FeedTether(dest);
             }
+            if (CurrentPhase == PhaseEnum.FateAlpha)
+            {
+                _fateAlphaAm.FeedTether(dest);
+            }
+            if (CurrentPhase == PhaseEnum.FateBeta)
+            {
+                _fateBetaAm.FeedTether(dest);
+            }
         }
 
         private void UnsubscribeFromEvents()
@@ -926,6 +1095,8 @@ namespace Lemegeton.Content
                 _inceptionAm = (InceptionAM)Items["InceptionAM"];
                 _wormholeAm = (WormholeAM)Items["WormholeAM"];
                 _finalWordAm = (FinalWordAM)Items["FinalWordAM"];
+                _fateAlphaAm = (FateAlphaAM)Items["FateAlphaAM"];
+                _fateBetaAm = (FateBetaAM)Items["FateBetaAM"];
                 _state.OnCombatChange += OnCombatChange;
                 LogItems();
             }

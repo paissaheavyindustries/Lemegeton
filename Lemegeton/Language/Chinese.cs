@@ -14,6 +14,36 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.2.7
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM", "Fate Calibration α automarker");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Enabled", "Enabled");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/AsSoftmarker", "Show as client-side soft markers");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/SharedSentence", "Shared Sentence");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Defamation", "Defamation");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Aggravated1", "Aggravated Assault 1");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Aggravated2", "Aggravated Assault 2");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Aggravated3", "Aggravated Assault 3");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Nothing1", "Nothing 1");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Nothing2", "Nothing 2");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Nothing3", "Nothing 3");
+            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Test", "Test random assignment");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM", "Fate Calibration β automarker");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Enabled", "Enabled");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/AsSoftmarker", "Show as client-side soft markers");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightRestraining", "Light Restraining Order");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/DarkRestraining", "Dark Restraining Order");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightHouseArrest", "Light House Arrest");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/DarkHouseArrest", "Dark House Arrest");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightShared", "Light Shared Sentence");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/DarkNothing", "Dark nothing");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightBeacon", "Light beacon");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/DarkBeacon", "Dark beacon");
+            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Test", "Test random assignment");
+            #endregion
             #region 1.0.2.6
             //AddEntry("Content/Ultimate/UltAlexander", "The Epic of Alexander (Ultimate)");
             //AddEntry("Content/Ultimate/UltAlexander/Enabled", "Enabled");
