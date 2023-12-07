@@ -14,6 +14,14 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.2.8
+            //AddEntry("MainMenu/Settings/AutomarkerHistorySoftmarker", "(soft marker)");
+            //AddEntry("MainMenu/Settings/AutomarkerHistoryRemoved", "(removed)");
+            //AddEntry("MainMenu/Settings/AutomarkerHistory", "Marker change history");
+            //AddEntry("MainMenu/Settings/AutomarkerHistoryIntro", "The last 100 marker changes will be listed here in chronologically descending order. This includes markers set (or unset) by other players, allowing you to easily see if anyone else has conflicting markers enabled.");
+            //AddEntry("Content/Debug/Debugger/EventLogger/MonitorOmen", "Monitor omen changes");
+            //AddEntry("Content/Debug/Debugger/EventLogger/MonitorVFX", "Monitor VFX changes");
+            #endregion
             #region 1.0.2.7
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM", "Fate Calibration α automarker");
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Enabled", "Enabled");

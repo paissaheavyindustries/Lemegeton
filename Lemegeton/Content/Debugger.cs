@@ -11,6 +11,11 @@ using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
+using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace Lemegeton.Content
 {
@@ -107,9 +112,13 @@ namespace Lemegeton.Content
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine(String.Format("ID: {0} ({1})", go.ObjectId.ToString(), go.ObjectId.ToString("X8")));
                     sb.AppendLine(String.Format("Addr: {0} ({1})", go.Address.ToString(), go.Address.ToString("X8")));
+                    Character ch = null;
                     if (go is Character)
                     {
-                        Character ch = (Character)go;
+                        ch = (Character)go;
+                    }
+                    if (ch != null)
+                    {                        
                         sb.AppendLine(String.Format("NameId: {0} Name: {1}", ch.NameId, go.Name.ToString()));
                     }
                     else
@@ -120,7 +129,18 @@ namespace Lemegeton.Content
                     {
                         BattleChara bc = (BattleChara)go;
                         sb.AppendLine(String.Format("HP: {0}/{1}", bc.CurrentHp, bc.MaxHp));
-                        sb.AppendLine(String.Format("Job: {0}", bc.ClassJob.Id));
+                        if (ch != null)
+                        {
+                            unsafe
+                            {
+                                CharacterStruct* chs = (CharacterStruct*)ch.Address;
+                                sb.AppendLine(String.Format("Job: {0} Omen: {1:X} VFX: {2:X} VFX2: {3:X}", bc.ClassJob.Id, (IntPtr)chs->Vfx.Omen, (IntPtr)chs->Vfx.VfxData, (IntPtr)chs->Vfx.VfxData2));
+                            }
+                        }
+                        else
+                        {
+                            sb.AppendLine(String.Format("Job: {0}", bc.ClassJob.Id));
+                        }
                         sb.AppendLine(String.Format("Flags: {0}", _state.GetStatusFlags(bc)));
                         if (bc.CastActionId > 0)
                         {
@@ -128,9 +148,8 @@ namespace Lemegeton.Content
                         }
                     }                    
                     sb.AppendLine(String.Format("Position: {0},{1},{2}", go.Position.X, go.Position.Y, go.Position.Z));
-                    if (go is Character)
+                    if (ch != null)
                     {
-                        Character ch = (Character)go;
                         unsafe
                         {
                             CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -432,11 +451,60 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(4001)]
             public bool ResolveNames { get; set; } = false;
 
+            private bool _MonitorOmen = false;
+            [AttributeOrderNumber(5001)]
+            public bool MonitorOmen
+            {
+                get
+                {
+                    return _MonitorOmen;
+                }
+                set
+                {
+                    if (_MonitorOmen != value)
+                    {
+                        _omenTracking.Clear();
+                        _MonitorOmen = value;
+                    }
+                }
+            }
+
+            private bool _MonitorVFX = false;
+            [AttributeOrderNumber(5002)]
+            public bool MonitorVFX
+            {
+                get
+                {
+                    return _MonitorVFX;
+                }
+                set
+                {
+                    if (_MonitorVFX != value)
+                    {
+                        _vfx1Tracking.Clear();
+                        _vfx2Tracking.Clear();
+                        _MonitorVFX = value;
+                    }
+                }
+            }
+
+            private Dictionary<IntPtr, IntPtr> _omenTracking = new Dictionary<IntPtr, IntPtr>();
+            private Dictionary<IntPtr, IntPtr> _vfx1Tracking = new Dictionary<IntPtr, IntPtr>();
+            private Dictionary<IntPtr, IntPtr> _vfx2Tracking = new Dictionary<IntPtr, IntPtr>();
+
             private bool _subbed = false;
 
             public EventLogger(State state) : base(state)
             {
                 OnActiveChanged += EventLogger_OnActiveChanged;
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                _omenTracking.Clear();
+                _vfx1Tracking.Clear();
+                _vfx2Tracking.Clear();
             }
 
             private void EventLogger_OnActiveChanged(bool newState)
@@ -473,6 +541,7 @@ namespace Lemegeton.Content
                     }
                     _subbed = true;
                     Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                    Reset();
                     _state.OnAction += _state_OnAction;
                     _state.OnCastBegin += _state_OnCastBegin;
                     _state.OnCombatChange += _state_OnCombatChange;
@@ -498,6 +567,7 @@ namespace Lemegeton.Content
                         return;
                     }
                     Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                    Reset();
                     _state.OnEventPlay64 -= _state_OnEventPlay64;
                     _state.OnEventPlay -= _state_OnEventPlay;
                     _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
@@ -592,7 +662,175 @@ namespace Lemegeton.Content
                 {
                     SubscribeToEvents();
                 }
+                if (MonitorOmen == true)
+                {
+                    MonitorOmens();
+                }
+                if (MonitorVFX == true)
+                {
+                    MonitorVFXs();
+                }
                 return true;
+            }
+
+            private void MonitorOmens()
+            {                
+                foreach (GameObject go in _state.ot)
+                {
+                    if (
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                        &&
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                        &&
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
+                    )
+                    {
+                        continue;
+                    }
+                    if (go is Character)
+                    {
+                        Character ch = (Character)go;
+                        unsafe
+                        {
+                            CharacterStruct* chs = (CharacterStruct*)ch.Address;
+                            IntPtr my, omen = (IntPtr)chs->Vfx.Omen;
+                            if (_omenTracking.TryGetValue(go.Address, out my) == true)
+                            {
+                                if (omen != my)
+                                {
+                                    string fmt = "OmenTracking: {0} Changed {1:X} -> {2:X}";
+                                    if (LogToDalamudLog == true)
+                                    {
+                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my, omen);
+                                    }
+                                    if (LogToFile == true)
+                                    {
+                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my, omen));
+                                    }
+                                    if (omen == IntPtr.Zero)
+                                    {
+                                        _omenTracking.Remove(go.Address);
+                                    }
+                                    else
+                                    {
+                                        _omenTracking[go.Address] = omen;
+                                    }
+                                }
+                            }
+                            else if (omen != IntPtr.Zero)
+                            {                                
+                                _omenTracking[go.Address] = omen;
+                                string fmt = "OmenTracking: {0} Started {1:X}";
+                                if (LogToDalamudLog == true)
+                                {
+                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), omen);
+                                }
+                                if (LogToFile == true)
+                                {
+                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), omen));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            private void MonitorVFXs()
+            {
+                foreach (GameObject go in _state.ot)
+                {
+                    if (
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                        &&
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                        &&
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
+                    )
+                    {
+                        continue;
+                    }
+                    if (go is Character)
+                    {
+                        Character ch = (Character)go;
+                        unsafe
+                        {
+                            CharacterStruct* chs = (CharacterStruct*)ch.Address;                            
+                            IntPtr my1, my2, vfx1 = (IntPtr)chs->Vfx.VfxData, vfx2 = (IntPtr)chs->Vfx.VfxData2;
+                            if (_vfx1Tracking.TryGetValue(go.Address, out my1) == true)
+                            {
+                                if (vfx1 != my1)
+                                {
+                                    string fmt = "VFXTracking: {0} Changed VFX1 {1:X} -> {2:X}";
+                                    if (LogToDalamudLog == true)
+                                    {
+                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my1, vfx1);
+                                    }
+                                    if (LogToFile == true)
+                                    {
+                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my1, vfx1));
+                                    }
+                                    if (vfx1 == IntPtr.Zero)
+                                    {
+                                        _vfx1Tracking.Remove(go.Address);
+                                    }
+                                    else
+                                    {
+                                        _vfx1Tracking[go.Address] = vfx1;
+                                    }
+                                }
+                            }
+                            else if (vfx1 != IntPtr.Zero)
+                            {
+                                _vfx1Tracking[go.Address] = vfx1;
+                                string fmt = "VFXTracking: {0} Started VFX1 {1:X}";
+                                if (LogToDalamudLog == true)
+                                {
+                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), vfx1);
+                                }
+                                if (LogToFile == true)
+                                {
+                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), vfx1));
+                                }
+                            }
+                            if (_vfx2Tracking.TryGetValue(go.Address, out my2) == true)
+                            {
+                                if (vfx2 != my2)
+                                {
+                                    string fmt = "VFXTracking: {0} Changed VFX2 {1:X} -> {2:X}";
+                                    if (LogToDalamudLog == true)
+                                    {
+                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my2, vfx2);
+                                    }
+                                    if (LogToFile == true)
+                                    {
+                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my2, vfx2));
+                                    }
+                                    if (vfx2 == IntPtr.Zero)
+                                    {
+                                        _vfx2Tracking.Remove(go.Address);
+                                    }
+                                    else
+                                    {
+                                        _vfx2Tracking[go.Address] = vfx2;
+                                    }
+                                }
+                            }
+                            else if (vfx2 != IntPtr.Zero)
+                            {
+                                _vfx2Tracking[go.Address] = vfx2;
+                                string fmt = "VFXTracking: {0} Started VFX2 {1:X}";
+                                if (LogToDalamudLog == true)
+                                {
+                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), vfx2);
+                                }
+                                if (LogToFile == true)
+                                {
+                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), vfx2));
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             private void _state_OnEventPlay64()

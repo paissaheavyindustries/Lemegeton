@@ -5,11 +5,12 @@ namespace Lemegeton.PacketHeaders
 
     public enum ActorControlCategory : ushort
     {
-        GainStatus = 20,
-        LoseStatus = 21,
+        GainStatus = 20, // unreliable for anything serious
+        LoseStatus = 21, // unreliable for anything serious
         Headmarker = 34,
         Tether = 35,
-        Director = 109
+        Director = 109,
+        Sign = 502,
     };
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]

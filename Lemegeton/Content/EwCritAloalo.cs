@@ -8,7 +8,6 @@ using Dalamud.Game.ClientState.Objects.Types;
 using System.Numerics;
 using System.Security.Cryptography;
 using Dalamud.Interface.Animation;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Lemegeton.Content.EwCritAloalo;
 using System.Drawing;
 

@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.2.7";
+        public string Version = "1.0.2.8";
 
         internal class Downloadable
         {
@@ -1770,28 +1770,27 @@ namespace Lemegeton
             return "???";
         }
 
+        internal string GetInstanceNameForTerritory(ushort territory)
+        {
+            TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.TerritoryType>().GetRow(territory);
+            ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>().Where(x => x.TerritoryType.Value == tt).FirstOrDefault();
+            if (cfc != null)
+            {
+                return cfc.Name;
+            }
+            PlaceName pn = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.PlaceName>().GetRow(tt.PlaceName.Row);
+            if (pn != null)
+            {
+                return pn.Name;
+            }
+            return tt.Name;
+        }
+
         private string GetInstanceNameForTimeline(Timeline tl)
         {
             if (tl.CachedName == null)
             {
-                TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.TerritoryType>().GetRow(tl.Territory);
-                ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>().Where(x => x.TerritoryType.Value == tt).FirstOrDefault();
-                if (cfc != null)
-                {
-                    tl.CachedName = cfc.Name;
-                }
-                else
-                {
-                    PlaceName pn = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.PlaceName>().GetRow(tt.PlaceName.Row);
-                    if (pn != null)
-                    {
-                        tl.CachedName = pn.Name;
-                    }
-                    else
-                    {
-                        tl.CachedName = tt.Name;
-                    }
-                }
+                tl.CachedName = GetInstanceNameForTerritory(tl.Territory);
             }
             return tl.CachedName;
         }
@@ -4187,6 +4186,40 @@ namespace Lemegeton
                         _state.cfg.SoftmarkerOffsetScreenY = smofsscreeny;
                     }
                     ImGui.PopItemWidth();
+                    ImGui.Unindent(30.0f);
+                    ImGui.PopID();
+                }
+                if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/AutomarkerHistory")) == true)
+                {
+                    ImGui.PushID("AutomarkerHistory");
+                    ImGui.Indent(30.0f);
+                    ImGui.TextWrapped(I18n.Translate("MainMenu/Settings/AutomarkerHistoryIntro") + Environment.NewLine + Environment.NewLine);
+                    lock (_state.MarkerHistory)
+                    {
+                        if (_state.MarkerHistory.Count == 0)
+                        {
+                            ImGui.BeginDisabled();
+                            ImGui.BeginChildFrame(1, new Vector2(ImGui.GetContentRegionAvail().X, 150.0f));
+                            ImGui.EndChildFrame();
+                            ImGui.EndDisabled();
+                        }
+                        else
+                        {
+                            ImGui.BeginChildFrame(1, new Vector2(ImGui.GetContentRegionAvail().X, 150.0f));
+                            foreach (MarkerApplication ma in _state.MarkerHistory)
+                            {
+                                string label = String.Format("[{0} - {1}] {2} -> {3}: {4}",
+                                    ma.Timestamp,
+                                    ma.Location,
+                                    ma.Source,
+                                    ma.Destination,
+                                    I18n.Translate(String.Format("Signs/{0}", ma.Sign.ToString())) + (ma.SoftMarker == true ? " " + I18n.Translate("MainMenu/Settings/AutomarkerHistorySoftmarker") : "")
+                                ); ;
+                                ImGui.Selectable(label, false, ImGuiSelectableFlags.Disabled);
+                            }
+                            ImGui.EndChildFrame();
+                        }
+                    }
                     ImGui.Unindent(30.0f);
                     ImGui.PopID();
                 }

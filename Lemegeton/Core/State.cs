@@ -155,6 +155,18 @@ namespace Lemegeton.Core
 
         }
 
+        internal class MarkerApplication
+        {
+
+            public DateTime Timestamp = DateTime.Now;
+            public string Location { get; set; } = "?";
+            public string Source { get; set; } = "?";
+            public string Destination { get; set; } = "?";
+            public bool SoftMarker { get; set; } = false;
+            public AutomarkerSigns.SignEnum Sign { get; set; } = AutomarkerSigns.SignEnum.None;
+
+        }
+
         internal DalamudPluginInterface pi { get; init; }
         internal IGameNetwork gn { get; init; }
         internal IChatGui cg { get; init; }
@@ -198,6 +210,8 @@ namespace Lemegeton.Core
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
         internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
+
+        internal List<MarkerApplication> MarkerHistory = new List<MarkerApplication>();
 
         private bool _markersApplied = false;
         internal bool _suppressCombatEndMarkRemoval = false;
@@ -353,6 +367,31 @@ namespace Lemegeton.Core
         public State()
         {
             GetStatusFlags = GetStatusFlags1;
+        }
+
+        internal void AddMarkerHistory(GameObject source, GameObject destination, bool soft, AutomarkerSigns.SignEnum sign)
+        {
+            if (source == null)
+            {
+                source = cs.LocalPlayer;
+            }
+            string location = plug.GetInstanceNameForTerritory(cs.TerritoryType);
+            MarkerApplication ma = new MarkerApplication()
+            {
+                Sign = sign,
+                SoftMarker = soft,
+                Location = location,
+                Source = source.Name.ToString(),
+                Destination = destination != null ? destination.Name.ToString() : I18n.Translate("MainMenu/Settings/AutomarkerHistoryRemoved")
+            };
+            lock (MarkerHistory)
+            {
+                MarkerHistory.Insert(0, ma);
+                if (MarkerHistory.Count > 100)
+                {
+                    MarkerHistory.RemoveAt(100);
+                }
+            }
         }
 
         public void PrepareFolder(string path)
@@ -607,7 +646,7 @@ namespace Lemegeton.Core
         }
 
         private void Cs_TerritoryChanged(ushort e)
-        {
+        {            
             _timeline = null;
             AutoselectTimeline(e);
             InvokeZoneChange(e);
@@ -1556,6 +1595,7 @@ namespace Lemegeton.Core
                         Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
                         if (cfg.DebugOnlyLogAutomarkers == false)
                         {
+                            AddMarkerHistory(null, null, true, kp.Key);
                             SoftMarkers[kp.Key] = 0;
                         }
                     }
@@ -1580,7 +1620,7 @@ namespace Lemegeton.Core
                                 State = this,
                                 Function = _markingFuncPtr,
                                 Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), go.ObjectId }
-                            };
+                            };                            
                             QueueInvocation(di);
                         }
                     }
@@ -1615,7 +1655,7 @@ namespace Lemegeton.Core
                         {
                             State = this,
                             CommandText = cmd
-                        };
+                        };                        
                         QueueInvocation(di);
                     }
                     return;
@@ -1695,6 +1735,7 @@ namespace Lemegeton.Core
                             if (cfg.DebugOnlyLogAutomarkers == false)
                             {
                                 SoftMarkers[kp.Key] = 0;
+                                AddMarkerHistory(null, null, true, kp.Key);
                             }
                         }
                     }
@@ -1703,6 +1744,7 @@ namespace Lemegeton.Core
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
                         SoftMarkers[sign] = go.ObjectId;
+                        AddMarkerHistory(null, go, true, sign);
                     }
                 }
                 return;

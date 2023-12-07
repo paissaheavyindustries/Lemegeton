@@ -247,16 +247,6 @@ namespace Lemegeton.Core
         {
             switch (category)
             {
-                case ActorControlCategory.GainStatus:
-                    // param1 = status id
-                    // doesn't seem like to reliable source for status info tbh, no duration and stacks available
-                    //_st.InvokeStatusChange(sourceActorId, targetActorId, param1, true, 0.0f, 0);
-                    break;
-                case ActorControlCategory.LoseStatus:
-                    // param1 = status id
-                    // doesn't seem like to reliable source for status info tbh
-                    //_st.InvokeStatusChange(sourceActorId, targetActorId, param1, false, 0.0f, 0);
-                    break;
                 case ActorControlCategory.Headmarker:
                     // param1 = headmarker id
                     _st.InvokeHeadmarker(targetActorId, param1);
@@ -290,11 +280,44 @@ namespace Lemegeton.Core
                     }
                     _st.InvokeDirectorUpdate(param1, param2, param3, param4);
                     break;
+                case ActorControlCategory.Sign:
+                    AutomarkerSigns.SignEnum sign = AutomarkerSigns.SignEnum.None;
+                    switch (param1)
+                    {
+                        case 0: sign = AutomarkerSigns.SignEnum.Attack1; break;
+                        case 1: sign = AutomarkerSigns.SignEnum.Attack2; break;
+                        case 2: sign = AutomarkerSigns.SignEnum.Attack3; break;
+                        case 3: sign = AutomarkerSigns.SignEnum.Attack4; break;
+                        case 4: sign = AutomarkerSigns.SignEnum.Attack5; break;
+                        case 5: sign = AutomarkerSigns.SignEnum.Bind1; break;
+                        case 6: sign = AutomarkerSigns.SignEnum.Bind2; break;
+                        case 7: sign = AutomarkerSigns.SignEnum.Bind3; break;
+                        case 8: sign = AutomarkerSigns.SignEnum.Ignore1; break;
+                        case 9: sign = AutomarkerSigns.SignEnum.Ignore2; break;
+                        case 10: sign = AutomarkerSigns.SignEnum.Square; break;
+                        case 11: sign = AutomarkerSigns.SignEnum.Circle; break;
+                        case 12: sign = AutomarkerSigns.SignEnum.Plus; break;
+                        case 13: sign = AutomarkerSigns.SignEnum.Triangle; break;
+                        case 14: sign = AutomarkerSigns.SignEnum.Attack6; break;
+                        case 15: sign = AutomarkerSigns.SignEnum.Attack7; break;
+                        case 16: sign = AutomarkerSigns.SignEnum.Attack8; break;
+                    }
+                    _st.AddMarkerHistory(
+                        _st.GetActorById(param2),
+                        (targetActorId != 0xE0000000) ? _st.GetActorById(targetActorId) : null,
+                        false,
+                        sign
+                    );
+                    break;
+                default:
+                    //_st.Log(State.LogLevelEnum.Debug, null, "Unhandled actor control {0} from {1:X} to {2:X}, p1: {3}, p2: {4}, p3: {5}, p4: {6}", category, sourceActorId, targetActorId, param1, param2, param3, param4);
+                    break;
             }
         }
 
         internal unsafe void Decode(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId)
         {
+            //_st.Log(State.LogLevelEnum.Debug, null, "Opcode: {0} (source: {1:X8}, target: {2:X8})", opCode, sourceActorId, targetActorId);
             if (opCode == Opcodes.ActorCast)
             {
                 ActorCast ac = Marshal.PtrToStructure<ActorCast>(dataPtr);
