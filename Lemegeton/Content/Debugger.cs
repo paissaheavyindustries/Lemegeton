@@ -447,9 +447,12 @@ namespace Lemegeton.Content
             public string CurrentLogFilename { get; private set; } = "";
 
             [AttributeOrderNumber(4000)]
-            public bool IncludeLocation { get; set; } = false;
+            public bool IncludeLocation { get; set; } = true;
             [AttributeOrderNumber(4001)]
-            public bool ResolveNames { get; set; } = false;
+            public bool ResolveNames { get; set; } = true;
+            
+            [AttributeOrderNumber(4100)]
+            public bool LogActorControl { get; set; } = true;
 
             private bool _MonitorOmen = false;
             [AttributeOrderNumber(5001)]
@@ -493,6 +496,7 @@ namespace Lemegeton.Content
             private Dictionary<IntPtr, IntPtr> _vfx2Tracking = new Dictionary<IntPtr, IntPtr>();
 
             private bool _subbed = false;
+            private bool _firstRun = true;
 
             public EventLogger(State state) : base(state)
             {
@@ -517,16 +521,26 @@ namespace Lemegeton.Content
                         FileInfo fi = new FileInfo(realfn);
                         realfn = fi.FullName;
                         Log(LogLevelEnum.Debug, null, "EventLogger file set to {0}", realfn);
-                        CurrentLogFilename = realfn;
+                        lock (this)
+                        {
+                            CurrentLogFilename = realfn;
+                        }
                     }
                     else
                     {
-                        CurrentLogFilename = null;
+                        lock (this)
+                        {
+                            CurrentLogFilename = "";
+                        }
                     }
                     SubscribeToEvents();
                 }
                 else
                 {
+                    lock (this)
+                    {
+                        CurrentLogFilename = "";
+                    }
                     UnsubscribeFromEvents();
                 }
             }
@@ -555,6 +569,7 @@ namespace Lemegeton.Content
                     _state.OnCombatantRemoved += _state_OnCombatantRemoved;
                     _state.OnEventPlay += _state_OnEventPlay;
                     _state.OnEventPlay64 += _state_OnEventPlay64;
+                    _state.OnActorControl += _state_OnActorControl;
                 }
             }
 
@@ -568,6 +583,7 @@ namespace Lemegeton.Content
                     }
                     Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
                     Reset();
+                    _state.OnActorControl -= _state_OnActorControl;
                     _state.OnEventPlay64 -= _state_OnEventPlay64;
                     _state.OnEventPlay -= _state_OnEventPlay;
                     _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
@@ -648,7 +664,10 @@ namespace Lemegeton.Content
                 {
                     lock (this)
                     {
-                        File.AppendAllText(CurrentLogFilename, "[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff") + "] " + msg + Environment.NewLine);
+                        if (CurrentLogFilename != "")
+                        {
+                            File.AppendAllText(CurrentLogFilename, "[" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff") + "] " + msg + Environment.NewLine);
+                        }
                     }
                 }
                 catch (Exception)
@@ -658,9 +677,10 @@ namespace Lemegeton.Content
 
             protected override bool ExecutionImplementation()
             {
-                if (_subbed == false)
+                if (_firstRun == true)
                 {
-                    SubscribeToEvents();
+                    EventLogger_OnActiveChanged(Active);
+                    _firstRun = false;
                 }
                 if (MonitorOmen == true)
                 {
@@ -885,6 +905,25 @@ namespace Lemegeton.Content
                 }
             }
 
+            private void _state_OnActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
+            {
+                if (LogActorControl == false || GoodToLog() == false)
+                {
+                    return;
+                }
+                string fmt = "InvokeActorControl: {0} {1} -> {2} {3:X8} {4:X8} {5:X8} {6:X8}";
+                GameObject src = _state.GetActorById(sourceActorId);
+                GameObject dst = _state.GetActorById(targetActorId);
+                if (LogToDalamudLog == true)
+                {
+                    Log(LogLevelEnum.Debug, null, fmt, category, FormatGameObject(src), FormatGameObject(dst), param1, param2, param3, param4);
+                }
+                if (LogToFile == true)
+                {
+                    LogEventToFile(String.Format(fmt, category, FormatGameObject(src), FormatGameObject(dst), param1, param2, param3, param4));
+                }
+            }
+
             private void _state_OnMapEffect(byte[] data)
             {
                 if (GoodToLog() == false)
@@ -937,7 +976,7 @@ namespace Lemegeton.Content
                 {
                     Log(LogLevelEnum.Debug, null, fmt, newZone);
                 }
-                if (LogToFile == true && CurrentLogFilename != null)
+                if (LogToFile == true)
                 {
                     LogEventToFile(String.Format(fmt, newZone));
                 }

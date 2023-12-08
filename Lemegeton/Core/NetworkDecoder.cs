@@ -301,6 +301,9 @@ namespace Lemegeton.Core
                         case 14: sign = AutomarkerSigns.SignEnum.Attack6; break;
                         case 15: sign = AutomarkerSigns.SignEnum.Attack7; break;
                         case 16: sign = AutomarkerSigns.SignEnum.Attack8; break;
+                        default:
+                            _st.Log(State.LogLevelEnum.Debug, null, "Unknown Sign actor control from {0:X} to {1:X}, p1: {2}, p2: {3}, p3: {4}, p4: {5}", category, sourceActorId, targetActorId, param1, param2, param3, param4);
+                            break;
                     }
                     _st.AddMarkerHistory(
                         _st.GetActorById(param2),
@@ -310,7 +313,7 @@ namespace Lemegeton.Core
                     );
                     break;
                 default:
-                    //_st.Log(State.LogLevelEnum.Debug, null, "Unhandled actor control {0} from {1:X} to {2:X}, p1: {3}, p2: {4}, p3: {5}, p4: {6}", category, sourceActorId, targetActorId, param1, param2, param3, param4);
+                    _st.InvokeActorControl((ushort)category, sourceActorId, targetActorId, param1, param2, param3, param4);
                     break;
             }
         }

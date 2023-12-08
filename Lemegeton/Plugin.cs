@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.2.8";
+        public string Version = "1.0.2.9";
 
         internal class Downloadable
         {
@@ -4443,6 +4443,7 @@ namespace Lemegeton
                     RenderMethodCall(_state.InvokeStatusChange);
                     RenderMethodCall(_state.InvokeTether);
                     RenderMethodCall(_state.InvokeDirectorUpdate);
+                    RenderMethodCall(_state.InvokeActorControl);
                     RenderMethodCall(_state.InvokeMapEffect);
                     RenderMethodCall(_state.InvokeEventPlay);
                     ImGui.PopItemWidth();

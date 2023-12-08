@@ -14,6 +14,24 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.2.9
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether", "Statice Present Box tether indicator");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/TetherColor", "Add tether color");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Test", "Test random bullets on player");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM", "Pinwheeling Dartboard automarker");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Enabled", "Enabled");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs", "Marker configuration");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Enumeration", "Enumeration");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Chain1", "Chain 1");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Chain2", "Chain 2");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Nothing", "Nothing");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Prio", "Priority configuration");
+            AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Test", "Test random assignment");
+            AddEntry("Content/Debug/Debugger/EventLogger/LogActorControl", "Log ActorControl messages");
+            #endregion
             #region 1.0.2.8
             AddEntry("MainMenu/Settings/AutomarkerHistorySoftmarker", "(soft marker)");
             AddEntry("MainMenu/Settings/AutomarkerHistoryRemoved", "(removed)");

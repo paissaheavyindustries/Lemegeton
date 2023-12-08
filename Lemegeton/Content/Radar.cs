@@ -709,6 +709,8 @@ namespace Lemegeton.Content
 
             private List<Entry> _defaultsIsland = new List<Entry>()
             {
+                // adamantoise
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12628 },
                 // Alkonost
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12462 },
                 // alligator
@@ -735,6 +737,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 353 },
                 // grand buffalo
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11455 },
+                // grand doblyn
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12630 },
                 // Griffin
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12313 },
                 // Island Billy
@@ -743,12 +747,16 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11453 },
                 // Lemur
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 6 },
+                // morbol
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12627 },
                 // Morbol Seedling
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11532 },
                 // Ornery Karakul
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 795 },
                 // paissa
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 3499 },
+                // pteranodon
+                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12629 },
                 // Star Marmot
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 262 },
                 // Tiger of Paradise
@@ -757,8 +765,6 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11458 },
                 // Weird Spriggan
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12460 },
-                // Wild Boar
-                new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 12458 },
                 // Yellow Coblyn
                 new Entry() { Type = Entry.EntryTypeEnum.RareAnimal, Kind = ObjectKind.BattleNpc, Territory = 1055, NameId = 11450 },
             };

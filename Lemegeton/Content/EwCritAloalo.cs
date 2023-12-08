@@ -6,6 +6,7 @@ using System.Data;
 using ImGuiNET;
 using Dalamud.Game.ClientState.Objects.Types;
 using System.Numerics;
+using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using System.Security.Cryptography;
 using Dalamud.Interface.Animation;
 using static Lemegeton.Content.EwCritAloalo;
@@ -23,6 +24,8 @@ namespace Lemegeton.Content
         private const int HeadmarkerLalaCCW = 485;
         private const int HeadmarkerPlayerCW = 493;
         private const int HeadmarkerPlayerCCW = 494;
+        private const int HeadmarkerChain = 97;
+        private const int HeadmarkerEnumeration = 347;        
         private const int StatusBackUnseen = 3727;
         private const int StatusFrontUnseen = 3726;
         private const int StatusLeftUnseen = 3729;
@@ -31,18 +34,33 @@ namespace Lemegeton.Content
         private const int StatusLalaFive = 3939;
         private const int StatusPlayerThree = 3721;
         private const int StatusPlayerFive = 3790;
-        private const int AbilityArcaneBlightN = 34956;
-        private const int AbilityArcaneBlightE = 34957;
-        private const int AbilityArcaneBlightS = 34955;
-        private const int AbilityArcaneBlightW = 34958;
-        private const int AbilityPlanarTactics = 34968;
-        private const int AbilityInfernoTheorem = 34990;
+        private const int StatusBullsEye = 3742;
+        private const int AbilityArcaneBlightN1 = 34956;
+        private const int AbilityArcaneBlightE1 = 34957;
+        private const int AbilityArcaneBlightS1 = 34955;
+        private const int AbilityArcaneBlightW1 = 34958;
+        private const int AbilityArcaneBlightN2 = 35811;
+        private const int AbilityArcaneBlightE2 = 35812;
+        private const int AbilityArcaneBlightS2 = 35810;
+        private const int AbilityArcaneBlightW2 = 35813;
+        private const int AbilityPlanarTactics1 = 34968;
+        private const int AbilityPlanarTactics2 = 35823;                
+        private const int AbilityInfernoTheorem1 = 34990;
+        private const int AbilityInfernoTheorem2 = 35845;
         private const int AbilityLockedAndLoaded = 35109;
         private const int AbilityMisload = 35110;
-        private const int AbilityTrickReload = 35146;
-        private const int AbilityTrapshooting1 = 36122;
-        private const int AbilityTrapshooting2 = 35161;
-        private const int AbilityTriggerHappy = 35147;
+        private const int AbilityTrickReload1 = 35146;
+        private const int AbilityTrickReload2 = 35175;
+        private const int AbilityTrapshootingStack1 = 36122;
+        private const int AbilityTrapshootingSpread1 = 35161;
+        private const int AbilityTrapshootingStack2 = 35190;
+        private const int AbilityTrapshootingSpread2 = 36124;
+        private const int AbilityTriggerHappy1 = 35147;
+        private const int AbilityTriggerHappy2 = 35176;
+        private const int AbilityPresentBox1 = 35157;
+        private const int AbilityPresentBox2 = 35186;
+        private const int AbilityPinwheelingDartboard1 = 36028;
+        private const int AbilityPinwheelingDartboard2 = 36031;
 
         private bool ZoneOk = false;
 
@@ -51,11 +69,16 @@ namespace Lemegeton.Content
         private PlayerRotation _playerRotation;
         private PlayerMarch _playerMarch;
         private StaticeReload _staticeReload;
+        private StaticePresentTether _staticePresentTether;
+        private StaticePinwheelAM _staticePinwheelAM;
 
         private enum PhaseEnum
         {
             Lala_Inferno,
             Lala_Planar,
+            Statice_Start,
+            Statice_PresentBox,
+            Statice_Pinwheel,
         }
 
         private PhaseEnum _CurrentPhase = PhaseEnum.Lala_Inferno;
@@ -246,16 +269,16 @@ namespace Lemegeton.Content
                 switch (r.Next(0, 4))
                 {
                     case 0:
-                        _lalaAction = AbilityArcaneBlightN;
+                        _lalaAction = AbilityArcaneBlightN1;
                         break;
                     case 1:
-                        _lalaAction = AbilityArcaneBlightE;
+                        _lalaAction = AbilityArcaneBlightE1;
                         break;
                     case 2:
-                        _lalaAction = AbilityArcaneBlightS;
+                        _lalaAction = AbilityArcaneBlightS1;
                         break;
                     case 3:
-                        _lalaAction = AbilityArcaneBlightW;
+                        _lalaAction = AbilityArcaneBlightW1;
                         break;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Testing with {0} {1} {2}", _lalaStatus, _lalaAction, _lalaHeadmarker);
@@ -313,49 +336,49 @@ namespace Lemegeton.Content
                 }
                 SafeZoneEnum sz = SafeZoneEnum.None;
                 if (
-                    (_lalaAction == AbilityArcaneBlightE && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightE1 || _lalaAction == AbilityArcaneBlightE2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightE && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightE1 || _lalaAction == AbilityArcaneBlightE2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightW && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightW1 || _lalaAction == AbilityArcaneBlightW2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightW && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightW1 || _lalaAction == AbilityArcaneBlightW2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
                 )
                 {
                     sz = SafeZoneEnum.North;
                 }
                 if (
-                    (_lalaAction == AbilityArcaneBlightE && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightE1 || _lalaAction == AbilityArcaneBlightE2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightE && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightE1 || _lalaAction == AbilityArcaneBlightE2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightW && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightW1 || _lalaAction == AbilityArcaneBlightW2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightW && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightW1 || _lalaAction == AbilityArcaneBlightW2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
                 )
                 {
                     sz = SafeZoneEnum.South;
                 }
                 if (
-                    (_lalaAction == AbilityArcaneBlightN && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightN1 || _lalaAction == AbilityArcaneBlightN2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightN && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightN1 || _lalaAction == AbilityArcaneBlightN2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightS && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightS1 || _lalaAction == AbilityArcaneBlightS2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightS && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightS1 || _lalaAction == AbilityArcaneBlightS2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
                 )
                 {
                     sz = SafeZoneEnum.West;
                 }
                 if (
-                    (_lalaAction == AbilityArcaneBlightN && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightN1 || _lalaAction == AbilityArcaneBlightN2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaFive)
                     ||
-                    (_lalaAction == AbilityArcaneBlightN && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightN1 || _lalaAction == AbilityArcaneBlightN2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightS && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
+                    ((_lalaAction == AbilityArcaneBlightS1 || _lalaAction == AbilityArcaneBlightS2) && _lalaHeadmarker == HeadmarkerLalaCW && _lalaStatus == StatusLalaThree)
                     ||
-                    (_lalaAction == AbilityArcaneBlightS && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
+                    ((_lalaAction == AbilityArcaneBlightS1 || _lalaAction == AbilityArcaneBlightS2) && _lalaHeadmarker == HeadmarkerLalaCCW && _lalaStatus == StatusLalaFive)
                 )
                 {
                     sz = SafeZoneEnum.East;
@@ -935,7 +958,7 @@ namespace Lemegeton.Content
                     _bullets[_bulletIndex] = BulletStateEnum.Misload;
                     _bulletIndex++;
                 }
-                if (abilityId == AbilityTrickReload)
+                if (abilityId == AbilityTrickReload1 || abilityId == AbilityTrickReload2)
                 {
                     Reset();
                     _staticeId = actorId;
@@ -1001,6 +1024,196 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region StaticePresentTether
+
+        public class StaticePresentTether : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1100)]
+            public Vector4 TetherColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 0.85f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private uint _trackerId = 0;
+
+            public StaticePresentTether(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());                
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _trackerId = 0;                
+            }
+
+            public void TestFunctionality()
+            {
+                if (_trackerId > 0)
+                {
+                    Reset();
+                    return;
+                }                
+                _state.InvokeZoneChange(1179);
+                GameObject me = _state.cs.LocalPlayer as GameObject;
+                foreach (GameObject go in _state.ot)
+                {
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    {
+                        continue;
+                    }
+                    if (go.ObjectId == me.ObjectId)
+                    {
+                        continue;
+                    }
+                    bool isTargettable;
+                    unsafe
+                    {
+                        GameObjectPtr* gop = (GameObjectPtr*)go.Address;
+                        isTargettable = gop->GetIsTargetable();
+                    }
+                    bool isHidden = (isTargettable == false);
+                    if (isHidden == true)
+                    {
+                        continue;
+                    }
+                    Random r = new Random();
+                    _trackerId = go.ObjectId;
+                    Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
+                    return;
+                }
+            }
+
+            internal void FeedTether(uint src, uint dest)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (_trackerId == 0 && dest == _state.cs.LocalPlayer.ObjectId)
+                {
+                    _trackerId = src;
+                }
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_trackerId == 0)
+                {
+                    return false;
+                }
+                GameObject go = _state.GetActorById(_trackerId);
+                if (go == null)
+                {
+                    _trackerId = 0;
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                Vector3 pos = new Vector3(go.Position.X, go.Position.Y, go.Position.Z);
+                Vector3 t1 = _state.plug._ui.TranslateToScreen(pos.X, pos.Y, pos.Z);
+                go = _state.cs.LocalPlayer;
+                Vector3 pos2 = new Vector3(go.Position.X, go.Position.Y, go.Position.Z);
+                Vector3 t2 = _state.plug._ui.TranslateToScreen(pos2.X, pos2.Y, pos2.Z);
+                draw.AddLine(new Vector2(t1.X, t1.Y), new Vector2(t2.X, t2.Y), ImGui.GetColorU32(TetherColor), 5.0f);
+                return true;
+            }
+
+        }
+
+        #endregion
+
+        #region StaticePinwheelAM
+
+        public class StaticePinwheelAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            public List<uint> _chains = new List<uint>();
+            public uint _enumId = 0;            
+            private bool _fired = false;
+
+            public StaticePinwheelAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Prio = new AutomarkerPrio();
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.Role;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("Enumeration", AutomarkerSigns.SignEnum.Circle, false);
+                Signs.SetRole("Chain1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Chain2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("Nothing", AutomarkerSigns.SignEnum.Ignore1, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _chains.Clear();
+                _enumId = 0;
+                _fired = false;
+            }
+
+            internal void FeedHeadmarker(uint actorId, uint markerId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered headmarker {0} on {1}", markerId, actorId);
+                if (markerId == HeadmarkerChain)
+                {
+                    _chains.Add(actorId);
+                }
+                if (markerId == HeadmarkerEnumeration)
+                {
+                    _enumId = actorId;
+                }
+                if (_chains.Count == 2 && _enumId > 0 && _fired == false)
+                {
+                    Party pty = _state.GetPartyMembers();
+                    List<Party.PartyMember> chainsGo = pty.GetByActorIds(new uint[] { _chains[0], _chains[1] });
+                    Party.PartyMember enumGo = pty.GetByActorId(_enumId);
+                    Party.PartyMember unmarkedGo = (
+                        from ix in pty.Members where chainsGo.Contains(ix) == false && ix != enumGo select ix
+                    ).FirstOrDefault();
+                    Prio.SortByPriority(chainsGo);
+                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                    ap.Assign(Signs.Roles["Enumeration"], enumGo.GameObject);
+                    ap.Assign(Signs.Roles["Chain1"], chainsGo[0].GameObject);
+                    ap.Assign(Signs.Roles["Chain2"], chainsGo[1].GameObject);
+                    ap.Assign(Signs.Roles["Nothing"], unmarkedGo.GameObject);
+                    _state.ExecuteAutomarkers(ap, Timing);
+                    _fired = true;
+                }
+            }
+
+        }
+
+        #endregion
+
         public EwCritAloalo(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -1023,6 +1236,7 @@ namespace Lemegeton.Content
             _state.OnCombatantAdded += _state_OnCombatantAdded;
             _state.OnCombatantRemoved += _state_OnCombatantRemoved;
             _state.OnAction += _state_OnAction;
+            _state.OnTether += _state_OnTether;
         }
 
         private void _state_OnAction(uint src, uint dest, ushort actionId)
@@ -1033,11 +1247,14 @@ namespace Lemegeton.Content
                 case AbilityMisload:                
                     _staticeReload.FeedAbility(dest, actionId);
                     break;
-                case AbilityTrapshooting1:
-                case AbilityTrapshooting2:
+                case AbilityTrapshootingStack1:
+                case AbilityTrapshootingSpread1:
+                case AbilityTrapshootingStack2:
+                case AbilityTrapshootingSpread2:
                     _staticeReload.EatBullets(1);
                     break;
-                case AbilityTriggerHappy:
+                case AbilityTriggerHappy1:
+                case AbilityTriggerHappy2:
                     _staticeReload.EatBullets(6);
                     break;
             }
@@ -1072,20 +1289,36 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
-                case AbilityArcaneBlightN:
-                case AbilityArcaneBlightE:
-                case AbilityArcaneBlightS:
-                case AbilityArcaneBlightW:
+                case AbilityArcaneBlightN1:
+                case AbilityArcaneBlightE1:
+                case AbilityArcaneBlightS1:
+                case AbilityArcaneBlightW1:
+                case AbilityArcaneBlightN2:
+                case AbilityArcaneBlightE2:
+                case AbilityArcaneBlightS2:
+                case AbilityArcaneBlightW2:
                     _lalaRotation.FeedAction(src, actionId);
                     break;
-                case AbilityInfernoTheorem:
+                case AbilityInfernoTheorem1:
+                case AbilityInfernoTheorem2:
                     CurrentPhase = PhaseEnum.Lala_Inferno;
                     break;
-                case AbilityPlanarTactics:
+                case AbilityPlanarTactics1:
+                case AbilityPlanarTactics2:
                     CurrentPhase = PhaseEnum.Lala_Planar;
                     break;
-                case AbilityTrickReload:
+                case AbilityTrickReload1:
+                case AbilityTrickReload2:
+                    CurrentPhase = PhaseEnum.Statice_Start;
                     _staticeReload.FeedAbility(dest, actionId);
+                    break;
+                case AbilityPresentBox1:
+                case AbilityPresentBox2:
+                    CurrentPhase = PhaseEnum.Statice_PresentBox;                    
+                    break;
+                case AbilityPinwheelingDartboard1:
+                case AbilityPinwheelingDartboard2:
+                    CurrentPhase = PhaseEnum.Statice_Pinwheel;
                     break;
             }
         }
@@ -1107,6 +1340,13 @@ namespace Lemegeton.Content
                     if (CurrentPhase == PhaseEnum.Lala_Planar)
                     {
                         _playerMarch.FeedHeadmarker(dest, markerId);
+                    }
+                    break;
+                case HeadmarkerChain:
+                case HeadmarkerEnumeration:
+                    if (CurrentPhase == PhaseEnum.Statice_Pinwheel)
+                    {
+                        _staticePinwheelAM.FeedHeadmarker(dest, markerId);
                     }
                     break;
             }
@@ -1135,6 +1375,22 @@ namespace Lemegeton.Content
                         _playerMarch.FeedStatus(dest, statusId, gained);
                     }
                     break;
+                case StatusBullsEye:
+                    if (CurrentPhase == PhaseEnum.Statice_Pinwheel && gained == false)
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                        _state.ClearAutoMarkers();
+                        _staticePinwheelAM.Reset();
+                    }
+                    break;
+            }
+        }
+
+        private void _state_OnTether(uint src, uint dest, uint tetherId)
+        {
+            if (CurrentPhase == PhaseEnum.Statice_PresentBox)
+            {
+                _staticePresentTether.FeedTether(src, dest);
             }
         }
 
@@ -1146,6 +1402,7 @@ namespace Lemegeton.Content
             _state.OnCombatantAdded -= _state_OnCombatantAdded;
             _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
             _state.OnAction -= _state_OnAction;
+            _state.OnTether -= _state_OnTether;
         }
 
         private void OnCombatChange(bool inCombat)
@@ -1172,6 +1429,8 @@ namespace Lemegeton.Content
                 _playerRotation = (PlayerRotation)Items["PlayerRotation"];
                 _playerMarch = (PlayerMarch)Items["PlayerMarch"];
                 _staticeReload = (StaticeReload)Items["StaticeReload"];
+                _staticePresentTether = (StaticePresentTether)Items["StaticePresentTether"];
+                _staticePinwheelAM = (StaticePinwheelAM)Items["StaticePinwheelAM"];
                 _state.OnCombatChange += OnCombatChange;
                 LogItems();
             }

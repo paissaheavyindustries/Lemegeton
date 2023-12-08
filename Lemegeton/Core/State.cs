@@ -36,6 +36,7 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using Lemegeton.PacketHeaders;
 
 namespace Lemegeton.Core
 {
@@ -257,6 +258,9 @@ namespace Lemegeton.Core
         internal delegate void DirectorUpdateDelegate(uint param1, uint param2, uint param3, uint param4);
         internal event DirectorUpdateDelegate OnDirectorUpdate;
 
+        internal delegate void ActorControlDelegate(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4);
+        internal event ActorControlDelegate OnActorControl;
+
         internal delegate void MapEffectDelegate(byte[] data);
         internal event MapEffectDelegate OnMapEffect;
 
@@ -327,6 +331,11 @@ namespace Lemegeton.Core
         internal void InvokeDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
         {
             OnDirectorUpdate?.Invoke(param1, param2, param3, param4);
+        }
+
+        internal void InvokeActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
+        {
+            OnActorControl?.Invoke(category, sourceActorId, targetActorId, param1, param2, param3, param4);
         }
 
         internal void InvokeStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
