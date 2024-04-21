@@ -544,6 +544,7 @@ namespace Lemegeton.Core
                 HelpMessage = string.Join("\n", halp),
             });
             cs.TerritoryChanged += Cs_TerritoryChanged;
+            pi.UiBuilder.OpenMainUi += UiBuilder_OpenConfigUi;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
             if (cfg.TimelineLocalAllowed == true)
             {
@@ -581,6 +582,7 @@ namespace Lemegeton.Core
             }
             cs.TerritoryChanged -= Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi -= UiBuilder_OpenConfigUi;
+            pi.UiBuilder.OpenMainUi -= UiBuilder_OpenConfigUi;
             cm.RemoveHandler("/lemmy");
             cd.ConditionChange -= Cd_ConditionChange;
             fw.Update -= FrameworkUpdate;

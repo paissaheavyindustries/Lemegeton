@@ -22,8 +22,10 @@ namespace Lemegeton.Content
 
         public override FeaturesEnum Features => FeaturesEnum.Experimental;
 
-        private const int AbilityAlphaSword = 18484;
-        private const int AbilitySuperBlasstyCharge = 19279;
+        private const int AbilityAlphaSword1 = 18484;
+        private const int AbilityAlphaSword2 = 18539;
+        private const int AbilitySuperBlasstyCharge1 = 19279;
+        private const int AbilitySuperBlasstyCharge2 = 18883;
         private const int AbilityJKick = 18516;
         private const int AbilityGavel = 18492;
         private const int AbilityJudgmentCrystal = 18524;
@@ -153,8 +155,10 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Debug, null, "Registered ability {0}", abilityId);
                 switch (abilityId)
                 {
-                    case AbilityAlphaSword:
-                    case AbilitySuperBlasstyCharge:
+                    case AbilityAlphaSword1:
+                    case AbilityAlphaSword2:
+                    case AbilitySuperBlasstyCharge1:
+                    case AbilitySuperBlasstyCharge2:
                         _cutCount++;
                         if (_cutCount == 8)
                         {
@@ -1041,7 +1045,7 @@ namespace Lemegeton.Content
 
         private void OnAction(uint src, uint dest, ushort actionId)
         {
-            if (actionId == AbilityAlphaSword || actionId == AbilitySuperBlasstyCharge)
+            if (actionId == AbilityAlphaSword1 || actionId == AbilitySuperBlasstyCharge1 || actionId == AbilityAlphaSword2 || actionId == AbilitySuperBlasstyCharge2)
             {
                 if (CurrentPhase == PhaseEnum.LimitCut)
                 {
