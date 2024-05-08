@@ -51,6 +51,9 @@ namespace Lemegeton.Core
             TimelineActive = 19,
             TimelineInactive = 20,
             ProfileActive = 21,
+            LightDragon = 22,
+            DarkDragon = 23,
+            LightCircle = 24,
         }
 
         internal void LoadTextures()
@@ -75,6 +78,9 @@ namespace Lemegeton.Core
             _misc[MiscIconEnum.TimelineActive] = GetTexture(61806);
             _misc[MiscIconEnum.TimelineInactive] = GetTexture(61807);
             _misc[MiscIconEnum.ProfileActive] = GetTexture(61803);
+            _misc[MiscIconEnum.LightDragon] = GetTexture(91113);
+            _misc[MiscIconEnum.DarkDragon] = GetTexture(91613);
+            _misc[MiscIconEnum.LightCircle] = GetTexture(60496);
             _signs[AutomarkerSigns.SignEnum.Attack1] = GetTexture(61201);
             _signs[AutomarkerSigns.SignEnum.Attack2] = GetTexture(61202);
             _signs[AutomarkerSigns.SignEnum.Attack3] = GetTexture(61203);

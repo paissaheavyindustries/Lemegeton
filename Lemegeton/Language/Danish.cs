@@ -14,6 +14,27 @@ namespace Lemegeton.Language
 
         public Danish(State st) : base(st)
         {
+            #region 1.0.3.1
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons", "(P6) Dragon HP difference indicator");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "Enabled");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Test", "Test on self and closest enemy");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar", "Enemy cast bar");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/Enabled", "Enabled");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastColor", "Cast bar color");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/WarningColor", "Cast bar time warning color");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/InterruptColor", "Interrupt highlight color");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals", "Cast bar visual configuration");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/WarningThreshold", "Cast time warning threshold in seconds");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/BarWidth", "Cast bar width");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/BarHeight", "Cast bar height");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/FontSize", "Text size");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/BarOffsetWorld", "Cast bar offset in world coordinates");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastbarVisuals/BarOffsetScreen", "Cast bar offset in screen coordinates");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/OnlyCurrentTarget", "Draw only for current target");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/OnlyTargettable", "Draw only for targettable entities");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/ShowCastName", "Show ability name on cast bar");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/ShowCastTime", "Show remaining time on cast bar");
+            #endregion
             #region 1.0.2.9
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether", "Statice Present Box tether indicator");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Enabled");

@@ -3,6 +3,7 @@ using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -22,6 +23,7 @@ namespace Lemegeton.Content
         private const int StatusPurgation4 = 0xd44;
 
         private bool ZoneOk = false;
+        private bool _subbed = false;
 
         private InviolateAM _inviolateAm;
 
@@ -228,8 +230,17 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnCastBegin += _state_OnCastBegin;
-            _state.OnStatusChange += _state_OnStatusChange;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnCastBegin += _state_OnCastBegin;
+                _state.OnStatusChange += _state_OnStatusChange;
+            }
         }
 
         private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
@@ -242,8 +253,17 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnStatusChange -= _state_OnStatusChange;
-            _state.OnCastBegin -= _state_OnCastBegin;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnStatusChange -= _state_OnStatusChange;
+                _state.OnCastBegin -= _state_OnCastBegin;
+                _subbed = false;
+            }
         }
 
         private void _state_OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)

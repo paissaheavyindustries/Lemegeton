@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using Dalamud.Interface.Animation;
 using static Lemegeton.Content.EwCritAloalo;
 using System.Drawing;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -63,6 +64,7 @@ namespace Lemegeton.Content
         private const int AbilityPinwheelingDartboard2 = 36031;
 
         private bool ZoneOk = false;
+        private bool _subbed = false;
 
         private SpringCrystal _springCrystal;
         private LalaRotation _lalaRotation;
@@ -1230,13 +1232,22 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnHeadMarker += _state_OnHeadMarker;
-            _state.OnStatusChange += _state_OnStatusChange;
-            _state.OnCastBegin += _state_OnCastBegin;
-            _state.OnCombatantAdded += _state_OnCombatantAdded;
-            _state.OnCombatantRemoved += _state_OnCombatantRemoved;
-            _state.OnAction += _state_OnAction;
-            _state.OnTether += _state_OnTether;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnHeadMarker += _state_OnHeadMarker;
+                _state.OnStatusChange += _state_OnStatusChange;
+                _state.OnCastBegin += _state_OnCastBegin;
+                _state.OnCombatantAdded += _state_OnCombatantAdded;
+                _state.OnCombatantRemoved += _state_OnCombatantRemoved;
+                _state.OnAction += _state_OnAction;
+                _state.OnTether += _state_OnTether;
+            }
         }
 
         private void _state_OnAction(uint src, uint dest, ushort actionId)
@@ -1396,13 +1407,22 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnHeadMarker -= _state_OnHeadMarker;
-            _state.OnStatusChange -= _state_OnStatusChange;
-            _state.OnCastBegin -= _state_OnCastBegin;
-            _state.OnCombatantAdded -= _state_OnCombatantAdded;
-            _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
-            _state.OnAction -= _state_OnAction;
-            _state.OnTether -= _state_OnTether;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnHeadMarker -= _state_OnHeadMarker;
+                _state.OnStatusChange -= _state_OnStatusChange;
+                _state.OnCastBegin -= _state_OnCastBegin;
+                _state.OnCombatantAdded -= _state_OnCombatantAdded;
+                _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
+                _state.OnAction -= _state_OnAction;
+                _state.OnTether -= _state_OnTether;
+                _subbed = false;
+            }
         }
 
         private void OnCombatChange(bool inCombat)

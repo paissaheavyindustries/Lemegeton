@@ -2,6 +2,17 @@
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud.Game.ClientState.Objects.Types;
+using ImGuiNET;
+using System.Collections;
+using static Lemegeton.Content.UltDragonsongReprise;
+using System.Numerics;
+using static Lemegeton.Content.Overlays.DotTracker;
+using Dalamud.Interface.Internal;
+using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using Dalamud.Interface.Utility;
+using System.Data.SqlTypes;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -17,12 +28,17 @@ namespace Lemegeton.Content
         private const int StatusPrey = 562;
         private const int StatusDoom = 2976;
 
+        private const int NameNidhogg = 3458;
+        private const int NameHraesvelgr = 4954;
+
         private bool ZoneOk = false;
+        private bool _subbed = false;
 
         private MeteorAM _meteorAm;
         private ChainLightningAm _chainLightningAm;
         private DothAM _dothAm;
         private WrothAM _wrothAm;
+        private DoubleDragons _doubleDragons;
 
         #region MeteorAM
 
@@ -458,6 +474,221 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region DoubleDragons
+
+        public class DoubleDragons : Core.ContentItem
+        {
+
+            public uint _idHraesvelgr = 0;
+            public uint _idNidhogg = 0;
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            public DoubleDragons(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public void TestFunctionality()
+            {
+                if (_idHraesvelgr > 0 || _idNidhogg > 0)
+                {
+                    _idHraesvelgr = 0;
+                    _idNidhogg = 0;
+                    return;
+                }
+                _state.InvokeZoneChange(968);
+                GameObject me = _state.cs.LocalPlayer as GameObject;
+                _idNidhogg = me.ObjectId;
+                _idHraesvelgr = me.ObjectId;
+                foreach (GameObject go in _state.ot)
+                {
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    {
+                        continue;
+                    }
+                    if (go.ObjectId == me.ObjectId)
+                    {
+                        continue;
+                    }
+                    bool isTargettable;
+                    unsafe
+                    {
+                        GameObjectPtr* gop = (GameObjectPtr*)go.Address;
+                        isTargettable = gop->GetIsTargetable();
+                    }
+                    bool isHidden = (isTargettable == false);
+                    if (isHidden == true)
+                    {
+                        continue;
+                    }
+                    Random r = new Random();
+                    _idNidhogg = go.ObjectId;
+                    Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Testing on self");
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _idHraesvelgr = 0;
+                _idNidhogg = 0;
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_idHraesvelgr == 0 || _idNidhogg == 0)
+                {
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                GameObject goH = _state.GetActorById(_idHraesvelgr);
+                if (goH == null)
+                {
+                    return false;
+                }
+                GameObject goN = _state.GetActorById(_idNidhogg);
+                if (goN == null)
+                {
+                    return false;
+                }
+                Character chH = (Character)goH;
+                Character chN = (Character)goN;
+                IDalamudTextureWrap bw, tw;
+                float x = 200.0f;
+                float y = 300.0f;
+                float w = 250.0f;
+                float hhp = (float)chH.CurrentHp / (float)chH.MaxHp * 100.0f;
+                float nhp = (float)chN.CurrentHp / (float)chN.MaxHp * 100.0f;
+                float dhp = Math.Abs(hhp - nhp);
+                Vector4 hcol, ncol, wcol;
+                hcol = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+                ncol = hcol;
+                wcol = hcol;
+                float time = (float)(DateTime.Now - DateTime.Today).TotalMilliseconds / 200.0f;                
+                if (dhp > 3.0f)
+                {
+                    float ang = (float)Math.Abs(Math.Cos(time * 2.0f));
+                    if (hhp > nhp)
+                    {
+                        hcol = new Vector4(1.0f, 0.0f, 0.0f, ang);                        
+                    }
+                    else
+                    {
+                        ncol = new Vector4(1.0f, 0.0f, 0.0f, ang);                        
+                    }
+                    wcol = new Vector4(1.0f, ang, 0.0f, 1.0f);
+                }
+                else if (dhp > 2.0f)
+                {
+                    float ang = (float)Math.Abs(Math.Cos(time));
+                    if (hhp > nhp)
+                    {
+                        hcol = new Vector4(1.0f, 0.5f, 0.0f, ang);
+                    }
+                    else
+                    {
+                        ncol = new Vector4(1.0f, 0.5f, 0.0f, ang);
+                    }
+                    wcol = new Vector4(1.0f, 0.5f + (ang * 0.5f), 0.0f, 1.0f);
+                }
+                else if (dhp > 1.0f)
+                {
+                    if (hhp > nhp)
+                    {
+                        hcol = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+                    }
+                    else
+                    {
+                        ncol = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+                    }
+                    wcol = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+                }
+                tw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.DarkDragon);
+                bw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightCircle);
+                draw.AddImage(
+                    bw.ImGuiHandle,
+                    new Vector2(x, y),
+                    new Vector2(x + tw.Width, y + tw.Height),
+                    new Vector2(1.0f, 0.0f),
+                    new Vector2(0.0f, 1.0f),
+                    ImGui.GetColorU32(hcol)
+                );
+                draw.AddImage(
+                    bw.ImGuiHandle,
+                    new Vector2(x + w - tw.Width, y),
+                    new Vector2(x + w, y + tw.Height),
+                    new Vector2(1.0f, 0.0f),
+                    new Vector2(0.0f, 1.0f),
+                    ImGui.GetColorU32(ncol)
+                );
+                draw.AddImage(
+                    tw.ImGuiHandle,
+                    new Vector2(x, y),
+                    new Vector2(x + tw.Width, y + tw.Height),
+                    new Vector2(1.0f, 0.0f),
+                    new Vector2(0.0f, 1.0f)
+                );
+                tw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightDragon);
+                draw.AddImage(
+                    tw.ImGuiHandle,
+                    new Vector2(x + w - tw.Width, y),
+                    new Vector2(x + w, y + tw.Height),
+                    new Vector2(0.0f, 0.0f),
+                    new Vector2(1.0f, 1.0f)
+                );
+                float textSize = 24.0f, scale;
+                string temp;
+                Vector2 sz;
+                temp = String.Format("{0:0.0} %", hhp);
+                sz = ImGui.CalcTextSize(temp);
+                scale = textSize / sz.Y;
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y + tw.Height + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f), y + tw.Height), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                temp = String.Format("{0:0.0} %", nhp);
+                sz = ImGui.CalcTextSize(temp);
+                scale = textSize / sz.Y;
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y + tw.Height + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f), y + tw.Height), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                temp = chH.Name.ToString();
+                sz = ImGui.CalcTextSize(temp);
+                scale = textSize / sz.Y;
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f), y - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                temp = chN.Name.ToString();
+                sz = ImGui.CalcTextSize(temp);
+                scale = textSize / sz.Y;
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f), y - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                temp = String.Format("{0:0.0} %", dhp);
+                textSize = 40.0f;
+                sz = ImGui.CalcTextSize(temp);
+                scale = textSize / sz.Y;
+                sz = new Vector2(sz.X * scale, sz.Y * scale);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f) + 1.0f, y + (tw.Height / 2.0f) - (sz.Y / 2.0f) + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f), y + (tw.Height / 2.0f) - (sz.Y / 2.0f)), ImGui.GetColorU32(wcol), temp);
+                return true;
+            }
+
+        }
+
+        #endregion
+
         public UltDragonsongReprise(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -474,7 +705,54 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnStatusChange += OnStatusChange;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnStatusChange += OnStatusChange;
+                _state.OnCombatantAdded += OnCombatantAdded;
+                _state.OnCombatantRemoved += OnCombatantRemoved;
+            }
+        }
+
+        private void OnCombatantRemoved(uint actorId, nint addr)
+        {
+            if (actorId == _doubleDragons._idNidhogg && actorId > 0)
+            {
+                Log(State.LogLevelEnum.Debug, null, "Nidhogg is gone");
+                _doubleDragons._idNidhogg = 0;
+            }
+            if (actorId == _doubleDragons._idHraesvelgr && actorId > 0)
+            {
+                Log(State.LogLevelEnum.Debug, null, "Hraesvelgr is gone");
+                _doubleDragons._idHraesvelgr = 0;
+            }
+        }
+
+        private void OnCombatantAdded(Dalamud.Game.ClientState.Objects.Types.GameObject go)
+        {
+            if (go is Character)
+            {                
+                Character ch = go as Character;
+                if (ch.MaxHp != 4535368)
+                {
+                    return;
+                }
+                if (ch.NameId == NameNidhogg)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Nidhogg found as {0:X8}", go.ObjectId);
+                    _doubleDragons._idNidhogg = go.ObjectId;
+                }
+                else if (ch.NameId == NameHraesvelgr)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Hraesvelgr found as {0:X8}", go.ObjectId);
+                    _doubleDragons._idHraesvelgr = go.ObjectId;
+                }
+            }
         }
 
         private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
@@ -499,7 +777,18 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnStatusChange -= OnStatusChange;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnStatusChange -= OnStatusChange;
+                _state.OnCombatantAdded -= OnCombatantAdded;
+                _state.OnCombatantRemoved -= OnCombatantRemoved;
+                _subbed = false;
+            }
         }
 
         private void OnCombatChange(bool inCombat)
@@ -525,6 +814,7 @@ namespace Lemegeton.Content
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _dothAm = (DothAM)Items["DothAM"];
                 _wrothAm = (WrothAM)Items["WrothAM"];
+                _doubleDragons = (DoubleDragons)Items["DoubleDragons"];
                 _state.OnCombatChange += OnCombatChange;
                 LogItems();
             }

@@ -54,7 +54,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.0";
+        public string Version = "1.0.3.1";
 
         internal class Downloadable
         {
@@ -301,7 +301,7 @@ namespace Lemegeton
             ChangeLanguage(_state.cfg.Language);
             InitializeActionTypes();
             _ui.LoadTextures();
-            _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;
+            _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;            
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
             _mainThread.Name = "Lemegeton main thread";
             _mainThread.Start(this);
@@ -3869,7 +3869,7 @@ namespace Lemegeton
             float calcHeight = tw.Height * 2.0f * _state.cfg.SoftmarkerScale;
             pt.X -= calcWidth / 2.0f;
             pt.Y -= calcHeight;
-            ImGui.SetCursorPos(pt);
+            ImGui.SetCursorPos(pt);            
             draw.AddImage(
                 tw.ImGuiHandle,
                 new Vector2(pt.X, pt.Y),

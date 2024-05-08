@@ -3,6 +3,7 @@ using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -26,6 +27,7 @@ namespace Lemegeton.Content
         private const int TetherFireball = 5;
 
         private bool ZoneOk = false;
+        private bool _subbed = false;
 
         private FireballAm _fireballAm;
         private ChainLightningAm _chainLightningAm;
@@ -429,10 +431,19 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnTether += OnTether;
-            _state.OnHeadMarker += OnHeadMarker;
-            _state.OnAction += _state_OnAction;
-            _state.OnStatusChange += _state_OnStatusChange;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnTether += OnTether;
+                _state.OnHeadMarker += OnHeadMarker;
+                _state.OnAction += _state_OnAction;
+                _state.OnStatusChange += _state_OnStatusChange;
+            }
         }
 
         private void OnTether(uint src, uint dest, uint tetherId)
@@ -503,10 +514,19 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnTether -= OnTether;
-            _state.OnHeadMarker -= OnHeadMarker;
-            _state.OnStatusChange -= _state_OnStatusChange;
-            _state.OnAction -= _state_OnAction;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnTether -= OnTether;
+                _state.OnHeadMarker -= OnHeadMarker;
+                _state.OnStatusChange -= _state_OnStatusChange;
+                _state.OnAction -= _state_OnAction;
+                _subbed = false;
+            }
         }
 
         private void OnCombatChange(bool inCombat)

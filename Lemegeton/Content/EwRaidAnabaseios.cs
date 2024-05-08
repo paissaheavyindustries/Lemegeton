@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lemegeton.Core;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -39,6 +40,7 @@ namespace Lemegeton.Content
 
         private bool _sawFirstHeadMarker = false;
         private uint _firstHeadMarker = 0;
+        private bool _subbed = false;
 
         private const int AbilityTwoMinds1 = 33156;
         private const int AbilityTwoMinds2 = 33157;
@@ -529,9 +531,18 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnHeadMarker += _state_OnHeadMarker;
-            _state.OnCastBegin += _state_OnCastBegin;
-            _state.OnStatusChange += _state_OnStatusChange;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnHeadMarker += _state_OnHeadMarker;
+                _state.OnCastBegin += _state_OnCastBegin;
+                _state.OnStatusChange += _state_OnStatusChange;
+            }
         }
 
         private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
@@ -617,9 +628,18 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnStatusChange -= _state_OnStatusChange;
-            _state.OnCastBegin -= _state_OnCastBegin;
-            _state.OnHeadMarker -= _state_OnHeadMarker;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnStatusChange -= _state_OnStatusChange;
+                _state.OnCastBegin -= _state_OnCastBegin;
+                _state.OnHeadMarker -= _state_OnHeadMarker;
+                _subbed = false;
+            }
         }
 
         private void OnCombatChange(bool inCombat)

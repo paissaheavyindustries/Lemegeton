@@ -13,6 +13,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System.Diagnostics;
 using System.Threading;
 using static Lemegeton.Content.UltAlexander;
+using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
 {
@@ -59,6 +60,7 @@ namespace Lemegeton.Content
         private const int Headmarker8 = 86;
 
         private bool ZoneOk = false;
+        private bool _subbed = false;
         private bool _sawFirstHeadMarker = false;
         private uint _firstHeadMarker = 0;
 
@@ -962,11 +964,20 @@ namespace Lemegeton.Content
 
         private void SubscribeToEvents()
         {
-            _state.OnCastBegin += OnCastBegin;
-            _state.OnAction += OnAction;
-            _state.OnStatusChange += OnStatusChange;
-            _state.OnTether += OnTether;
-            _state.OnHeadMarker += OnHeadMarker;
+            lock (this)
+            {
+                if (_subbed == true)
+                {
+                    return;
+                }
+                _subbed = true;
+                Log(LogLevelEnum.Debug, null, "Subscribing to events");
+                _state.OnCastBegin += OnCastBegin;
+                _state.OnAction += OnAction;
+                _state.OnStatusChange += OnStatusChange;
+                _state.OnTether += OnTether;
+                _state.OnHeadMarker += OnHeadMarker;
+            }
         }
 
         private void OnHeadMarker(uint dest, uint markerId)
@@ -1104,11 +1115,20 @@ namespace Lemegeton.Content
 
         private void UnsubscribeFromEvents()
         {
-            _state.OnHeadMarker -= OnHeadMarker;
-            _state.OnTether -= OnTether;
-            _state.OnStatusChange -= OnStatusChange;
-            _state.OnAction -= OnAction;
-            _state.OnCastBegin -= OnCastBegin;
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnHeadMarker -= OnHeadMarker;
+                _state.OnTether -= OnTether;
+                _state.OnStatusChange -= OnStatusChange;
+                _state.OnAction -= OnAction;
+                _state.OnCastBegin -= OnCastBegin;
+                _subbed = false;
+            }
         }
 
         private void OnCombatChange(bool inCombat)
