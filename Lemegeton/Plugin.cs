@@ -42,6 +42,8 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using System.Xml.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Internal;
+using static Dalamud.Interface.Utility.Raii.ImRaii;
+using static FFXIVClientStructs.FFXIV.Common.Component.BGCollision.MeshPCB;
 
 namespace Lemegeton
 {
@@ -54,7 +56,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.1";
+        public string Version = "1.0.3.2";
 
         internal class Downloadable
         {
@@ -93,12 +95,15 @@ namespace Lemegeton
         private DateTime _loaded = DateTime.Now;
         private bool _aboutProg = false;
         private bool _softMarkerPreview = false;
+        private bool _timelineSelectorOpened = false;
         private DateTime _aboutOpened;
         private Dictionary<Delegate, string[]> _delDebugInput = new Dictionary<Delegate, string[]>();
         private Queue<Downloadable> _downloadQueue = new Queue<Downloadable>();
         private bool _downloadPending = false;
         private string _downloadFilename = "";
         private string _timelineActionFilter = "";
+        private string _timelineSelectorZoneFilter = "";
+        private string _timelineSelectorFileFilter = "";
         private bool _newNotifications = false;
         private int _ttsCounter = 1;
 
@@ -295,7 +300,7 @@ namespace Lemegeton
             ApplyVersionChanges();
             I18n.OnFontDownload += I18n_OnFontDownload;
             InitializeLanguage();
-            InitializeContent();
+            InitializeContent();            
             _state.Initialize();
             ApplyConfigToContent();
             ChangeLanguage(_state.cfg.Language);
@@ -413,6 +418,7 @@ namespace Lemegeton
                 if (_drawingCallback == false)
                 {
                     _state.pi.UiBuilder.Draw += DrawUI;
+                    _state.pi.UiBuilder.Draw += _ui._dialogManager.Draw;
                     _drawingCallback = true;
                 }
             }
@@ -424,6 +430,7 @@ namespace Lemegeton
             {
                 if (_drawingCallback == true)
                 {
+                    _state.pi.UiBuilder.Draw -= _ui._dialogManager.Draw;
                     _state.pi.UiBuilder.Draw -= DrawUI;
                     _drawingCallback = false;
                 }
@@ -792,6 +799,25 @@ namespace Lemegeton
             }
         }
 
+        internal void DeserializeTimelineOverrides(string data)
+        {
+            if (data == null || data.Length == 0)
+            {
+                return;
+            }
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(data);
+            XmlNode root = doc.SelectSingleNode("/Lemegeton/TimelineOverrides");
+            foreach (XmlNode ncc in root.ChildNodes)
+            {
+                ushort territory = ushort.Parse(ncc.Attributes["Territory"].Value);
+                lock (_state.TimelineOverrides)
+                {
+                    _state.TimelineOverrides[territory] = ncc.Attributes["Filename"].Value;
+                }
+            }
+        }
+
         private void DeserializeProperties(string data)
         {
             if (data == null || data.Length == 0)
@@ -884,6 +910,24 @@ namespace Lemegeton
                             a.Value = Base64Encode(XmlSerializer<Timeline.Profile>.Serialize(pro));
                             cc.Attributes.Append(a);
                         }
+                    }
+                }
+            }
+            {
+                XmlNode c = doc.CreateElement("TimelineOverrides");
+                root.AppendChild(c);
+                lock (_state.TimelineOverrides)
+                {
+                    foreach (KeyValuePair<ushort, string> kp in _state.TimelineOverrides)
+                    {
+                        XmlNode cc = doc.CreateElement("Override");
+                        c.AppendChild(cc);
+                        XmlAttribute a = doc.CreateAttribute("Territory");
+                        a.Value = kp.Key.ToString();
+                        cc.Attributes.Append(a);
+                        a = doc.CreateAttribute("Filename");
+                        a.Value = kp.Value;
+                        cc.Attributes.Append(a);
                     }
                 }
             }
@@ -1936,6 +1980,11 @@ namespace Lemegeton
                 ImGui.EndDisabled();
             }
             ImGui.SameLine();
+            if (UserInterface.IconButton(FontAwesomeIcon.Edit, I18n.Translate("Timelines/TimelineSelector")) == true)
+            {
+                OpenTimelineSelector();
+            }
+            ImGui.SameLine();
             ImGui.Text(I18n.Translate("Timelines/Profile"));
             ImGui.SameLine();
             bool hasprofiles = tl != null && tl.Profiles.Count > 0;
@@ -2083,6 +2132,12 @@ namespace Lemegeton
             _adjusterXtl += (float)Math.Floor((fsp.X - ImGui.GetCursorPosX()) / 2.0f);
             ImGui.Text("");
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.ItemSpacing.Y);
+        }
+
+        private void OpenTimelineSelector()
+        {
+            Log(LogLevelEnum.Debug, "Opening timeline selector");
+            _timelineSelectorOpened = true;
         }
 
         private float RenderTimelineContentEvents()
@@ -2385,7 +2440,7 @@ namespace Lemegeton
                 {
                     ImGui.BeginDisabled();
                 }
-                if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/NewReaction")) == true)
+                if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/Reactions/NewReaction")) == true)
                 {
                     string prname = _newReactionName.Trim();
                     Log(LogLevelEnum.Debug, "Creating new blank reaction as {0}", prname);
@@ -2415,7 +2470,7 @@ namespace Lemegeton
                 {
                     ImGui.BeginDisabled();
                 }
-                if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/CloneReaction")) == true)
+                if (UserInterface.IconButton(FontAwesomeIcon.Copy, I18n.Translate("Timelines/Reactions/CloneReaction")) == true)
                 {
                     Timeline.Reaction orp = SelectedReaction;
                     string orname = orp.Name;
@@ -4250,7 +4305,7 @@ namespace Lemegeton
                 if (ImGui.Button(I18n.Translate("MainMenu/Settings/TimelineLocalReload")) == true)
                 {
                     Log(LogLevelEnum.Debug, "Reloading all local timelines");
-                    _state.LoadLocalTimelines();
+                    _state.LoadLocalTimelines(0);
                 }
                 if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/TimelineOverlaySettings")) == true)
                 {
@@ -4648,6 +4703,7 @@ namespace Lemegeton
                 SaveConfig();
                 ImGui.End();
                 ImGui.PopStyleColor(3);
+                _ui.ClearDialog();
                 return;
             }
             Vector2 c1 = ImGui.GetWindowPos();
@@ -4751,7 +4807,267 @@ namespace Lemegeton
             RenderFooter();
             UserInterface.KeepWindowInSight();
             ImGui.End();
+            if (_timelineSelectorOpened == true)
+            {
+                DrawTimelineSelectorWindow();
+            }
             ImGui.PopStyleColor(3);
+        }
+
+        private void DrawTimelineSelectorWindow()
+        {
+            bool open = true;
+            ImGui.SetNextWindowSize(new Vector2(500, 500), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin(I18n.Translate("Timelines/TimelineSelector/WindowTitle"), ref open, ImGuiWindowFlags.NoCollapse) == false)
+            {
+                ImGui.End();                
+                return;
+            }
+            if (open == false)
+            {
+                Log(LogLevelEnum.Debug, "Closing timeline selector");
+                _timelineSelectorOpened = false;
+                ImGui.End();
+                _ui.ClearDialog();
+                return;
+            }
+            _ui.RenderWarning(I18n.Translate("Timelines/TimelineSelector/SelectionInfo"));
+            ImGui.BeginTable("Lemegeton_TimelineSelector", 4, ImGuiTableFlags.Resizable | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY);
+            ImGui.TableSetupScrollFreeze(0, 2);
+            ImGui.TableSetupColumn(I18n.Translate("Timelines/TimelineSelector/ColZoneID"), ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoSort);
+            ImGui.TableSetupColumn(I18n.Translate("Timelines/TimelineSelector/ColZoneName"), ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoSort);
+            ImGui.TableSetupColumn(I18n.Translate("Timelines/TimelineSelector/ColZoneFile"), ImGuiTableColumnFlags.WidthStretch | ImGuiTableColumnFlags.NoSort);
+            ImGui.TableSetupColumn("##Lemegeton_TimelineSelector_actions", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoSort | ImGuiTableColumnFlags.NoResize);
+            ImGui.TableHeadersRow();
+            Dictionary<ushort, Timeline> tlcopy;
+            lock (_state.AllTimelines)
+            {
+                tlcopy = new Dictionary<ushort, Timeline>(_state.AllTimelines);
+            }
+            Dictionary<ushort, string> zonenames = new Dictionary<ushort, string>();
+            foreach (ushort t in tlcopy.Keys)
+            {
+                zonenames[t] = GetInstanceNameForTerritory(t);
+            }
+            var temp = zonenames.ToList();
+            temp.Sort((a, b) => a.Value.CompareTo(b.Value));
+            ImGuiStylePtr style = ImGui.GetStyle();
+            float itemsp = style.ItemSpacing.X;
+            ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(0);
+            Vector2 avail3 = ImGui.GetContentRegionAvail();
+            ImGui.Text(" ");
+            ImGui.TableSetColumnIndex(1);
+            Vector2 avail1 = ImGui.GetContentRegionAvail();
+            ImGui.PushFont(UiBuilder.IconFont);
+            string ico = FontAwesomeIcon.Search.ToIconString();
+            Vector2 sz = ImGui.CalcTextSize(ico);
+            ImGui.Text(ico);
+            ImGui.PopFont();
+            ImGui.SameLine();
+            ImGui.PushItemWidth(avail1.X - sz.X - itemsp);
+            if (ImGui.InputText("##TimelineSelector/ZoneFilterBox", ref _timelineSelectorZoneFilter, 256) == true)
+            {
+            }
+            ImGui.PopItemWidth();
+            ImGui.TableSetColumnIndex(2);
+            Vector2 avail2 = ImGui.GetContentRegionAvail();
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.Text(ico);
+            ImGui.PopFont();
+            ImGui.SameLine();
+            ImGui.PushItemWidth(avail2.X - sz.X - itemsp);
+            if (ImGui.InputText("##TimelineSelector/FileFilterBox", ref _timelineSelectorFileFilter, 256) == true)
+            {
+            }
+            ImGui.PopItemWidth();
+            ImGui.TableSetColumnIndex(3);
+            ImGui.Text(" ");
+            temp = (from tx in temp where
+                    (
+                        _timelineSelectorZoneFilter == ""
+                        ||
+                        tx.Value.Contains(_timelineSelectorZoneFilter, StringComparison.InvariantCultureIgnoreCase)
+                        ||
+                        tx.Key.ToString().Contains(_timelineSelectorZoneFilter, StringComparison.InvariantCultureIgnoreCase))
+                    &&
+                    (_timelineSelectorFileFilter == "" || tlcopy[tx.Key].Filename.Contains(_timelineSelectorFileFilter, StringComparison.InvariantCultureIgnoreCase))
+                    select tx).ToList();
+            foreach (var zn in temp)
+            {                
+                ImGui.TableNextRow();
+                bool overridden;
+                lock (_state.TimelineOverrides)
+                {
+                    overridden = _state.TimelineOverrides.ContainsKey(zn.Key);
+                }
+                for (int col = 0; col < 4; col++)
+                {
+                    ImGui.TableSetColumnIndex(col);
+                    switch (col)
+                    {
+                        case 0:
+                            {
+                                string txt = zn.Key.ToString();
+                                Vector2 psz = ImGui.CalcTextSize(txt);
+                                ImGui.Text(txt);
+                                if (psz.X > avail3.X && ImGui.IsItemHovered() == true)
+                                {
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text(txt);
+                                    ImGui.EndTooltip();
+                                }
+                            }
+                            break;
+                        case 1:
+                            {
+                                string txt = zn.Value;
+                                Vector2 psz = ImGui.CalcTextSize(txt);
+                                ImGui.Text(txt);
+                                if (psz.X > avail1.X && ImGui.IsItemHovered() == true)
+                                {
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text(txt);
+                                    ImGui.EndTooltip();
+                                }
+                            }
+                            break;
+                        case 2:
+                            {
+                                if (overridden == false)
+                                {
+                                    ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(new Vector4(0.5f, 1.0f, 0.5f, 0.7f)));
+                                    UserInterface.IconText(FontAwesomeIcon.Sync, I18n.Translate("Timelines/TimelineSelector/SelTypeAutomatic"));
+                                    ImGui.PopStyleColor();
+                                }
+                                else
+                                {
+                                    ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetColorU32(new Vector4(1.0f, 0.5f, 0.5f, 0.7f)));
+                                    UserInterface.IconText(FontAwesomeIcon.Edit, I18n.Translate("Timelines/TimelineSelector/SelTypeOverride"));
+                                    ImGui.PopStyleColor();
+                                }
+                                ImGui.SameLine();
+                                string txt = tlcopy[zn.Key].Filename;
+                                Vector2 psz = ImGui.CalcTextSize(txt);
+                                if (ImGui.Selectable(txt, false) == true)
+                                {
+                                    System.Diagnostics.Process.Start("explorer.exe", String.Format("/select, \"{0}\"", txt));
+                                }
+                                if (psz.X > avail2.X && ImGui.IsItemHovered() == true)
+                                {
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text(txt);
+                                    ImGui.EndTooltip();
+                                }
+                            }
+                            break;
+                        case 3:
+                            {
+                                if (UserInterface.IconButton(FontAwesomeIcon.FolderOpen, I18n.Translate("Timelines/TimelineSelector/ChangeTimelineFile") + "##" + zn.Key) == true)
+                                {
+                                    string sp = Path.GetDirectoryName(tlcopy[zn.Key].Filename);
+                                    Log(LogLevelEnum.Debug, "Opening timeline file selection dialog to {0}", sp);
+                                    _ui.OpenFileDialog(I18n.Translate("Timelines/TimelineSelector/SelectTimelineFile", zn.Value), ".xml", sp, (ok, filename) =>
+                                    {
+                                        if (ok == true)
+                                        {
+                                            SetTimelineOverrideToFile(zn.Key, filename.First());
+                                        }
+                                    });
+                                }
+                                if (overridden == true)
+                                {
+                                    ImGui.SameLine();
+                                    if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/TimelineSelector/DeleteOverride") + "##" + zn.Key) == true)
+                                    {
+                                        RemoveTimelineOverrideFrom(zn.Key);
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }                
+            }
+            ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(0);
+            ImGui.Text("");
+            ImGui.TableSetColumnIndex(1);
+            ImGui.Text("");
+            ImGui.TableSetColumnIndex(2);
+            ImGui.Text("");
+            ImGui.TableSetColumnIndex(3);
+            if (UserInterface.IconButton(FontAwesomeIcon.Plus, I18n.Translate("Timelines/TimelineSelector/AddTimelineFile")) == true)
+            {
+                string sp = _state.cfg.TimelineLocalFolder;
+                Log(LogLevelEnum.Debug, "Opening timeline file selection dialog to {0}", sp);
+                _ui.OpenFileDialog(I18n.Translate("Timelines/TimelineSelector/SelectTimelineFileUnspecified"), ".xml", sp, (ok, filename) =>
+                {
+                    if (ok == true)
+                    {
+                        string fn = filename.First();
+                        Timeline tl = _state.LoadTimeline(fn);
+                        if (tl != null)
+                        {
+                            SetTimelineOverrideToFile(tl.Territory, fn);
+                        }
+                    }
+                });
+            }
+            ImGui.EndTable();
+            UserInterface.KeepWindowInSight();
+            ImGui.End();
+        }
+
+        private void RemoveTimelineOverrideFrom(ushort territory)
+        {
+            Log(LogLevelEnum.Debug, "Removing timeline override from territory {0}", territory);
+            lock (_state.TimelineOverrides)
+            {
+                if (_state.TimelineOverrides.ContainsKey(territory) == false)
+                {
+                    return;
+                }
+                _state.TimelineOverrides.Remove(territory);
+            }
+            lock (_state.AllTimelines)
+            {
+                if (_state.AllTimelines.ContainsKey(territory) == true)
+                {
+                    _state.AllTimelines.Remove(territory);
+                }
+            }
+            if (_state.cfg.TimelineLocalAllowed == true)
+            {
+                _state.LoadLocalTimelines(territory);
+            }
+        }
+
+        private void SetTimelineOverrideToFile(ushort territory, string filename)
+        {
+            Log(LogLevelEnum.Debug, "Setting timeline override for territory {0} to {1}", territory, filename);
+            Timeline tl = _state.LoadTimeline(filename);
+            if (tl == null)
+            {
+                Log(LogLevelEnum.Warning, "Timeline file {0} could not be loaded as override for territory {1}", filename, territory);
+                return;
+            }
+            if (tl.Territory != territory)
+            {
+                Log(LogLevelEnum.Warning, "Timeline file {0} is meant for another territory {1}, not territory {2}", filename, tl.Territory, territory);
+                return;
+            }
+            lock (_state.AllTimelines)
+            {
+                _state.AllTimelines[territory] = tl;
+            }
+            lock (_state.TimelineOverrides)
+            {
+                _state.TimelineOverrides[territory] = filename;
+            }
+            if (territory == _state.cs.TerritoryType)
+            {
+                _state.Cs_TerritoryChanged(territory);
+            }
         }
 
         private void RenderMethodCall(Delegate del)

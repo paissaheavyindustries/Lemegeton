@@ -1,4 +1,5 @@
 ﻿using Dalamud.Interface;
+using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Internal;
 using ImGuiNET;
 using ImGuiScene;
@@ -19,6 +20,8 @@ namespace Lemegeton.Core
         private Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap>();
         private Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap>();
         private Dictionary<uint, IDalamudTextureWrap> _onDemand = new Dictionary<uint, IDalamudTextureWrap>();
+
+        internal FileDialogManager _dialogManager = new FileDialogManager();
 
         internal State _state;
 
@@ -57,7 +60,7 @@ namespace Lemegeton.Core
         }
 
         internal void LoadTextures()
-        {
+        {            
             _misc[MiscIconEnum.Lemegeton] = GetTexture(33237);
             _misc[MiscIconEnum.BlueDiamond] = GetTexture(63937);
             _misc[MiscIconEnum.PurpleDiamond] = GetTexture(63939);
@@ -354,6 +357,21 @@ namespace Lemegeton.Core
             return bitmap;
         }
 
+        internal static bool IconText(FontAwesomeIcon icon, string tooltip)
+        {
+            ImGui.PushFont(UiBuilder.IconFont);
+            string ico = icon.ToIconString();
+            ImGui.Text(ico);
+            ImGui.PopFont();
+            if (tooltip != null && ImGui.IsItemHovered() == true)
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text(tooltip);
+                ImGui.EndTooltip();
+            }
+            return false;
+        }
+
         internal static bool IconButton(FontAwesomeIcon icon, string tooltip)
         {
             ImGui.PushFont(UiBuilder.IconFont);
@@ -364,10 +382,18 @@ namespace Lemegeton.Core
                 return true;
             }
             ImGui.PopFont();
-            if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
+            if (tooltip != null && ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
             {
                 ImGui.BeginTooltip();
-                ImGui.Text(tooltip);
+                int cut = tooltip.IndexOf("##");
+                if (cut >= 0)
+                {
+                    ImGui.Text(tooltip.Substring(0, cut));
+                }
+                else
+                {
+                    ImGui.Text(tooltip);
+                }
                 ImGui.EndTooltip();
             }
             return false;
@@ -638,6 +664,17 @@ namespace Lemegeton.Core
             ImGui.TextWrapped(text);
             Vector2 anp2 = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new Vector2(tenp.X, Math.Max(anp1.Y, anp2.Y)));
+        }
+
+        internal void ClearDialog()
+        {
+            _dialogManager.Reset();
+        }
+
+        internal void OpenFileDialog(string title, string filter, string startPath, Action<bool, List<string>> callback)
+        {
+            ClearDialog();
+            _dialogManager.OpenFileDialog(title, filter, callback, 1, startPath, true);
         }
 
     }

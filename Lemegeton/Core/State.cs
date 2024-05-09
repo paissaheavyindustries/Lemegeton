@@ -37,6 +37,7 @@ using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lemegeton.PacketHeaders;
+using System.Text.RegularExpressions;
 
 namespace Lemegeton.Core
 {
@@ -211,6 +212,7 @@ namespace Lemegeton.Core
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
         internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
+        internal Dictionary<ushort, string> TimelineOverrides = new Dictionary<ushort, string>();
 
         internal List<MarkerApplication> MarkerHistory = new List<MarkerApplication>();
 
@@ -413,27 +415,46 @@ namespace Lemegeton.Core
             Directory.CreateDirectory(Path.GetDirectoryName(path));
         }
 
-        public void LoadLocalTimelines()
+        public void LoadLocalTimelines(ushort territory)
         {
             try
             {
                 PrepareFolder(cfg.TimelineLocalFolder);
                 var timelinefiles = Directory.GetFiles(cfg.TimelineLocalFolder, "*.timeline.xml").OrderBy(x => new FileInfo(x).LastWriteTime);
+                Regex rex = new Regex("Lemegeton_(?<territory>[0-9]{1,})[^0-9]");                
                 Dictionary<ushort, Timeline> tls = new Dictionary<ushort, Timeline>();
                 foreach (string fn in timelinefiles)
                 {
+                    Match m = rex.Match(fn);
+                    if (m.Success == false)
+                    {
+                        continue;
+                    }
+                    ushort t = ushort.Parse(m.Groups["territory"].Value);
+                    if (tls.ContainsKey(t) == true || (territory != 0 && t != territory))
+                    {
+                        continue;
+                    }
                     Timeline tlx = LoadTimeline(fn);
                     if (tlx != null)
                     {
                         tls[tlx.Territory] = tlx;
                     }
                 }
-                foreach (KeyValuePair<ushort, Timeline> tl in tls)
+                foreach (KeyValuePair<ushort, Timeline> kp in tls)
                 {
-                    Log(LogLevelEnum.Debug, null, "Timeline from {0} set to territory {1}", tl.Value.Filename, tl.Key);
+                    lock (TimelineOverrides)
+                    {
+                        if (TimelineOverrides.ContainsKey(kp.Key))
+                        {
+                            Log(LogLevelEnum.Debug, null, "Timeline from {0} not set to territory {1}, manually overridden", kp.Value.Filename, kp.Key);
+                            continue;
+                        }
+                    }
+                    Log(LogLevelEnum.Debug, null, "Timeline from {0} automatically set to territory {1}", kp.Value.Filename, kp.Key);
                     lock (AllTimelines)
                     {
-                        AllTimelines[tl.Key] = tl.Value;
+                        AllTimelines[kp.Key] = kp.Value;
                     }
                 }
             }
@@ -442,7 +463,25 @@ namespace Lemegeton.Core
                 Log(LogLevelEnum.Error, ex, "Couldn't load timelines due to an exception");
             }
         }
-        
+
+        public void LoadOverriddenTimelines()
+        {
+            Dictionary<ushort, string> tlcopy;
+            lock (TimelineOverrides)                
+            {
+                tlcopy = new Dictionary<ushort, string>(TimelineOverrides);
+            }
+            foreach (KeyValuePair<ushort, string> kp in tlcopy)
+            {
+                Timeline tlx = LoadTimeline(kp.Value);
+                Log(LogLevelEnum.Debug, null, "Timeline override from {0} set to territory {1}", kp.Value, kp.Key);
+                lock (AllTimelines)
+                {
+                    AllTimelines[kp.Key] = tlx;
+                }
+            }
+        }
+
         public Timeline LoadTimeline(string filename)
         {
             try
@@ -546,10 +585,12 @@ namespace Lemegeton.Core
             cs.TerritoryChanged += Cs_TerritoryChanged;
             pi.UiBuilder.OpenMainUi += UiBuilder_OpenConfigUi;
             pi.UiBuilder.OpenConfigUi += UiBuilder_OpenConfigUi;
+            plug.DeserializeTimelineOverrides(cfg.PropertyBlob);
             if (cfg.TimelineLocalAllowed == true)
             {
-                LoadLocalTimelines();
+                LoadLocalTimelines(0);
             }
+            LoadOverriddenTimelines();
             Cs_TerritoryChanged(cs.TerritoryType);
         }
 
@@ -656,7 +697,7 @@ namespace Lemegeton.Core
             ClearReactionQueue();
         }
 
-        private void Cs_TerritoryChanged(ushort e)
+        internal void Cs_TerritoryChanged(ushort e)
         {            
             _timeline = null;
             AutoselectTimeline(e);
