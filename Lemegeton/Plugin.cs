@@ -39,11 +39,8 @@ using static Lemegeton.Core.AutomarkerPrio;
 using System.Net.Http;
 using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using System.Xml.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Internal;
-using static Dalamud.Interface.Utility.Raii.ImRaii;
-using static FFXIVClientStructs.FFXIV.Common.Component.BGCollision.MeshPCB;
 
 namespace Lemegeton
 {
@@ -56,7 +53,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.2";
+        public string Version = "1.0.3.4";
 
         internal class Downloadable
         {
@@ -315,8 +312,7 @@ namespace Lemegeton
             if (_state.cs.IsLoggedIn == true)
             {
                 Cs_Login();
-            }
-            _state.AutoselectTimeline(_state.cs.TerritoryType);
+            }            
         }
 
         private void InitializeActionTypes()
@@ -808,12 +804,23 @@ namespace Lemegeton
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(data);
             XmlNode root = doc.SelectSingleNode("/Lemegeton/TimelineOverrides");
+            if (root == null)
+            {
+                return;
+            }
             foreach (XmlNode ncc in root.ChildNodes)
             {
-                ushort territory = ushort.Parse(ncc.Attributes["Territory"].Value);
-                lock (_state.TimelineOverrides)
+                try
                 {
-                    _state.TimelineOverrides[territory] = ncc.Attributes["Filename"].Value;
+                    ushort territory = ushort.Parse(ncc.Attributes["Territory"].Value);
+                    lock (_state.TimelineOverrides)
+                    {
+                        _state.TimelineOverrides[territory] = ncc.Attributes["Filename"].Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    GenericExceptionHandler(ex);
                 }
             }
         }

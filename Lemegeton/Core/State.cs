@@ -1,11 +1,6 @@
 ﻿using Dalamud.Logging;
-using Dalamud.Data;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
-using Dalamud.Game.Network;
-using Dalamud.Interface;
 using Dalamud.Plugin;
 using ImGuiNET;
 using System.Numerics;
@@ -35,8 +30,6 @@ using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using Lemegeton.PacketHeaders;
 using System.Text.RegularExpressions;
 
 namespace Lemegeton.Core
@@ -231,6 +224,8 @@ namespace Lemegeton.Core
         internal List<DeferredInvoke> InvoqFramework = new List<DeferredInvoke>();
         internal AutoResetEvent InvoqThreadNew = new AutoResetEvent(false);
         internal bool _newReactions = false;
+        internal ushort _territoryCurrent = 0;
+        internal ushort _territoryNext = 0;
 
         private Dictionary<nint, bool> _objectsInCombat = new Dictionary<nint, bool>();
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
@@ -631,6 +626,14 @@ namespace Lemegeton.Core
 
         private void FrameworkUpdate(IFramework framework)
         {
+            if (_territoryNext != _territoryCurrent)
+            {
+                Log(LogLevelEnum.Debug, null, "Territory changing from {0} to {1}", _territoryCurrent, _territoryNext);
+                _timeline = null;
+                _territoryCurrent = _territoryNext;                
+                AutoselectTimeline(_territoryCurrent);
+                InvokeZoneChange(_territoryCurrent);
+            }
             if (_inCombat == true)
             {
                 Timeline t = _timeline;
@@ -683,25 +686,23 @@ namespace Lemegeton.Core
                 int num = tl.SelectProfiles(cs.LocalPlayer.ClassJob.Id);
                 if (num > 0)
                 {
-                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, {1} selected profile(s)", cs.TerritoryType, num);
+                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, {1} selected profile(s)", territory, num);
                 }
                 else
                 {
-                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, no profile selected", cs.TerritoryType);
+                    Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, no profile selected", territory);
                 }
             }
             else
             {
-                Log(LogLevelEnum.Debug, null, "No timeline available for territory {0}", cs.TerritoryType);
-            }
+                Log(LogLevelEnum.Debug, null, "No timeline available for territory {0}", territory);
+            }            
             ClearReactionQueue();
         }
 
         internal void Cs_TerritoryChanged(ushort e)
-        {            
-            _timeline = null;
-            AutoselectTimeline(e);
-            InvokeZoneChange(e);
+        {
+            _territoryNext = e;
         }
 
         private void Cd_ConditionChange(ConditionFlag flag, bool value)

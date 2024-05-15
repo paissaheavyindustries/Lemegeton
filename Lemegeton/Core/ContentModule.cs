@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using static Lemegeton.Content.UltOmegaProtocol;
 
 namespace Lemegeton.Core
 {

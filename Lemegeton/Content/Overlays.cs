@@ -1,28 +1,12 @@
-﻿using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.ClientState.Objects.Types;
-using ImGuiNET;
+﻿using ImGuiNET;
 using Lemegeton.Core;
 using System;
 using System.Numerics;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
-using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
-using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using System.Collections.Generic;
-using Dalamud.Game.ClientState.Statuses;
 using static Lemegeton.Core.State;
-using System.IO;
 using static Lemegeton.Core.NetworkDecoder;
 using System.Linq;
-using System.Reflection.Metadata;
-using static Lemegeton.Content.Radar.AlertFinder;
-using ImGuiScene;
-using Lemegeton.ContentCategory;
-using Newtonsoft.Json.Linq;
-using System.ComponentModel;
-using Dalamud.Interface;
-using System.ComponentModel.Design;
-using Lumina.Excel.GeneratedSheets;
 using Dalamud.Interface.Internal;
 
 namespace Lemegeton.Content
@@ -83,7 +67,6 @@ namespace Lemegeton.Content
                     string proptr = I18n.Translate(path);
                     ImGui.Text(proptr);
                     ImGui.PushItemWidth(avail.X);
-
                     ImGui.Text(Environment.NewLine + I18n.Translate(path + "/BarWidth"));
                     float barw = _dt._visualBarWidth;
                     if (ImGui.SliderFloat("##" + path + "/BarWidth", ref barw, 50.0f, 400.0f, "%.0f") == true)
@@ -250,6 +233,9 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2000)]
             public DotSettingsWidget DotSettings { get; set; }
 
+            [AttributeOrderNumber(3000)]
+            public bool ClampToScreen { get; set; } = true;
+
             private Dictionary<uint, DotSpecification> specs = new Dictionary<uint, DotSpecification>();
             private List<DotApplication> apps = new List<DotApplication>();
             public override FeaturesEnum Features => FeaturesEnum.Drawing;
@@ -413,7 +399,8 @@ namespace Lemegeton.Content
                     return false;
                 }
                 Dictionary<GameObject, float> stacks = new Dictionary<GameObject, float>();
-                List<DotApplication> exps = new List<DotApplication>();                
+                List<DotApplication> exps = new List<DotApplication>();
+                Vector2 disp = ImGui.GetIO().DisplaySize;
                 foreach (DotApplication d in apps)
                 {
                     if (DateTime.Now > d.Applied.AddSeconds(d.Duration))
@@ -426,20 +413,54 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    Vector3 pos = _state.plug._ui.TranslateToScreen(
-                        go.Position.X + _visualItemOffsetWorldX,
-                        go.Position.Y + _visualItemOffsetWorldY,
-                        go.Position.Z + _visualItemOffsetWorldZ
-                    );
-                    pos = new Vector3(pos.X + _visualItemOffsetScreenX, pos.Y + _visualItemOffsetScreenY, pos.Z);
-                    if (stacks.TryGetValue(go, out float stack) == false)
+                    try
                     {
-                        stack = 0.0f;
+                        Vector3 pos = _state.plug._ui.TranslateToScreen(
+                            go.Position.X + _visualItemOffsetWorldX,
+                            go.Position.Y + _visualItemOffsetWorldY,
+                            go.Position.Z + _visualItemOffsetWorldZ
+                        );
+                        pos = new Vector3(pos.X + _visualItemOffsetScreenX, pos.Y + _visualItemOffsetScreenY, pos.Z);
+                        if (stacks.TryGetValue(go, out float stack) == false)
+                        {
+                            stack = 0.0f;
+                        }
+                        float xofs = (_visualShowBar == true ? (_visualBarWidth / 2.0f) : 0.0f);
+                        float yofs = (_visualItemHeight + stack);
+                        DotSpecification spec = specs[d.StatusId];
+                        if (ClampToScreen == true)
+                        {
+                            float ix = 0.0f;
+                            if (spec.StatusIcon != null && _visualShowIcon == true)
+                            {
+                                float iw = spec.StatusIcon.Width * (_visualItemHeight/ spec.StatusIcon.Height);
+                                ix = iw + 3.0f;
+                            }
+                            if (pos.X < 0.0f + xofs + ix)
+                            {
+                                pos.X = 0.0f + xofs + ix;
+                            }
+                            if (pos.X > disp.X - xofs)
+                            {
+                                pos.X = disp.X - xofs;
+                            }
+                            if (pos.Y < 0.0f + yofs)
+                            {
+                                pos.Y = 0.0f + yofs;
+                            }
+                            if (pos.Y > disp.Y)
+                            {
+                                pos.Y = disp.Y;
+                            }
+                        }
+                        float timeLeft = d.Duration - (float)(DateTime.Now - d.Applied).TotalSeconds;
+                        DrawTimerBar(draw, pos.X - xofs, pos.Y - yofs, _visualBarWidth, _visualItemHeight, timeLeft, d.Duration, spec.StatusIcon);
+                        stacks[go] = stack + _visualItemHeight + 2.0f;
                     }
-                    float timeLeft = d.Duration - (float)(DateTime.Now - d.Applied).TotalSeconds;
-                    DotSpecification spec = specs[d.StatusId];
-                    DrawTimerBar(draw, pos.X - (_visualShowBar == true ? (_visualBarWidth / 2.0f) : 0.0f), pos.Y - (_visualItemHeight + stack), _visualBarWidth, _visualItemHeight, timeLeft, d.Duration, spec.StatusIcon);
-                    stacks[go] = stack + _visualItemHeight + 2.0f;
+                    catch (Exception ex)
+                    {
+                        Log(LogLevelEnum.Error, ex, "Exception when drawing {0}", go);
+                    }
                 }
                 foreach (DotApplication d in exps)
                 {
@@ -470,10 +491,10 @@ namespace Lemegeton.Content
                     }
                     _subbed = true;
                     Log(LogLevelEnum.Debug, null, "Subscribing to events");
-                    _state.OnStatusChange += _state_OnStatusChange;
-                    _state.OnZoneChange += _state_OnZoneChange;
-                    _state.OnCombatantRemoved += _state_OnCombatantRemoved;
-                    _state.OnDirectorUpdate += _state_OnDirectorUpdate;
+                    _state.OnStatusChange += OnStatusChange;
+                    _state.OnZoneChange += OnZoneChange;
+                    _state.OnCombatantRemoved += OnCombatantRemoved;
+                    _state.OnDirectorUpdate += OnDirectorUpdate;
                 }
             }
 
@@ -486,10 +507,10 @@ namespace Lemegeton.Content
                         return;
                     }
                     Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
-                    _state.OnDirectorUpdate -= _state_OnDirectorUpdate;
-                    _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
-                    _state.OnStatusChange -= _state_OnStatusChange;
-                    _state.OnZoneChange -= _state_OnZoneChange;
+                    _state.OnDirectorUpdate -= OnDirectorUpdate;
+                    _state.OnCombatantRemoved -= OnCombatantRemoved;
+                    _state.OnStatusChange -= OnStatusChange;
+                    _state.OnZoneChange -= OnZoneChange;
                     _subbed = false;
                 }
             }
@@ -533,7 +554,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
+            private void OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
             {
                 if (param2 == (uint)DirectorTypeEnum.FadeOut)
                 {
@@ -541,17 +562,17 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnZoneChange(ushort newZone)
+            private void OnZoneChange(ushort newZone)
             {
                 ClearDots(0);
             }
 
-            private void _state_OnCombatantRemoved(uint actorId, nint addr)
+            private void OnCombatantRemoved(uint actorId, nint addr)
             {
                 ClearDots(actorId);
             }
 
-            private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+            private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
             {
                 uint me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ObjectId : 0;
                 if (me == 0 || src != me)

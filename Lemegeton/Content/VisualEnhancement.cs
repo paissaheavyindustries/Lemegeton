@@ -1,15 +1,12 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Interface.Internal;
 using ImGuiNET;
 using Lemegeton.Core;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
-using static Lemegeton.Content.Overlays;
-using static Lemegeton.Content.Overlays.DotTracker;
+using static Lemegeton.Core.State;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
@@ -145,12 +142,14 @@ namespace Lemegeton.Content
             public CastbarVisualsWidget CastbarVisuals { get; set; }
 
             [AttributeOrderNumber(3000)]
-            public bool OnlyCurrentTarget { get; set; } = true;
+            public bool ClampToScreen { get; set; } = true;
             [AttributeOrderNumber(3001)]
-            public bool OnlyTargettable { get; set; } = true;
+            public bool OnlyCurrentTarget { get; set; } = true;
             [AttributeOrderNumber(3002)]
-            public bool ShowCastName { get; set; } = false;
+            public bool OnlyTargettable { get; set; } = true;
             [AttributeOrderNumber(3003)]
+            public bool ShowCastName { get; set; } = false;
+            [AttributeOrderNumber(3004)]
             public bool ShowCastTime { get; set; } = false;
 
             internal float _visualBarHeight { get; set; } = 20.0f;
@@ -248,6 +247,7 @@ namespace Lemegeton.Content
                     return false;
                 }
                 PlayerCharacter c = _state.cs.LocalPlayer;
+                Vector2 disp = ImGui.GetIO().DisplaySize;
                 foreach (GameObject go in _state.ot)
                 {
                     if (go.ObjectKind != ObjectKind.BattleNpc)
@@ -262,28 +262,58 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    bool isTargettable;
-                    unsafe
+                    try
                     {
-                        GameObjectPtr* gop = (GameObjectPtr*)go.Address;
-                        isTargettable = gop->GetIsTargetable();
-                    }                    
-                    if (OnlyTargettable == true && isTargettable == false)
-                    {
-                        continue;
+                        if (!(go is BattleChara))
+                        {
+                            continue;
+                        }
+                        bool isTargettable;
+                        unsafe
+                        {
+                            GameObjectPtr* gop = (GameObjectPtr*)go.Address;
+                            isTargettable = gop->GetIsTargetable();
+                        }
+                        if (OnlyTargettable == true && isTargettable == false)
+                        {
+                            continue;
+                        }
+                        BattleChara bc = go as BattleChara;
+                        if (bc.IsCasting == true && bc.CastActionId > 0)
+                        {
+                            Vector3 pos = _state.plug._ui.TranslateToScreen(
+                                go.Position.X + _visualBarOffsetWorldX,
+                                go.Position.Y + _visualBarOffsetWorldY,
+                                go.Position.Z + _visualBarOffsetWorldZ
+                            );
+                            pos = new Vector3(pos.X + _visualBarOffsetScreenX, pos.Y + _visualBarOffsetScreenY, pos.Z);
+                            if (ClampToScreen == true)
+                            {                                
+                                if (pos.X < 0.0f + (_visualBarWidth / 2.0f))
+                                {
+                                    pos.X = 0.0f + (_visualBarWidth / 2.0f);
+                                }
+                                if (pos.X > disp.X - (_visualBarWidth / 2.0f))
+                                {
+                                    pos.X = disp.X - (_visualBarWidth / 2.0f);
+                                }
+                                if (pos.Y < 0.0f + _visualBarHeight)
+                                {
+                                    pos.Y = 0.0f + _visualBarHeight;
+                                }
+                                if (pos.Y > disp.Y)
+                                {
+                                    pos.Y = disp.Y;
+                                }
+                            }
+                            DrawCastBar(draw, pos.X - (_visualBarWidth / 2.0f), pos.Y - _visualBarHeight, _visualBarWidth, _visualBarHeight, bc.TotalCastTime - bc.CurrentCastTime, bc.TotalCastTime, bc.IsCastInterruptible,
+                                ShowCastName == true ? _state.plug.GetActionName(bc.CastActionId) : ""                                
+                            );
+                        }
                     }
-                    BattleChara bc = go as BattleChara;
-                    if (bc.IsCasting == true && bc.CastActionId > 0)
+                    catch (Exception ex)
                     {
-                        Vector3 pos = _state.plug._ui.TranslateToScreen(
-                            go.Position.X + _visualBarOffsetWorldX,
-                            go.Position.Y + _visualBarOffsetWorldY,
-                            go.Position.Z + _visualBarOffsetWorldZ
-                        );
-                        pos = new Vector3(pos.X + _visualBarOffsetScreenX, pos.Y + _visualBarOffsetScreenY, pos.Z);                        
-                        DrawCastBar(draw, pos.X - (_visualBarWidth / 2.0f), pos.Y - _visualBarHeight, _visualBarWidth, _visualBarHeight, bc.TotalCastTime - bc.CurrentCastTime, bc.TotalCastTime, bc.IsCastInterruptible, 
-                            ShowCastName == true ? _state.plug.GetActionName(bc.CastActionId) : ""
-                        );
+                        Log(LogLevelEnum.Error, ex, "Exception when drawing {0}", go);
                     }
                 }
                 return true;

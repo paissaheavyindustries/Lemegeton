@@ -14,6 +14,21 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.3.2
+            //AddEntry("Timelines/TimelineSelector", "Open timeline selector");
+            //AddEntry("Timelines/TimelineSelector/WindowTitle", "Lemegeton timeline selector");
+            //AddEntry("Timelines/TimelineSelector/SelectionInfo", "By default, Lemegeton will select the most recently edited timeline file it can find for a specific zone. You can add zone-specific overrides to make it always use the same timeline file. Please note that timeline reactions are generally tied to a specific timeline file.");
+            //AddEntry("Timelines/TimelineSelector/ColZoneID", "ID");
+            //AddEntry("Timelines/TimelineSelector/ColZoneName", "Zone name");
+            //AddEntry("Timelines/TimelineSelector/ColZoneFile", "Timeline file in use");
+            //AddEntry("Timelines/TimelineSelector/ChangeTimelineFile", "Change timeline file");
+            //AddEntry("Timelines/TimelineSelector/DeleteOverride", "Remove timeline override");
+            //AddEntry("Timelines/TimelineSelector/SelTypeAutomatic", "Selected automatically");
+            //AddEntry("Timelines/TimelineSelector/SelTypeOverride", "Overridden manually");
+            //AddEntry("Timelines/TimelineSelector/SelectTimelineFile", "Select timeline file to use for '{0}'");
+            //AddEntry("Timelines/TimelineSelector/SelectTimelineFileUnspecified", "Select timeline file to add");
+            //AddEntry("Timelines/TimelineSelector/AddTimelineFile", "Add timeline file");
+            #endregion
             #region 1.0.3.1
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons", "(P6) Dragon HP difference indicator");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "Enabled");

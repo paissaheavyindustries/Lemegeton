@@ -274,8 +274,8 @@ namespace Lemegeton.Content
                     case FishingStateEnum.Idle:
                         if (_listening == false)
                         {
-                            _state.OnEventPlay += _state_OnEventPlay;
-                            _state.OnStatusChange += _state_OnStatusChange;
+                            _state.OnEventPlay += OnEventPlay;
+                            _state.OnStatusChange += OnStatusChange;
                             _listening = true;
                         }
                         if (ReleaseEverything == true && CanRelease() == true && CanMooch() == false && CanMooch2() == false)
@@ -345,8 +345,8 @@ namespace Lemegeton.Content
             {
                 if (_listening == true)
                 {
-                    _state.OnEventPlay -= _state_OnEventPlay;
-                    _state.OnStatusChange -= _state_OnStatusChange;
+                    _state.OnEventPlay -= OnEventPlay;
+                    _state.OnStatusChange -= OnStatusChange;
                     _listening = false;
                 }
                 _anglerStacks = 0;
@@ -354,7 +354,7 @@ namespace Lemegeton.Content
                 FishingState = FishingStateEnum.Idle;
             }
 
-            private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+            private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
             {
                 if (statusId == 764)
                 {
@@ -367,7 +367,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
+            private void OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
             {
                 if (FishingState == FishingStateEnum.Fishing && scene == 5)
                 {

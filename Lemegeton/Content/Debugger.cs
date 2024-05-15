@@ -11,11 +11,6 @@ using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
-using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 
 namespace Lemegeton.Content
 {
@@ -64,6 +59,7 @@ namespace Lemegeton.Content
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 18.0f / defSize;
+                Vector2 disp = ImGui.GetIO().DisplaySize;
                 foreach (GameObject go in _state.ot)
                 {
                     int renderFlags;
@@ -169,6 +165,14 @@ namespace Lemegeton.Content
                     sz.Y *= mul;
                     pt.X = temp.X - (sz.X / 2.0f);
                     pt.Y = temp.Y + 10.0f;
+                    if (pt.X + sz.X < 0.0f || pt.X > disp.X)
+                    {
+                        continue;
+                    }
+                    if (pt.Y + sz.Y < 0.0f || pt.Y > disp.Y)
+                    {
+                        continue;
+                    }                    
                     if (ShowTextBg == true)
                     {
                         draw.AddRectFilled(
@@ -556,20 +560,20 @@ namespace Lemegeton.Content
                     _subbed = true;
                     Log(LogLevelEnum.Debug, null, "Subscribing to events");
                     Reset();
-                    _state.OnAction += _state_OnAction;
-                    _state.OnCastBegin += _state_OnCastBegin;
-                    _state.OnCombatChange += _state_OnCombatChange;
-                    _state.OnHeadMarker += _state_OnHeadMarker;
-                    _state.OnStatusChange += _state_OnStatusChange;
-                    _state.OnZoneChange += _state_OnZoneChange;
-                    _state.OnTether += _state_OnTether;
-                    _state.OnMapEffect += _state_OnMapEffect;
-                    _state.OnDirectorUpdate += _state_OnDirectorUpdate;
-                    _state.OnCombatantAdded += _state_OnCombatantAdded;
-                    _state.OnCombatantRemoved += _state_OnCombatantRemoved;
-                    _state.OnEventPlay += _state_OnEventPlay;
-                    _state.OnEventPlay64 += _state_OnEventPlay64;
-                    _state.OnActorControl += _state_OnActorControl;
+                    _state.OnAction += OnAction;
+                    _state.OnCastBegin += OnCastBegin;
+                    _state.OnCombatChange += OnCombatChange;
+                    _state.OnHeadMarker += OnHeadMarker;
+                    _state.OnStatusChange += OnStatusChange;
+                    _state.OnZoneChange += OnZoneChange;
+                    _state.OnTether += OnTether;
+                    _state.OnMapEffect += OnMapEffect;
+                    _state.OnDirectorUpdate += OnDirectorUpdate;
+                    _state.OnCombatantAdded += OnCombatantAdded;
+                    _state.OnCombatantRemoved += OnCombatantRemoved;
+                    _state.OnEventPlay += OnEventPlay;
+                    _state.OnEventPlay64 += OnEventPlay64;
+                    _state.OnActorControl += OnActorControl;
                 }
             }
 
@@ -583,20 +587,20 @@ namespace Lemegeton.Content
                     }
                     Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
                     Reset();
-                    _state.OnActorControl -= _state_OnActorControl;
-                    _state.OnEventPlay64 -= _state_OnEventPlay64;
-                    _state.OnEventPlay -= _state_OnEventPlay;
-                    _state.OnCombatantRemoved -= _state_OnCombatantRemoved;
-                    _state.OnCombatantAdded -= _state_OnCombatantAdded;
-                    _state.OnDirectorUpdate -= _state_OnDirectorUpdate;
-                    _state.OnMapEffect -= _state_OnMapEffect;
-                    _state.OnTether -= _state_OnTether;
-                    _state.OnAction -= _state_OnAction;
-                    _state.OnCastBegin -= _state_OnCastBegin;
-                    _state.OnCombatChange -= _state_OnCombatChange;
-                    _state.OnHeadMarker -= _state_OnHeadMarker;
-                    _state.OnStatusChange -= _state_OnStatusChange;
-                    _state.OnZoneChange -= _state_OnZoneChange;
+                    _state.OnActorControl -= OnActorControl;
+                    _state.OnEventPlay64 -= OnEventPlay64;
+                    _state.OnEventPlay -= OnEventPlay;
+                    _state.OnCombatantRemoved -= OnCombatantRemoved;
+                    _state.OnCombatantAdded -= OnCombatantAdded;
+                    _state.OnDirectorUpdate -= OnDirectorUpdate;
+                    _state.OnMapEffect -= OnMapEffect;
+                    _state.OnTether -= OnTether;
+                    _state.OnAction -= OnAction;
+                    _state.OnCastBegin -= OnCastBegin;
+                    _state.OnCombatChange -= OnCombatChange;
+                    _state.OnHeadMarker -= OnHeadMarker;
+                    _state.OnStatusChange -= OnStatusChange;
+                    _state.OnZoneChange -= OnZoneChange;
                     _subbed = false;
                 }
             }
@@ -853,7 +857,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnEventPlay64()
+            private void OnEventPlay64()
             {
                 if (GoodToLog() == false)
                 {
@@ -870,7 +874,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
+            private void OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
             {
                 if (GoodToLog() == false)
                 {
@@ -888,7 +892,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
+            private void OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
             {
                 if (GoodToLog() == false)
                 {
@@ -905,7 +909,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
+            private void OnActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
             {
                 if (LogActorControl == false || GoodToLog() == false)
                 {
@@ -924,7 +928,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnMapEffect(byte[] data)
+            private void OnMapEffect(byte[] data)
             {
                 if (GoodToLog() == false)
                 {
@@ -946,7 +950,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnTether(uint src, uint dest, uint tetherId)
+            private void OnTether(uint src, uint dest, uint tetherId)
             {
                 if (GoodToLog() == false)
                 {
@@ -965,7 +969,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnZoneChange(ushort newZone)
+            private void OnZoneChange(ushort newZone)
             {
                 if (GoodToLog() == false)
                 {
@@ -982,7 +986,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+            private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
             {
                 if (GoodToLog() == false)
                 {
@@ -1001,7 +1005,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnHeadMarker(uint dest, uint markerId)
+            private void OnHeadMarker(uint dest, uint markerId)
             {
                 if (GoodToLog() == false)
                 {
@@ -1019,7 +1023,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnCombatChange(bool inCombat)
+            private void OnCombatChange(bool inCombat)
             {
                 if (GoodToLog() == false)
                 {
@@ -1036,7 +1040,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
+            private void OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
             {
                 if (GoodToLog() == false)
                 {
@@ -1055,7 +1059,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnAction(uint src, uint dest, ushort actionId)
+            private void OnAction(uint src, uint dest, ushort actionId)
             {
                 if (GoodToLog() == false)
                 {
@@ -1074,7 +1078,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnCombatantAdded(GameObject go)
+            private void OnCombatantAdded(GameObject go)
             {
                 if (GoodToLog() == false)
                 {
@@ -1091,7 +1095,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void _state_OnCombatantRemoved(uint actorId, nint addr)
+            private void OnCombatantRemoved(uint actorId, nint addr)
             {
                 if (GoodToLog() == false)
                 {
