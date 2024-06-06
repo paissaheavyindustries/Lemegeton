@@ -16,10 +16,10 @@ namespace Lemegeton.Language
         {
             #region 1.0.3.1
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons", "(P6) Dragon HP difference indicator");
-            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "Enabled");
+            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "启用");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Test", "Test on self and closest enemy");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar", "Enemy cast bar");
-            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/Enabled", "Enabled");
+            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/Enabled", "启用");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastColor", "Cast bar color");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/WarningColor", "Cast bar time warning color");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/InterruptColor", "Interrupt highlight color");
@@ -37,14 +37,14 @@ namespace Lemegeton.Language
             #endregion
             #region 1.0.2.9
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether", "Statice Present Box tether indicator");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Enabled");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "启用");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/TetherColor", "Add tether color");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Test", "Test random bullets on player");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM", "Pinwheeling Dartboard automarker");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Enabled", "Enabled");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs", "Marker configuration");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Enabled", "启用");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/SelfMarkOnly", "仅标记自己");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/AsSoftmarker", "显示客户端软标记");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs", "标记配置");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Enumeration", "Enumeration");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Chain1", "Chain 1");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM/Signs/Chain2", "Chain 2");
@@ -63,10 +63,10 @@ namespace Lemegeton.Language
             #endregion
             #region 1.0.2.7
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM", "Fate Calibration α automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/SharedSentence", "Shared Sentence");
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Defamation", "Defamation");
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Aggravated1", "Aggravated Assault 1");
@@ -77,10 +77,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Signs/Nothing3", "Nothing 3");
             //AddEntry("Content/Ultimate/UltAlexander/FateAlphaAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM", "Fate Calibration β automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightRestraining", "Light Restraining Order");
             //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/DarkRestraining", "Dark Restraining Order");
             //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Signs/LightHouseArrest", "Light House Arrest");
@@ -92,35 +92,35 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/FateBetaAM/Test", "Test random assignment");
             #endregion
             #region 1.0.2.6
-            //AddEntry("Content/Ultimate/UltAlexander", "The Epic of Alexander (Ultimate)");
-            //AddEntry("Content/Ultimate/UltAlexander/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM", "Limit Cut automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/One", "One");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Two", "Two");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Three", "Three");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Four", "Four");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Five", "Five");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Six", "Six");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Seven", "Seven");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Eight", "Eight");
-            //AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Test", "Test random assignment");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM", "Compressed Water/Lightning automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs/Water", "Compressed Water");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs/Lightning", "Compressed Lightning");
-            //AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltAlexander", "亚历山大绝境战");
+            AddEntry("Content/Ultimate/UltAlexander/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM", "(P1.5)麻将自动标记");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs", "标记配置");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/One", "麻将1");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Two", "麻将2");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Three", "麻将3");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Four", "麻将4");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Five", "麻将5");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Six", "麻将6");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Seven", "麻将7");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Signs/Eight", "麻将8");
+            AddEntry("Content/Ultimate/UltAlexander/LimitCutAM/Test", "测试标记");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM", "(P2)水雷分摊标记");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs", "标记配置");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs/Water", "水分摊");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs/Lightning", "雷分摊");
+            AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Test", "测试标记");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM", "Temporal Stasis automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Enabled"， "启用");
+            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs/House1", "House Arrest 1");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs/House2", "House Arrest 2");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs/Restraining1", "Restraining Order 1");
@@ -132,10 +132,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Prio", "Priority configuration");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM", "Inception Crystal automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/CrystalAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/CrystalAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Signs/Crystal1", "Crystal 1");
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Signs/Crystal2", "Crystal 2");
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Signs/Crystal3", "Crystal 3");
@@ -143,10 +143,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Prio", "Priority configuration");
             //AddEntry("Content/Ultimate/UltAlexander/CrystalAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM", "Inception Formation automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/SharedSentence", "Shared Sentence");            
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/Restraining1", "Restraining Order 1");
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/Restraining2", "Restraining Order 2");
@@ -158,10 +158,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Prio", "Priority configuration");
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM", "Wormhole automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/SelfMarkOnly"， "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/AsSoftmarker"， "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs"， "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/One", "One");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Two", "Two");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Three", "Three");
@@ -172,10 +172,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Eight", "Eight");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM", "Final Word automarker");
-            //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Enabled"， "启用");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/SelfMarkOnly"， "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/AsSoftmarker"， "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs"， "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/LightBeacon", "Light beacon");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/Light1", "Light 1");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/Light2", "Light 2");
@@ -219,7 +219,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltUcob/FireballAm/Enabled", "启用");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/SelfMarkOnly", "仅标记自己");
             AddEntry("Content/Ultimate/UltUcob/FireballAm/AsSoftmarker", "显示客户端软标记");
-            //AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltUcob/FireballAm/Signs/FireballTarget", "Fireball target");
             //AddEntry("Content/Ultimate/UltUcob/FireballAm/Test", "Test random assignment");
             //AddEntry("Content/Debug/Debugger/EventLogger/IncludeLocation", "Include location information");
@@ -230,7 +230,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Enabled", "启用");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/SelfMarkOnly", "仅标记自己");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/AsSoftmarker", "显示客户端软标记");
-            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs", "Marker configuration");
+            //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Signs/TwistingDive", "Dive target");
             AddEntry("Content/Ultimate/UltUcob/GrandOctetAm/Test", "测试标记");
             #endregion
