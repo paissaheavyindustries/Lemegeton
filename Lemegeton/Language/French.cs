@@ -14,6 +14,10 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.3.6
+            AddEntry("Job/VPR", "Rôdeur vipère");
+            AddEntry("Job/PCT", "Pictomancien");
+            #endregion
             #region 1.0.3.2
             //AddEntry("Timelines/TimelineSelector", "Open timeline selector");
             //AddEntry("Timelines/TimelineSelector/WindowTitle", "Lemegeton timeline selector");

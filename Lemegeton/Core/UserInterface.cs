@@ -125,10 +125,12 @@ namespace Lemegeton.Core
             _jobs[AutomarkerPrio.PrioJobEnum.NIN] = GetTexture(62130);
             _jobs[AutomarkerPrio.PrioJobEnum.SAM] = GetTexture(62134);
             _jobs[AutomarkerPrio.PrioJobEnum.RPR] = GetTexture(62139);
+            _jobs[AutomarkerPrio.PrioJobEnum.VPR] = GetTexture(62141);
             _jobs[AutomarkerPrio.PrioJobEnum.BRD] = GetTexture(62123);
             _jobs[AutomarkerPrio.PrioJobEnum.MCH] = GetTexture(62131);
             _jobs[AutomarkerPrio.PrioJobEnum.DNC] = GetTexture(62138);
             _jobs[AutomarkerPrio.PrioJobEnum.BLM] = GetTexture(62125);
+            _jobs[AutomarkerPrio.PrioJobEnum.PCT] = GetTexture(62142);
             _jobs[AutomarkerPrio.PrioJobEnum.SMN] = GetTexture(62127);
             _jobs[AutomarkerPrio.PrioJobEnum.RDM] = GetTexture(62135);
             _jobs[AutomarkerPrio.PrioJobEnum.BLU] = GetTexture(62136);
@@ -290,9 +292,9 @@ namespace Lemegeton.Core
             jobList.AddRange(new PrioJobEnum[] {
                 PrioJobEnum.PLD, PrioJobEnum.WAR, PrioJobEnum.DRK, PrioJobEnum.GNB,
                 PrioJobEnum.WHM, PrioJobEnum.SCH, PrioJobEnum.AST, PrioJobEnum.SGE,
-                PrioJobEnum.MNK, PrioJobEnum.DRG, PrioJobEnum.NIN, PrioJobEnum.SAM, PrioJobEnum.RPR,
+                PrioJobEnum.MNK, PrioJobEnum.DRG, PrioJobEnum.NIN, PrioJobEnum.SAM, PrioJobEnum.RPR, PrioJobEnum.VPR,
                 PrioJobEnum.BRD, PrioJobEnum.MCH, PrioJobEnum.DNC,
-                PrioJobEnum.BLM, PrioJobEnum.SMN, PrioJobEnum.RDM,
+                PrioJobEnum.BLM, PrioJobEnum.PCT, PrioJobEnum.SMN, PrioJobEnum.RDM,
             });
             if (allowLimited == true)
             {
@@ -331,6 +333,7 @@ namespace Lemegeton.Core
                             bitmap = SetJob(bitmap, PrioJobEnum.NIN, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.SAM, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.RPR, selected == false);
+                            bitmap = SetJob(bitmap, PrioJobEnum.VPR, selected == false);
                             break;
                         case PrioRoleEnum.Ranged:
                             bitmap = SetJob(bitmap, PrioJobEnum.BRD, selected == false);
@@ -339,6 +342,7 @@ namespace Lemegeton.Core
                             break;
                         case PrioRoleEnum.Caster:
                             bitmap = SetJob(bitmap, PrioJobEnum.BLM, selected == false);
+                            bitmap = SetJob(bitmap, PrioJobEnum.PCT, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.SMN, selected == false);
                             bitmap = SetJob(bitmap, PrioJobEnum.RDM, selected == false);
                             if (allowLimited == true)

@@ -14,6 +14,10 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.3.6
+            AddEntry("Job/VPR", "ヴァイパー");
+            AddEntry("Job/PCT", "ピクトマンサー");
+            #endregion
             #region 1.0.3.2
             //AddEntry("Timelines/TimelineSelector", "Open timeline selector");
             //AddEntry("Timelines/TimelineSelector/WindowTitle", "Lemegeton timeline selector");

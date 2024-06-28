@@ -76,6 +76,10 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
+                if (actorId == 0 || _gaols.Contains(actorId) == true)
+                {
+                    return;
+                }
                 _gaols.Add(actorId);
                 if (_gaols.Count < 3)
                 {
@@ -119,15 +123,6 @@ namespace Lemegeton.Content
             st.OnZoneChange += OnZoneChange;
         }
 
-        protected override bool ExecutionImplementation()
-        {
-            if (ZoneOk == true)
-            {
-                return base.ExecutionImplementation();
-            }
-            return false;
-        }
-
         private void SubscribeToEvents()
         {
             lock (this)
@@ -138,24 +133,9 @@ namespace Lemegeton.Content
                 }
                 _subbed = true;
                 Log(LogLevelEnum.Debug, null, "Subscribing to events");
-                _state.OnAction += _state_OnAction;
-                _state.OnStatusChange += _state_OnStatusChange;
-            }
-        }
-
-        private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
-        {
-            if (statusId == StatusFetters)
-            {
-                _gaolAm.FeedStatus(statusId, gained);
-            }
-        }
-
-        private void _state_OnAction(uint src, uint dest, ushort actionId)
-        {
-            if (actionId == AbilityTitanGaol1 || actionId == AbilityTitanGaol2)
-            {
-                _gaolAm.FeedAction(dest, actionId);
+                _state.OnAction += OnAction;
+                _state.OnStatusChange += OnStatusChange;
+                _state.OnCombatChange += OnCombatChange;
             }
         }
 
@@ -168,23 +148,41 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
-                _state.OnStatusChange -= _state_OnStatusChange;
-                _state.OnAction -= _state_OnAction;
+                _state.OnStatusChange -= OnStatusChange;
+                _state.OnAction -= OnAction;
+                _state.OnCombatChange -= OnCombatChange;
                 _subbed = false;
+            }
+        }
+
+        protected override bool ExecutionImplementation()
+        {
+            if (ZoneOk == true)
+            {
+                return base.ExecutionImplementation();
+            }
+            return false;
+        }
+
+        private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+        {
+            if (statusId == StatusFetters)
+            {
+                _gaolAm.FeedStatus(statusId, gained);
+            }
+        }
+
+        private void OnAction(uint src, uint dest, ushort actionId)
+        {
+            if (actionId == AbilityTitanGaol1 || actionId == AbilityTitanGaol2)
+            {
+                _gaolAm.FeedAction(dest, actionId);
             }
         }
 
         private void OnCombatChange(bool inCombat)
         {
             Reset();
-            if (inCombat == true)
-            {
-                SubscribeToEvents();
-            }
-            else
-            {
-                UnsubscribeFromEvents();
-            }
         }
 
         private void OnZoneChange(ushort newZone)
@@ -194,13 +192,13 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _gaolAm = (GaolAM)Items["GaolAM"];
-                _state.OnCombatChange += OnCombatChange;
+                SubscribeToEvents();
                 LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {
                 Log(State.LogLevelEnum.Info, null, "Content unavailable");
-                _state.OnCombatChange -= OnCombatChange;
+                UnsubscribeFromEvents();
             }
             ZoneOk = newZoneOk;
         }

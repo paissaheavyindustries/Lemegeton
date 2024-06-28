@@ -694,15 +694,6 @@ namespace Lemegeton.Content
             st.OnZoneChange += OnZoneChange;
         }
 
-        protected override bool ExecutionImplementation()
-        {
-            if (ZoneOk == true)
-            {
-                return base.ExecutionImplementation();
-            }
-            return false;
-        }
-
         private void SubscribeToEvents()
         {
             lock (this)
@@ -716,7 +707,34 @@ namespace Lemegeton.Content
                 _state.OnStatusChange += OnStatusChange;
                 _state.OnCombatantAdded += OnCombatantAdded;
                 _state.OnCombatantRemoved += OnCombatantRemoved;
+                _state.OnCombatChange += OnCombatChange;
             }
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnStatusChange -= OnStatusChange;
+                _state.OnCombatantAdded -= OnCombatantAdded;
+                _state.OnCombatantRemoved -= OnCombatantRemoved;
+                _state.OnCombatChange -= OnCombatChange;
+                _subbed = false;
+            }
+        }
+
+        protected override bool ExecutionImplementation()
+        {
+            if (ZoneOk == true)
+            {
+                return base.ExecutionImplementation();
+            }
+            return false;
         }
 
         private void OnCombatantRemoved(uint actorId, nint addr)
@@ -775,33 +793,9 @@ namespace Lemegeton.Content
             }
         }
 
-        private void UnsubscribeFromEvents()
-        {
-            lock (this)
-            {
-                if (_subbed == false)
-                {
-                    return;
-                }
-                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
-                _state.OnStatusChange -= OnStatusChange;
-                _state.OnCombatantAdded -= OnCombatantAdded;
-                _state.OnCombatantRemoved -= OnCombatantRemoved;
-                _subbed = false;
-            }
-        }
-
         private void OnCombatChange(bool inCombat)
         {
             Reset();
-            if (inCombat == true)
-            {
-                SubscribeToEvents();
-            }
-            else
-            {
-                UnsubscribeFromEvents();
-            }
         }
 
         private void OnZoneChange(ushort newZone)
@@ -815,13 +809,13 @@ namespace Lemegeton.Content
                 _dothAm = (DothAM)Items["DothAM"];
                 _wrothAm = (WrothAM)Items["WrothAM"];
                 _doubleDragons = (DoubleDragons)Items["DoubleDragons"];
-                _state.OnCombatChange += OnCombatChange;
+                SubscribeToEvents();
                 LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {
                 Log(State.LogLevelEnum.Info, null, "Content unavailable");
-                _state.OnCombatChange -= OnCombatChange;
+                UnsubscribeFromEvents();
             }
             ZoneOk = newZoneOk;
         }

@@ -2,7 +2,6 @@
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections;
 using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
@@ -171,6 +170,10 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1:X}", actionId, actorId);
+                if (actorId == 0)
+                {
+                    return;
+                }
                 _lightnings.Add(actorId);
                 if (_lightnings.Count < 2)
                 {
@@ -268,8 +271,11 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-
                 Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
+                if (actorId == 0)
+                {
+                    return;
+                }
                 switch (headMarkerId)
                 {
                     case HeadmarkerEarthshaker:
@@ -376,6 +382,10 @@ namespace Lemegeton.Content
                 }
 
                 Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
+                if (actorId == 0 || _marked.Contains(actorId) == true)
+                {
+                    return;
+                }
                 switch (headMarkerId)
                 {
                     case HeadmarkerLunarDive:
@@ -420,15 +430,6 @@ namespace Lemegeton.Content
             st.OnZoneChange += OnZoneChange;
         }
 
-        protected override bool ExecutionImplementation()
-        {
-            if (ZoneOk == true)
-            {
-                return base.ExecutionImplementation();
-            }
-            return false;
-        }
-
         private void SubscribeToEvents()
         {
             lock (this)
@@ -441,9 +442,37 @@ namespace Lemegeton.Content
                 Log(LogLevelEnum.Debug, null, "Subscribing to events");
                 _state.OnTether += OnTether;
                 _state.OnHeadMarker += OnHeadMarker;
-                _state.OnAction += _state_OnAction;
-                _state.OnStatusChange += _state_OnStatusChange;
+                _state.OnAction += OnAction;
+                _state.OnStatusChange += OnStatusChange;
+                _state.OnCombatChange += OnCombatChange;
             }
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            lock (this)
+            {
+                if (_subbed == false)
+                {
+                    return;
+                }
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnTether -= OnTether;
+                _state.OnHeadMarker -= OnHeadMarker;
+                _state.OnStatusChange -= OnStatusChange;
+                _state.OnAction -= OnAction;
+                _state.OnCombatChange -= OnCombatChange;
+                _subbed = false;
+            }
+        }
+
+        protected override bool ExecutionImplementation()
+        {
+            if (ZoneOk == true)
+            {
+                return base.ExecutionImplementation();
+            }
+            return false;
         }
 
         private void OnTether(uint src, uint dest, uint tetherId)
@@ -466,7 +495,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+        private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
             if (statusId == StatusThunderstruck)
             {
@@ -474,7 +503,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void _state_OnAction(uint src, uint dest, ushort actionId)
+        private void OnAction(uint src, uint dest, ushort actionId)
         {
             if (actionId == AbilityChainLighting)
             {
@@ -512,35 +541,10 @@ namespace Lemegeton.Content
             }
         }
 
-        private void UnsubscribeFromEvents()
-        {
-            lock (this)
-            {
-                if (_subbed == false)
-                {
-                    return;
-                }
-                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
-                _state.OnTether -= OnTether;
-                _state.OnHeadMarker -= OnHeadMarker;
-                _state.OnStatusChange -= _state_OnStatusChange;
-                _state.OnAction -= _state_OnAction;
-                _subbed = false;
-            }
-        }
-
         private void OnCombatChange(bool inCombat)
         {
             Reset();
-            if (inCombat == true)
-            {
-                CurrentPhase = PhaseEnum.Start;
-                SubscribeToEvents();
-            }
-            else
-            {
-                UnsubscribeFromEvents();
-            }
+            CurrentPhase = PhaseEnum.Start;
         }
 
         private void OnZoneChange(ushort newZone)
@@ -553,13 +557,13 @@ namespace Lemegeton.Content
                 _chainLightningAm = (ChainLightningAm)Items["ChainLightningAm"];
                 _tenstrikeAm = (TenstrikeAm)Items["TenstrikeAm"];
                 _grandOctetAm = (GrandOctetAm)Items["GrandOctetAm"];
-                _state.OnCombatChange += OnCombatChange;
+                SubscribeToEvents();
                 LogItems();
             }
             else if (newZoneOk == false && ZoneOk == true)
             {
                 Log(State.LogLevelEnum.Info, null, "Content unavailable");
-                _state.OnCombatChange -= OnCombatChange;
+                UnsubscribeFromEvents();
             }
             ZoneOk = newZoneOk;
         }

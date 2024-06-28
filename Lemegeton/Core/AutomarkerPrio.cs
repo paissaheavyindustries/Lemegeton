@@ -61,10 +61,12 @@ namespace Lemegeton.Core
             NIN = 30, 
             SAM = 34, 
             RPR = 39,
+            VPR = 41,
             BRD = 23, 
             MCH = 31, 
             DNC = 38, 
             BLM = 25,
+            PCT = 42,
             SMN = 27, 
             RDM = 35,
             BLU = 36,
@@ -92,9 +94,9 @@ namespace Lemegeton.Core
             _prioByJob.AddRange(new PrioJobEnum[] {
                 PrioJobEnum.PLD, PrioJobEnum.WAR, PrioJobEnum.DRK, PrioJobEnum.GNB,
                 PrioJobEnum.WHM, PrioJobEnum.SCH, PrioJobEnum.AST, PrioJobEnum.SGE,
-                PrioJobEnum.MNK, PrioJobEnum.DRG, PrioJobEnum.NIN, PrioJobEnum.SAM, PrioJobEnum.RPR,
+                PrioJobEnum.MNK, PrioJobEnum.DRG, PrioJobEnum.NIN, PrioJobEnum.SAM, PrioJobEnum.RPR, PrioJobEnum.VPR,
                 PrioJobEnum.BRD, PrioJobEnum.MCH, PrioJobEnum.DNC,
-                PrioJobEnum.BLM, PrioJobEnum.SMN, PrioJobEnum.RDM,
+                PrioJobEnum.BLM, PrioJobEnum.PCT, PrioJobEnum.SMN, PrioJobEnum.RDM,
             } );
             for (int i = 1; i <= 8; i++)
             {
@@ -110,7 +112,7 @@ namespace Lemegeton.Core
                     return PrioRoleEnum.Tank;
                 case PrioJobEnum.WHM: case PrioJobEnum.SCH: case PrioJobEnum.AST: case PrioJobEnum.SGE:
                     return PrioRoleEnum.Healer;
-                case PrioJobEnum.MNK: case PrioJobEnum.DRG: case PrioJobEnum.NIN: case PrioJobEnum.SAM: case PrioJobEnum.RPR:
+                case PrioJobEnum.MNK: case PrioJobEnum.DRG: case PrioJobEnum.NIN: case PrioJobEnum.SAM: case PrioJobEnum.RPR: case PrioJobEnum.VPR:
                     return PrioRoleEnum.Melee;
                 case PrioJobEnum.BRD: case PrioJobEnum.MCH: case PrioJobEnum.DNC:
                     return PrioRoleEnum.Ranged;
@@ -352,6 +354,22 @@ namespace Lemegeton.Core
                                 kp[1].Split(",").Select(a => (PrioJobEnum)Enum.Parse(typeof(PrioJobEnum), a))
                             );
                             temp.AddRange(from ix in _prioByJob where temp.Contains(ix) == false select ix);
+                            if (temp.Contains(PrioJobEnum.VPR) == false)
+                            {
+                                int jidx = temp.IndexOf(PrioJobEnum.RPR);
+                                if (jidx >= 0)
+                                {
+                                    temp.Insert(jidx + 1, PrioJobEnum.VPR);
+                                }
+                            }
+                            if (temp.Contains(PrioJobEnum.PCT) == false)
+                            {
+                                int jidx = temp.IndexOf(PrioJobEnum.BLM);
+                                if (jidx >= 0)
+                                {
+                                    temp.Insert(jidx + 1, PrioJobEnum.PCT);
+                                }
+                            }
                             _prioByJob = temp;
                         }
                         break;

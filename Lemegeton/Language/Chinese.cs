@@ -14,6 +14,10 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.3.6
+            //AddEntry("Job/VPR", "Viper");
+            //AddEntry("Job/PCT", "Pictomancer");
+            #endregion
             #region 1.0.3.2
             //AddEntry("Timelines/TimelineSelector", "Open timeline selector");
             //AddEntry("Timelines/TimelineSelector/WindowTitle", "Lemegeton timeline selector");
@@ -49,7 +53,7 @@ namespace Lemegeton.Language
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/OnlyTargettable", "Draw only for targettable entities");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/ShowCastName", "Show ability name on cast bar");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/ShowCastTime", "Show remaining time on cast bar");
-#endregion
+            #endregion
             #region 1.0.2.9
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether", "Statice Present Box tether indicator");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Enabled");
