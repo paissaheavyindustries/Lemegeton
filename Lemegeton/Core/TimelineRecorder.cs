@@ -188,7 +188,7 @@ namespace Lemegeton.Core
 
         private bool IsHostile(uint id)
         {
-            GameObject go = _state.GetActorById(id);
+            IGameObject go = _state.GetActorById(id);
             return IsHostile(go);
         }
 
@@ -197,17 +197,17 @@ namespace Lemegeton.Core
             return !IsHostile(id);
         }
 
-        private bool IsHostile(GameObject go)
+        private bool IsHostile(IGameObject go)
         {
-            if (go is BattleChara)
+            if (go is IBattleChara)
             {
-                BattleChara bc = (BattleChara)go;
+                IBattleChara bc = (IBattleChara)go;
                 return ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0);
             }
             return false;
         }
 
-        private bool IsFriendly(GameObject go)
+        private bool IsFriendly(IGameObject go)
         {
             return !IsHostile(go);
         }
@@ -234,10 +234,10 @@ namespace Lemegeton.Core
             }
             _lastActionId = actionId;
             _lastActionTs = DateTime.Now;
-            GameObject go = _state.GetActorById(src);
-            if (go is Character)
+            IGameObject go = _state.GetActorById(src);
+            if (go is ICharacter)
             {
-                Character ch = (Character)go;
+                ICharacter ch = (ICharacter)go;
                 unsafe
                 {
                     CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -247,9 +247,9 @@ namespace Lemegeton.Core
                     }
                 }
             }
-            if (go is BattleChara)
+            if (go is IBattleChara)
             {
-                BattleChara bc = (BattleChara)go;
+                IBattleChara bc = (IBattleChara)go;
                 if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                 {
                     Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(actionId);
@@ -325,15 +325,15 @@ namespace Lemegeton.Core
             }
         }
 
-        private void _state_OnCombatantAdded(GameObject go)
+        private void _state_OnCombatantAdded(IGameObject go)
         {
             if (recState != RecordingStateEnum.Recording || (RecordedEvents & RecordedEventsEnum.HostileSpawn) == 0)
             {
                 return;
             }
-            if (go is Character)
+            if (go is ICharacter)
             {
-                Character ch = (Character)go;
+                ICharacter ch = (ICharacter)go;
                 unsafe
                 {
                     CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -343,9 +343,9 @@ namespace Lemegeton.Core
                     }
                 }
             }
-            if (go is BattleChara)
+            if (go is IBattleChara)
             {
-                BattleChara bc = (BattleChara)go;
+                IBattleChara bc = (IBattleChara)go;
                 if (_lastSpawnNameId == bc.NameId && (DateTime.Now - _lastSpawnTs).TotalMilliseconds < 50.0)
                 {
                     return;

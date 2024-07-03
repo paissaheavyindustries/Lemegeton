@@ -2,12 +2,14 @@
 using Lemegeton.Core;
 using System;
 using System.Numerics;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using System.Collections.Generic;
 using static Lemegeton.Core.State;
 using static Lemegeton.Core.NetworkDecoder;
 using System.Linq;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Lemegeton.Content
 {
@@ -209,7 +211,7 @@ namespace Lemegeton.Content
             {
 
                 public uint StatusId { get; set; } = 0;
-                public uint ActorId { get; set; } = 0;
+                public ulong ActorId { get; set; } = 0;
                 public float Duration { get; set; } = 10.0f;
                 public DateTime Applied { get; set; } = DateTime.Now;
 
@@ -223,7 +225,7 @@ namespace Lemegeton.Content
                 public string CachedName { get; set; } = null;
                 public bool Tracking { get; set; } = true;
 
-                public IDalamudTextureWrap StatusIcon { get; set; } = null;
+                public ISharedImmediateTexture StatusIcon { get; set; } = null;
 
             }
 
@@ -314,7 +316,7 @@ namespace Lemegeton.Content
                 AddDotSpec(new DotSpecification() { Id = 3359, Job = 0 }); // Sustained Damage (Variant donjon Spirit Dart action)
             }
 
-            private void DrawTimerBar(ImDrawListPtr draw, float x, float y, float width, float height, float timeRemaining, float timeMax, IDalamudTextureWrap icon)
+            private void DrawTimerBar(ImDrawListPtr draw, float x, float y, float width, float height, float timeRemaining, float timeMax, ISharedImmediateTexture t)
             {
                 float x2 = x + (_visualShowBar == true ? (width * timeRemaining / timeMax) : 0.0f);
                 float yt = y + (height * 0.3f);
@@ -331,6 +333,7 @@ namespace Lemegeton.Content
                 {
                     maincol = new Vector4(1.0f, timeRemaining / 5.0f, 0.0f, 1.0f);
                 }
+                IDalamudTextureWrap icon = t.GetWrapOrEmpty();
                 if (icon != null && _visualShowIcon == true)
                 {
                     float iw = icon.Width * (height / icon.Height);
@@ -393,7 +396,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                uint me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ObjectId : 0;
+                ulong me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.GameObjectId : 0;
                 if (me == 0)
                 {
                     return false;
@@ -433,7 +436,8 @@ namespace Lemegeton.Content
                             float ix = 0.0f;
                             if (spec.StatusIcon != null && _visualShowIcon == true)
                             {
-                                float iw = spec.StatusIcon.Width * (_visualItemHeight/ spec.StatusIcon.Height);
+                                IDalamudTextureWrap tw = spec.StatusIcon.GetWrapOrEmpty();
+                                float iw = tw.Width * (_visualItemHeight / tw.Height);
                                 ix = iw + 3.0f;
                             }
                             if (pos.X < 0.0f + xofs + ix)
@@ -538,7 +542,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void ClearDots(uint actorId)
+            private void ClearDots(ulong actorId)
             {
                 if (actorId == 0)
                 {
@@ -567,14 +571,14 @@ namespace Lemegeton.Content
                 ClearDots(0);
             }
 
-            private void OnCombatantRemoved(uint actorId, nint addr)
+            private void OnCombatantRemoved(ulong actorId, nint addr)
             {
                 ClearDots(actorId);
             }
 
             private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
             {
-                uint me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ObjectId : 0;
+                ulong me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.GameObjectId : 0;
                 if (me == 0 || src != me)
                 {
                     return;

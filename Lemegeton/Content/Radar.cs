@@ -1,6 +1,8 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
@@ -19,7 +21,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using static Lemegeton.Core.State;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
 namespace Lemegeton.Content
@@ -71,7 +73,7 @@ namespace Lemegeton.Content
                 {
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go.SubKind == 5 && go.IsDead == false)
                     {
-                        BattleChara bc = (BattleChara)go;
+                        IBattleChara bc = (IBattleChara)go;
                         if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
                         {
                             double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
@@ -161,7 +163,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                uint myid = _state.cs.LocalPlayer.ObjectId;
+                ulong myid = _state.cs.LocalPlayer.GameObjectId;
                 Vector3 me = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
@@ -174,7 +176,7 @@ namespace Lemegeton.Content
                         double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
-                        string name = IncludeDistance == true && go.ObjectId != myid ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
+                        string name = IncludeDistance == true && go.GameObjectId != myid ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
                         Vector2 sz = ImGui.CalcTextSize(name);
                         sz.X *= mul;
                         sz.Y *= mul;
@@ -183,8 +185,8 @@ namespace Lemegeton.Content
                         IDalamudTextureWrap jobicon = null;
                         if (ShowJobIcon == true)
                         {
-                            Character chara = go as Character;
-                            jobicon = _state.plug._ui.GetJobIcon(chara.ClassJob.Id);
+                            ICharacter chara = go as ICharacter;
+                            jobicon = _state.plug._ui.GetJobIcon(chara.ClassJob.Id).GetWrapOrEmpty();
                         }
                         if (ShowNames == true)
                         {
@@ -233,7 +235,7 @@ namespace Lemegeton.Content
                         }
                         if (ShowHpBar == true)
                         {
-                            BattleChara bc = go as BattleChara;
+                            IBattleChara bc = go as IBattleChara;
                             if (bc.CurrentHp > 0)
                             {
                                 float barw = sz.X + (ShowNameBg != true ? 10.0f : 0.0f) + (ShowJobIcon == true && jobicon != null ? jobicon.Width : 0.0f);
@@ -346,7 +348,7 @@ namespace Lemegeton.Content
                         return false;
                     }
                 }
-                uint myid = _state.cs.LocalPlayer.ObjectId;
+                ulong myid = _state.cs.LocalPlayer.GameObjectId;
                 Vector3 origme = _state.cs.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 Vector3 me = _state.plug._ui.TranslateToScreen(origme.X, origme.Y, origme.Z);
@@ -367,7 +369,7 @@ namespace Lemegeton.Content
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string ntmp = go.Name.ToString();
-                        string name = IncludeDistance == true && go.ObjectId != myid ? String.Format("{0} ({1:0})", ntmp, dist) : String.Format("{0}", ntmp);
+                        string name = IncludeDistance == true && go.GameObjectId != myid ? String.Format("{0} ({1:0})", ntmp, dist) : String.Format("{0}", ntmp);
                         Vector2 sz = ImGui.CalcTextSize(name);
                         sz.X *= mul;
                         sz.Y *= mul;
@@ -1378,9 +1380,9 @@ namespace Lemegeton.Content
                                     continue;
                                 }
                             }
-                            if (go is Character)
+                            if (go is ICharacter)
                             {
-                                Character ch = go as Character;
+                                ICharacter ch = go as ICharacter;
                                 if (ch.NameId == ae.NameId)
                                 {
                                     SawEntry(go, ae, run);

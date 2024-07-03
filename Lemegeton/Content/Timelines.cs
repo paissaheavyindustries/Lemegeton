@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.IO;
 using static Lemegeton.Core.State;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
@@ -241,9 +241,9 @@ namespace Lemegeton.Content
                 _lastActionId = actionId;
                 _lastActionTs = DateTime.Now;
                 GameObject go = _state.GetActorById(src);
-                if (go is Character)
+                if (go is ICharacter)
                 {
-                    Character ch = (Character)go;
+                    ICharacter ch = (ICharacter)go;
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -253,9 +253,9 @@ namespace Lemegeton.Content
                         }
                     }
                 }
-                if (go is BattleChara)
+                if (go is IBattleChara)
                 {
-                    BattleChara bc = (BattleChara)go;
+                    IBattleChara bc = (IBattleChara)go;
                     if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                     {
                         Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(actionId);
@@ -337,9 +337,9 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (go is Character)
+                if (go is ICharacter)
                 {
-                    Character ch = (Character)go;
+                    ICharacter ch = (ICharacter)go;
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -349,9 +349,9 @@ namespace Lemegeton.Content
                         }
                     }
                 }
-                if (go is BattleChara)
+                if (go is IBattleChara)
                 {
-                    BattleChara bc = (BattleChara)go;
+                    IBattleChara bc = (IBattleChara)go;
                     if (_lastSpawnNameId == bc.NameId && (DateTime.Now - _lastSpawnTs).TotalMilliseconds < 50.0)
                     {
                         return;

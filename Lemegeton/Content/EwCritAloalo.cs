@@ -114,7 +114,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2000)]
             public System.Action Test { get; set; }
 
-            internal uint _midCrystalId = 0;
+            internal ulong _midCrystalId = 0;
             private List<PointF> _points = new List<PointF>();
 
             public SpringCrystal(State state) : base(state)
@@ -138,17 +138,17 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(1179);
-                _midCrystalId = _state.cs.LocalPlayer.ObjectId;
+                _midCrystalId = _state.cs.LocalPlayer.GameObjectId;
             }
 
-            internal void FeedMidCrystal(GameObject go)
+            internal void FeedMidCrystal(IGameObject go)
             {
                 if (Active == false)
                 {
                     return;
                 }
-                _midCrystalId = go.ObjectId;
-                Log(State.LogLevelEnum.Debug, null, "Registered mid crystal {0}", go.ObjectId);
+                _midCrystalId = go.GameObjectId;
+                Log(State.LogLevelEnum.Debug, null, "Registered mid crystal {0}", go.GameObjectId);
             }
 
             protected override bool ExecutionImplementation()
@@ -162,7 +162,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                GameObject go = _state.GetActorById(_midCrystalId);
+                IGameObject go = _state.GetActorById(_midCrystalId);
                 if (go == null)
                 {
                     Reset();
@@ -239,7 +239,7 @@ namespace Lemegeton.Content
             private uint _lalaStatus = 0;
             private uint _lalaAction = 0;
             private uint _lalaHeadmarker = 0;
-            private uint _lalaId = 0;
+            private ulong _lalaId = 0;
 
             public LalaRotation(State state) : base(state)
             {
@@ -265,7 +265,7 @@ namespace Lemegeton.Content
                 }
                 _state.InvokeZoneChange(1179);
                 Random r = new Random();
-                _lalaId = _state.cs.LocalPlayer.ObjectId;
+                _lalaId = _state.cs.LocalPlayer.GameObjectId;
                 _lalaStatus = (uint)(r.Next(0, 2) == 0 ? StatusLalaThree : StatusLalaFive);
                 _lalaHeadmarker = (uint)(r.Next(0, 2) == 0 ? HeadmarkerLalaCW : HeadmarkerLalaCCW);
                 switch (r.Next(0, 4))
@@ -389,7 +389,7 @@ namespace Lemegeton.Content
                 {
                     return true;
                 }
-                GameObject go = _state.GetActorById(_lalaId);
+                IGameObject go = _state.GetActorById(_lalaId);
                 Vector3 t1, t2;
                 Vector3 p1 = go.Position;
                 Vector3 p2, p3;
@@ -512,7 +512,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                if (actorId != _state.cs.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -547,7 +547,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                if (actorId != _state.cs.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -618,7 +618,7 @@ namespace Lemegeton.Content
                 {
                     return true;
                 }
-                GameObject go = _state.cs.LocalPlayer;
+                IGameObject go = _state.cs.LocalPlayer;
                 Vector3 t1, t2;
                 Vector3 p1 = go.Position;
                 Vector3 p2, p3, p4;
@@ -731,7 +731,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                if (actorId != _state.cs.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -759,7 +759,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.ObjectId)
+                if (actorId != _state.cs.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -798,7 +798,7 @@ namespace Lemegeton.Content
                 {
                     return true;
                 }
-                GameObject go = _state.cs.LocalPlayer;
+                IGameObject go = _state.cs.LocalPlayer;
                 Vector3 t1, t2;
                 Vector3 p1 = go.Position;
                 Vector3 p2, p3, p4, p5;
@@ -876,7 +876,7 @@ namespace Lemegeton.Content
                 Load
             }
 
-            private uint _staticeId = 0;
+            private ulong _staticeId = 0;
             private BulletStateEnum[] _bullets = new BulletStateEnum[8];
             private int _bulletIndex = 0;
             private int _bulletsSpent = 0;
@@ -932,7 +932,7 @@ namespace Lemegeton.Content
                     }
                     return;
                 }
-                _staticeId = _state.cs.LocalPlayer.ObjectId;
+                _staticeId = _state.cs.LocalPlayer.GameObjectId;
                 _state.InvokeZoneChange(1179);
                 Random r = new Random();
                 for (int i = 0; i < 8; i++)
@@ -979,7 +979,7 @@ namespace Lemegeton.Content
                     return false;
                 }
                 int bulletsToDraw = 8 - _bulletsSpent;
-                GameObject go = _state.GetActorById(_staticeId);
+                IGameObject go = _state.GetActorById(_staticeId);
                 Vector3 pos = new Vector3(go.Position.X, go.Position.Y + 3.0f, go.Position.Z);
                 Vector3 t1 = _state.plug._ui.TranslateToScreen(pos.X, pos.Y, pos.Z);
                 float radius = 15.0f;
@@ -1040,7 +1040,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2000)]
             public System.Action Test { get; set; }
 
-            private uint _trackerId = 0;
+            private ulong _trackerId = 0;
 
             public StaticePresentTether(State state) : base(state)
             {
@@ -1062,14 +1062,14 @@ namespace Lemegeton.Content
                     return;
                 }                
                 _state.InvokeZoneChange(1179);
-                GameObject me = _state.cs.LocalPlayer as GameObject;
-                foreach (GameObject go in _state.ot)
+                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                foreach (IGameObject go in _state.ot)
                 {
                     if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
-                    if (go.ObjectId == me.ObjectId)
+                    if (go.GameObjectId == me.GameObjectId)
                     {
                         continue;
                     }
@@ -1085,7 +1085,7 @@ namespace Lemegeton.Content
                         continue;
                     }
                     Random r = new Random();
-                    _trackerId = go.ObjectId;
+                    _trackerId = go.GameObjectId;
                     Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
                     return;
                 }
@@ -1097,7 +1097,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (_trackerId == 0 && dest == _state.cs.LocalPlayer.ObjectId)
+                if (_trackerId == 0 && dest == _state.cs.LocalPlayer.GameObjectId)
                 {
                     _trackerId = src;
                 }
@@ -1110,7 +1110,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                GameObject go = _state.GetActorById(_trackerId);
+                IGameObject go = _state.GetActorById(_trackerId);
                 if (go == null)
                 {
                     _trackerId = 0;
@@ -1271,7 +1271,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void _state_OnCombatantRemoved(uint actorId, nint addr)
+        private void _state_OnCombatantRemoved(ulong actorId, nint addr)
         {
             if (actorId == _springCrystal._midCrystalId)
             {
@@ -1279,11 +1279,11 @@ namespace Lemegeton.Content
             }
         }
 
-        private void _state_OnCombatantAdded(GameObject go)
+        private void _state_OnCombatantAdded(IGameObject go)
         {
-            if (go is Character)
+            if (go is ICharacter)
             {
-                Character ch = go as Character;
+                ICharacter ch = go as ICharacter;
                 if (ch.NameId == 12606 || ch.NameId == 12607)
                 {
                     float x = Math.Abs(go.Position.X);

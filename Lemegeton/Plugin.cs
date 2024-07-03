@@ -41,6 +41,8 @@ using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Lemegeton
 {
@@ -53,7 +55,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.6";
+        public string Version = "1.0.3.7";
 
         internal class Downloadable
         {
@@ -257,20 +259,22 @@ namespace Lemegeton
         };
 
         public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] IGameNetwork gameNetwork,
-            [RequiredVersion("1.0")] IChatGui chatGui,
-            [RequiredVersion("1.0")] ICommandManager commandManager,
-            [RequiredVersion("1.0")] IObjectTable objectTable,
-            [RequiredVersion("1.0")] IGameGui gameGui,
-            [RequiredVersion("1.0")] IClientState clientState,
-            [RequiredVersion("1.0")] IDataManager dataManager,
-            [RequiredVersion("1.0")] ITextureProvider textureProvider,
-            [RequiredVersion("1.0")] ICondition condition,
-            [RequiredVersion("1.0")] IFramework framework,
-            [RequiredVersion("1.0")] ISigScanner sigScanner,
-            [RequiredVersion("1.0")] IPartyList partylist,
-            [RequiredVersion("1.0")] ITargetManager targetManager
+            IDalamudPluginInterface pluginInterface,
+            IGameNetwork gameNetwork,
+            IChatGui chatGui,
+            ICommandManager commandManager,
+            IObjectTable objectTable,
+            IGameGui gameGui,
+            IClientState clientState,
+            IDataManager dataManager,
+            ITextureProvider textureProvider,
+            ICondition condition,
+            IFramework framework,
+            ISigScanner sigScanner,
+            IPartyList partylist,
+            ITargetManager targetManager,
+            IPluginLog log,
+            IGameInteropProvider interop
         )
         {
             _state = new State()
@@ -289,6 +293,8 @@ namespace Lemegeton
                 ss = sigScanner,
                 pl = partylist,
                 tm = targetManager,
+                lo = log,
+                io = interop,
                 plug = this
             };
             _ui._state = _state;
@@ -303,7 +309,7 @@ namespace Lemegeton
             ChangeLanguage(_state.cfg.Language);
             InitializeActionTypes();
             _ui.LoadTextures();
-            _state.pi.UiBuilder.BuildFonts += UiBuilder_BuildFonts;            
+            //_state.pi.UiBuilder.FontAtlas.BuildFonts += UiBuilder_BuildFonts; todo
             _mainThread = new Thread(new ParameterizedThreadStart(MainThreadProc));
             _mainThread.Name = "Lemegeton main thread";
             _mainThread.Start(this);
@@ -355,7 +361,7 @@ namespace Lemegeton
             lock (_fontBuilderQueue)
             {
                 _fontBuilderQueue.Add(new Tuple<Core.Language, string>(l, d.LocalFile));
-                _state.pi.UiBuilder.RebuildFonts();
+                //_state.pi.UiBuilder.RebuildFonts(); todo
             }
         }
 
@@ -436,14 +442,19 @@ namespace Lemegeton
 
         public void Dispose()
         {
+            if (_state._markingFuncHook != null)
+            {
+                _state._markingFuncHook.Disable();
+                _state._markingFuncHook.Dispose();
+                _state._markingFuncHook = null;
+            }
             I18n.OnFontDownload -= I18n_OnFontDownload;
             _state.cs.Logout -= Cs_Logout;
             _state.cs.Login -= Cs_Login;
             Cs_Logout();
             _state.Uninitialize();
             _stopEvent.Set();
-            _state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts;
-            _ui.UnloadTextures();
+            //_state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts; todo            
             SaveConfig();
             if (_state.InvoqThreadNew != null)
             {
@@ -1515,13 +1526,13 @@ namespace Lemegeton
                 ImGui.Text(proptr);
                 if (kp.Value != AutomarkerSigns.SignEnum.None)
                 {
-                    IDalamudTextureWrap tw = _ui.GetSignIcon(kp.Value);
+                    IDalamudTextureWrap tw = _ui.GetSignIcon(kp.Value).GetWrapOrEmpty();
                     ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
                     ImGui.SameLine();
                 }
                 else
                 {
-                    IDalamudTextureWrap tw = _ui.GetSignIcon(AutomarkerSigns.SignEnum.Attack1);
+                    IDalamudTextureWrap tw = _ui.GetSignIcon(AutomarkerSigns.SignEnum.Attack1).GetWrapOrEmpty();
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X);
                 }
                 if (ImGui.BeginCombo("##" + proppath, signtr) == true)
@@ -1859,7 +1870,7 @@ namespace Lemegeton
             Vector2 startpos = ImGui.GetCursorPos();
             if (atl != null)
             {
-                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineActive);                
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineActive).GetWrapOrEmpty();                
                 ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                 if (ImGui.IsItemHovered() == true)
                 {
@@ -1892,7 +1903,7 @@ namespace Lemegeton
                 {
                     ImGui.SameLine();
                     ImGui.SetCursorPosY(startpos.Y);
-                    tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.ProfileActive);
+                    tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.ProfileActive).GetWrapOrEmpty();
                     float basex = ImGui.GetCursorPosX();
                     ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                     if (ImGui.IsItemHovered() == true)
@@ -1927,7 +1938,7 @@ namespace Lemegeton
             }
             else
             {
-                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineInactive);
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.TimelineInactive).GetWrapOrEmpty();
                 statustext = I18n.Translate("Timelines/Status/InactiveTimeline");
                 ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                 Vector2 after = ImGui.GetCursorPos();
@@ -3794,9 +3805,10 @@ namespace Lemegeton
                                 }
                                 Vector2 b3 = ImGui.GetCursorPos();
                                 ImGui.SetCursorPos(new Vector2(a3.X + 20, a3.Y + 2));
-                                IDalamudTextureWrap t3 = contentItem.Value.Enabled == true ?
+                                IDalamudTextureWrap t3 = (contentItem.Value.Enabled == true ?
                                     (contentItem.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
-                                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
+                                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond)
+                                ).GetWrapOrEmpty();
                                 ImGui.Image(t3.ImGuiHandle, new Vector2(20, 20));
                                 ImGui.SetCursorPos(b3);
                             }
@@ -3812,9 +3824,10 @@ namespace Lemegeton
                         }
                         Vector2 b2 = ImGui.GetCursorPos();
                         ImGui.SetCursorPos(new Vector2(a2.X + 20, a2.Y + 2));
-                        IDalamudTextureWrap t2 = content.Value.Enabled == true ?
+                        IDalamudTextureWrap t2 = (content.Value.Enabled == true ?
                             (content.Value.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
-                            : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
+                            : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond)
+                        ).GetWrapOrEmpty();
                         ImGui.Image(t2.ImGuiHandle, new Vector2(20, 20));
                         ImGui.SetCursorPos(b2);
                     }
@@ -3831,9 +3844,10 @@ namespace Lemegeton
                 Vector2 b1 = ImGui.GetCursorPos();
                 ImGui.SetCursorPos(new Vector2(a1.X + 20, a1.Y + 2));
 
-                IDalamudTextureWrap t1 = contentCat.Enabled == true ? 
+                IDalamudTextureWrap t1 = (contentCat.Enabled == true ? 
                     (contentCat.Active == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.BlueDiamond) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.PurpleDiamond))
-                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond);
+                    : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedDiamond)
+                ).GetWrapOrEmpty();
                 ImGui.Image(t1.ImGuiHandle, new Vector2(20, 20));
                 ImGui.SetCursorPos(b1);
             }
@@ -3901,13 +3915,13 @@ namespace Lemegeton
             }
         }
 
-        private void DrawSoftmarkerOn(AutomarkerSigns.SignEnum sign, uint actorId)
+        private void DrawSoftmarkerOn(AutomarkerSigns.SignEnum sign, ulong actorId)
         {
             if (actorId == 0 || sign == AutomarkerSigns.SignEnum.None)
             {
                 return;
             }
-            GameObject go = _state.GetActorById(actorId);
+            IGameObject go = _state.GetActorById(actorId);
             if (go == null)
             {
                 return;
@@ -3926,7 +3940,7 @@ namespace Lemegeton
                 temp.X + _state.cfg.SoftmarkerOffsetScreenX,
                 temp.Y + _state.cfg.SoftmarkerOffsetScreenY
             );
-            IDalamudTextureWrap tw = _ui.GetSignIcon(sign);
+            IDalamudTextureWrap tw = _ui.GetSignIcon(sign).GetWrapOrEmpty();
             float calcWidth = tw.Width * 2.0f * _state.cfg.SoftmarkerScale;
             float calcHeight = tw.Height * 2.0f * _state.cfg.SoftmarkerScale;
             pt.X -= calcWidth / 2.0f;
@@ -3973,11 +3987,11 @@ namespace Lemegeton
                 {
                     sign = AutomarkerSigns.SignEnum.Plus;
                 }
-                DrawSoftmarkerOn(sign, _state.cs.LocalPlayer.ObjectId);
+                DrawSoftmarkerOn(sign, _state.cs.LocalPlayer.GameObjectId);
             }
             else
             {
-                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in _state.SoftMarkers)
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp in _state.SoftMarkers)
                 {
                     DrawSoftmarkerOn(kp.Key, kp.Value);
                 }
@@ -3995,7 +4009,7 @@ namespace Lemegeton
                     _lemmyShortcutPopped = now.AddSeconds(2);
                     _lemmyShortcutJustPopped = false;
                 }
-                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton);
+                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton).GetWrapOrEmpty();
                 winSize = new Vector2(tw.Width + 10, tw.Height + 10);
                 ImGui.SetWindowSize(winSize);
                 ImGui.SetCursorPos(new Vector2(5, 5));
@@ -4728,7 +4742,7 @@ namespace Lemegeton
             {
                 Vector2 tenp = ImGui.GetCursorPos();
                 float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
-                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
+                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation).GetWrapOrEmpty();
                 ImGui.Image(
                     tw.ImGuiHandle, new Vector2(tw.Width, tw.Height),
                     new Vector2(0, 0), new Vector2(1, 1),
@@ -5169,11 +5183,11 @@ namespace Lemegeton
                 int k = 0;
                 foreach (ParameterInfo p in pis)
                 {
-                    if (p.ParameterType == typeof(GameObject))
+                    if (p.ParameterType == typeof(IGameObject))
                     {
                         string temp = _delDebugInput[del][k];
                         uint actorId = uint.Parse(temp, System.Globalization.NumberStyles.HexNumber);
-                        GameObject go = _state.GetActorById(actorId);
+                        IGameObject go = _state.GetActorById(actorId);
                         conversions.Add(go);
                     }
                     else if (p.ParameterType == typeof(IntPtr))
@@ -5226,7 +5240,7 @@ namespace Lemegeton
                     ImGui.CollapsingHeader("  " + I18n.Translate("Status/AtAGlance"), ImGuiTreeNodeFlags.Leaf);
                     ImGui.EndDisabled();
                     {
-                        tw = _state.StatusGotOpcodes == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
+                        tw = (_state.StatusGotOpcodes == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross)).GetWrapOrEmpty();
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         string txt = I18n.Translate("Status/StatusGotOpcodes" + _state.StatusGotOpcodes);
@@ -5248,12 +5262,12 @@ namespace Lemegeton
                         }
                     }
                     {
-                        tw = _state.StatusMarkingFuncAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
+                        tw = (_state.StatusMarkingFuncAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross)).GetWrapOrEmpty();
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
                         ImGui.TextWrapped(I18n.Translate("Status/StatusMarkingFuncAvailable" + _state.StatusMarkingFuncAvailable));
-                        tw = _state.StatusPostCommandAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
+                        tw = (_state.StatusPostCommandAvailable == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross)).GetWrapOrEmpty();
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -5279,7 +5293,7 @@ namespace Lemegeton
                     }
                     {
                         tfer = _state.LastNetworkTrafficDown != DateTime.MinValue && (DateTime.Now - _state.LastNetworkTrafficDown).TotalSeconds < 60.0;
-                        tw = tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected);
+                        tw = (tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected)).GetWrapOrEmpty();
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -5291,7 +5305,7 @@ namespace Lemegeton
                     }
                     {
                         tfer = _state.LastNetworkTrafficUp != DateTime.MinValue && (DateTime.Now - _state.LastNetworkTrafficUp).TotalSeconds < 60.0;
-                        tw = tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected);
+                        tw = (tfer == true ? _ui.GetMiscIcon(UserInterface.MiscIconEnum.Connected) : _ui.GetMiscIcon(UserInterface.MiscIconEnum.Disconnected)).GetWrapOrEmpty();
                         ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                         ImGui.SameLine();
                         ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -5373,7 +5387,7 @@ namespace Lemegeton
 #endif
             if (complaints.Count == 0)
             {
-                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley);
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Smiley).GetWrapOrEmpty();
                 ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
                 ImGui.SameLine();
                 ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
@@ -5381,7 +5395,7 @@ namespace Lemegeton
             }
             else
             {
-                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross);
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross).GetWrapOrEmpty();
                 int i = 0;
                 foreach (string c in complaints)
                 {

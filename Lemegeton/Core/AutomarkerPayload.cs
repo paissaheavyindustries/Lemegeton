@@ -11,7 +11,7 @@ namespace Lemegeton.Core
         public bool markSelfOnly { get; set; } = false;
         public bool softMarker { get; set; } = false;
 
-        public Dictionary<AutomarkerSigns.SignEnum, List<GameObject>> assignments = new Dictionary<AutomarkerSigns.SignEnum, List<GameObject>>();
+        public Dictionary<AutomarkerSigns.SignEnum, List<IGameObject>> assignments = new Dictionary<AutomarkerSigns.SignEnum, List<IGameObject>>();
 
         public AutomarkerPayload(State st, bool selfOnly, bool soft)
         {
@@ -20,24 +20,24 @@ namespace Lemegeton.Core
             softMarker = (_st.cfg.AutomarkerSoft == true || soft == true);
         }
 
-        public void Assign(AutomarkerSigns.SignEnum sign, GameObject go)
+        public void Assign(AutomarkerSigns.SignEnum sign, IGameObject go)
         {
             if (markSelfOnly == true)
             {
-                if (go.ObjectId != _st.cs.LocalPlayer.ObjectId)
+                if (go.GameObjectId != _st.cs.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
             }
             if (sign != AutomarkerSigns.SignEnum.AttackNext && sign != AutomarkerSigns.SignEnum.BindNext && sign != AutomarkerSigns.SignEnum.IgnoreNext)
             {
-                assignments[sign] = new List<GameObject>(new GameObject[] { go });
+                assignments[sign] = new List<IGameObject>(new IGameObject[] { go });
             }
             else
             {
                 if (assignments.ContainsKey(sign) == false)
                 {
-                    assignments[sign] = new List<GameObject>();
+                    assignments[sign] = new List<IGameObject>();
                 }
                 assignments[sign].Add(go);
             }

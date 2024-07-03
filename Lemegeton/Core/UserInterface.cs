@@ -1,6 +1,8 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Internal;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using ImGuiNET;
 using ImGuiScene;
 using System;
@@ -14,12 +16,12 @@ namespace Lemegeton.Core
     internal class UserInterface
     {
 
-        private Dictionary<MiscIconEnum, IDalamudTextureWrap> _misc = new Dictionary<MiscIconEnum, IDalamudTextureWrap>();
-        private Dictionary<AutomarkerSigns.SignEnum, IDalamudTextureWrap> _signs = new Dictionary<AutomarkerSigns.SignEnum, IDalamudTextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap>();
-        private Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap>();
-        private Dictionary<uint, IDalamudTextureWrap> _onDemand = new Dictionary<uint, IDalamudTextureWrap>();
+        private Dictionary<MiscIconEnum, ISharedImmediateTexture> _misc = new Dictionary<MiscIconEnum, ISharedImmediateTexture>();
+        private Dictionary<AutomarkerSigns.SignEnum, ISharedImmediateTexture> _signs = new Dictionary<AutomarkerSigns.SignEnum, ISharedImmediateTexture>();
+        private Dictionary<AutomarkerPrio.PrioRoleEnum, ISharedImmediateTexture> _roles = new Dictionary<AutomarkerPrio.PrioRoleEnum, ISharedImmediateTexture>();
+        private Dictionary<AutomarkerPrio.PrioTrinityEnum, ISharedImmediateTexture> _trinity = new Dictionary<AutomarkerPrio.PrioTrinityEnum, ISharedImmediateTexture>();
+        private Dictionary<AutomarkerPrio.PrioJobEnum, ISharedImmediateTexture> _jobs = new Dictionary<AutomarkerPrio.PrioJobEnum, ISharedImmediateTexture>();
+        private Dictionary<uint, ISharedImmediateTexture> _onDemand = new Dictionary<uint, ISharedImmediateTexture>();
 
         internal FileDialogManager _dialogManager = new FileDialogManager();
 
@@ -136,59 +138,7 @@ namespace Lemegeton.Core
             _jobs[AutomarkerPrio.PrioJobEnum.BLU] = GetTexture(62136);
         }
 
-        internal void UnloadTextures()
-        {
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, IDalamudTextureWrap> kp in _signs)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _signs.Clear();
-            foreach (KeyValuePair<MiscIconEnum, IDalamudTextureWrap> kp in _misc)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _misc.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioTrinityEnum, IDalamudTextureWrap> kp in _trinity)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _trinity.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioRoleEnum, IDalamudTextureWrap> kp in _roles)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _roles.Clear();
-            foreach (KeyValuePair<AutomarkerPrio.PrioJobEnum, IDalamudTextureWrap> kp in _jobs)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _jobs.Clear();
-            foreach (KeyValuePair<uint, IDalamudTextureWrap> kp in _onDemand)
-            {
-                if (kp.Value != null)
-                {
-                    kp.Value.Dispose();
-                }
-            }
-            _onDemand.Clear();
-        }
-
-        internal IDalamudTextureWrap GetOnDemandIcon(uint iconId)
+        internal ISharedImmediateTexture GetOnDemandIcon(uint iconId)
         {
             if (_onDemand.ContainsKey(iconId) == false)
             {
@@ -197,7 +147,7 @@ namespace Lemegeton.Core
             return _onDemand[iconId];
         }
 
-        internal IDalamudTextureWrap GetMiscIcon(MiscIconEnum icon)
+        internal ISharedImmediateTexture GetMiscIcon(MiscIconEnum icon)
         {
             if (_misc.ContainsKey(icon) == true)
             {
@@ -206,7 +156,7 @@ namespace Lemegeton.Core
             return null;
         }
 
-        internal IDalamudTextureWrap GetSignIcon(AutomarkerSigns.SignEnum icon)
+        internal ISharedImmediateTexture GetSignIcon(AutomarkerSigns.SignEnum icon)
         {
             if (_signs.ContainsKey(icon) == true)
             {
@@ -225,13 +175,14 @@ namespace Lemegeton.Core
             return new Vector3(tenp.X, tenp.Y, (float)z);
         }
 
-        internal IDalamudTextureWrap? GetTexture(uint id)
-        {
-            return _state.tp.GetIcon(id, Dalamud.Plugin.Services.ITextureProvider.IconFlags.None);
+        internal ISharedImmediateTexture GetTexture(uint id)
+        {                                
+            return _state.tp.GetFromGameIcon(new GameIconLookup() { IconId = id });
         }
 
-        internal static ImGuiMouseButton ImageButton(IDalamudTextureWrap tw, bool enabled, string tooltip)
+        internal static ImGuiMouseButton ImageButton(ISharedImmediateTexture t, bool enabled, string tooltip)
         {
+            IDalamudTextureWrap tw = t.GetWrapOrEmpty();
             if (enabled == true)
             {
                 ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
@@ -257,7 +208,7 @@ namespace Lemegeton.Core
             return (ImGuiMouseButton)(-1);
         }
 
-        internal IDalamudTextureWrap GetJobIcon(uint jobId)
+        internal ISharedImmediateTexture GetJobIcon(uint jobId)
         {
             AutomarkerPrio.PrioJobEnum job = (AutomarkerPrio.PrioJobEnum)jobId;
             if (_jobs.ContainsKey(job) == true)
@@ -304,7 +255,8 @@ namespace Lemegeton.Core
             foreach (AutomarkerPrio.PrioJobEnum p in jobList)
             {
                 bool selected = JobSelected(bitmap, p);
-                float curx = ImGui.GetCursorPosX() + _jobs[p].Width + style.ItemSpacing.X;
+                IDalamudTextureWrap tw = _jobs[p].GetWrapOrEmpty();
+                float curx = ImGui.GetCursorPosX() + tw.Width + style.ItemSpacing.X;
                 ImGuiMouseButton btn = ImageButton(_jobs[p], selected, I18n.Translate("Job/" + p));
                 if (btn == ImGuiMouseButton.Left)
                 {
@@ -352,7 +304,7 @@ namespace Lemegeton.Core
                             break;
                     }
                 }
-                if (curx + _jobs[p].Width + style.ItemSpacing.X < wid && numjobs > 1)
+                if (curx + tw.Width + style.ItemSpacing.X < wid && numjobs > 1)
                 {
                     ImGui.SameLine();
                 }
@@ -431,7 +383,7 @@ namespace Lemegeton.Core
             return "???";
         }
 
-        private IDalamudTextureWrap? RetrieveOrderableIcon<T>(T item)
+        private ISharedImmediateTexture RetrieveOrderableIcon<T>(T item)
         {
             if (item is PrioRoleEnum)
             {
@@ -466,7 +418,8 @@ namespace Lemegeton.Core
             Vector2 icosize = new Vector2(30, 30);
             Vector2 pt = ImGui.GetCursorPos();
             string text = TranslateOrderableItem(item);
-            IDalamudTextureWrap? icon = RetrieveOrderableIcon(item);
+            ISharedImmediateTexture t = RetrieveOrderableIcon(item);
+            IDalamudTextureWrap icon = t.GetWrapOrEmpty();
             float icospace = 0.0f;
             if (icon != null)
             {
@@ -659,7 +612,8 @@ namespace Lemegeton.Core
         internal void RenderWarning(string text)
         {
             Vector2 tenp = ImGui.GetCursorPos();
-            IDalamudTextureWrap tw = GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
+            ISharedImmediateTexture t = GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
+            IDalamudTextureWrap tw = t.GetWrapOrEmpty();
             ImGui.Image(
                 tw.ImGuiHandle, new Vector2(tw.Width, tw.Height)
             );

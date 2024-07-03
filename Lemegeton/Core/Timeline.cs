@@ -832,15 +832,15 @@ namespace Lemegeton.Core
             }
         }
 
-        public void FeedPulled(State st, GameObject go)
+        public void FeedPulled(State st, IGameObject go)
         {
             if (go == null)
             {
                 return;
             }
-            if (go is Character)
+            if (go is ICharacter)
             {
-                Character ch = (Character)go;
+                ICharacter ch = (ICharacter)go;
                 IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.Pulled, ch.NameId, ch.MaxHp, 0);
                 foreach (Encounter enc in encs)
                 {
@@ -864,15 +864,15 @@ namespace Lemegeton.Core
             }
         }
 
-        public void FeedNewCombatant(State st, GameObject go)
+        public void FeedNewCombatant(State st, IGameObject go)
         {
             if (go == null)
             {
                 return;
             }
-            if (go is Character)
+            if (go is ICharacter)
             {
-                Character ch = (Character)go;
+                ICharacter ch = (ICharacter)go;
                 IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.Spawn, ch.NameId, ch.CurrentHp, 0);
                 foreach (Encounter enc in encs)
                 {
@@ -940,12 +940,12 @@ namespace Lemegeton.Core
             }
         }
 
-        public void FeedEventCastBegin(State st, GameObject src, GameObject dest, uint abilityId, float castTime)
+        public void FeedEventCastBegin(State st, IGameObject src, IGameObject dest, uint abilityId, float castTime)
         {
             uint nameId = 0;
-            if (dest is Character)
+            if (dest is ICharacter)
             {
-                Character ch = (Character)dest;
+                ICharacter ch = (ICharacter)dest;
                 nameId = ch.NameId;
             }
             IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.OnCastBegin, nameId, 0, abilityId);
@@ -987,12 +987,12 @@ namespace Lemegeton.Core
             }
         }
 
-        public void FeedEventCastEnd(State st, GameObject src, GameObject dest, uint abilityId)
+        public void FeedEventCastEnd(State st, IGameObject src, IGameObject dest, uint abilityId)
         {
             uint nameId = 0;
-            if (dest is Character)
+            if (dest is ICharacter)
             {
-                Character ch = (Character)dest;
+                ICharacter ch = (ICharacter)dest;
                 nameId = ch.NameId;
             }
             IEnumerable<Encounter> encs = GetEncountersForEvents(Encounter.Trigger.EventTypeEnum.All, Encounter.Trigger.TriggerTypeEnum.OnCastEnd, nameId, 0, abilityId);

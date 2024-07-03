@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Text;
 using System.IO;
 using static Lemegeton.Core.State;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
@@ -106,12 +106,12 @@ namespace Lemegeton.Content
                             break;
                     }
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine(String.Format("ID: {0} ({1})", go.ObjectId.ToString(), go.ObjectId.ToString("X8")));
+                    sb.AppendLine(String.Format("ID: {0} ({1})", go.GameObjectId.ToString(), go.GameObjectId.ToString("X8")));
                     sb.AppendLine(String.Format("Addr: {0} ({1})", go.Address.ToString(), go.Address.ToString("X8")));
-                    Character ch = null;
-                    if (go is Character)
+                    ICharacter ch = null;
+                    if (go is ICharacter)
                     {
-                        ch = (Character)go;
+                        ch = (ICharacter)go;
                     }
                     if (ch != null)
                     {                        
@@ -121,9 +121,9 @@ namespace Lemegeton.Content
                     {
                         sb.AppendLine(String.Format("Name: {0}", go.Name.ToString()));
                     }
-                    if (go is BattleChara)
+                    if (go is IBattleChara)
                     {
-                        BattleChara bc = (BattleChara)go;
+                        IBattleChara bc = (IBattleChara)go;
                         sb.AppendLine(String.Format("HP: {0}/{1}", bc.CurrentHp, bc.MaxHp));
                         if (ch != null)
                         {
@@ -307,9 +307,9 @@ namespace Lemegeton.Content
                             {
                                 ret = true;
                                 currentSign = AutomarkerSigns.SignEnum.None;
-                                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp2 in _state.SoftMarkers)
+                                foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp2 in _state.SoftMarkers)
                                 {
-                                    if (kp2.Value == expectedActor.ObjectId)
+                                    if (kp2.Value == expectedActor.GameObjectId)
                                     {
                                         currentSign = kp2.Key;
                                     }
@@ -317,7 +317,7 @@ namespace Lemegeton.Content
                             }
                             else
                             { 
-                                ret = _state.GetCurrentMarker(expectedActor.ObjectId, out currentSign);
+                                ret = _state.GetCurrentMarker(expectedActor.GameObjectId, out currentSign);
                             }
                             if (ret == false)
                             {
@@ -626,13 +626,13 @@ namespace Lemegeton.Content
             {
                 if (IncludeLocation == true)
                 {
-                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3} pos {4},{5},{6} rot {7}", go.ObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"),
+                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3} pos {4},{5},{6} rot {7}", go.GameObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"),
                         go.Position.X, go.Position.Y, go.Position.Z, go.Rotation
                     );
                 }
                 else
                 {
-                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3}", go.ObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"));
+                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3}", go.GameObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"));
                 }
             }
 
@@ -711,9 +711,9 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    if (go is Character)
+                    if (go is ICharacter)
                     {
-                        Character ch = (Character)go;
+                        ICharacter ch = (ICharacter)go;
                         unsafe
                         {
                             CharacterStruct* chs = (CharacterStruct*)ch.Address;
@@ -773,9 +773,9 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    if (go is Character)
+                    if (go is ICharacter)
                     {
-                        Character ch = (Character)go;
+                        ICharacter ch = (ICharacter)go;
                         unsafe
                         {
                             CharacterStruct* chs = (CharacterStruct*)ch.Address;                            
@@ -1095,7 +1095,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void OnCombatantRemoved(uint actorId, nint addr)
+            private void OnCombatantRemoved(ulong actorId, nint addr)
             {
                 if (GoodToLog() == false)
                 {

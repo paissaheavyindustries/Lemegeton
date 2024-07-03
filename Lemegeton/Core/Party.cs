@@ -14,15 +14,15 @@ namespace Lemegeton.Core
 
             public int Index { get; set; }
             public string Name { get; set; }
-            public GameObject GameObject { get; set; } = null;
-            public uint ObjectId { get; set; } = 0;
+            public IGameObject GameObject { get; set; } = null;
+            public ulong ObjectId { get; set; } = 0;
             public int Selection { get; set; } = 0;
 
             public uint Job
             {
                 get
                 {
-                    return GameObject != null ? ((BattleChara)GameObject).ClassJob.Id : 0;
+                    return GameObject != null ? ((IBattleChara)GameObject).ClassJob.Id : 0;
                 }
             }
 

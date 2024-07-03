@@ -136,7 +136,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Signs/Lightning", "雷分摊");
             AddEntry("Content/Ultimate/UltAlexander/WaterLightningAM/Test", "测试标记");
             //AddEntry("Content/Ultimate/UltAlexander/TemporalAM", "Temporal Stasis automarker");
-            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Enabled"， "启用");
+            AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Enabled", "启用");
             AddEntry("Content/Ultimate/UltAlexander/TemporalAM/SelfMarkOnly", "仅标记自己");
             AddEntry("Content/Ultimate/UltAlexander/TemporalAM/AsSoftmarker", "显示客户端软标记");
             AddEntry("Content/Ultimate/UltAlexander/TemporalAM/Signs", "标记配置");
@@ -178,9 +178,9 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM", "Wormhole automarker");
             AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Enabled", "启用");
-            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/SelfMarkOnly"， "仅标记自己");
-            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/AsSoftmarker"， "显示客户端软标记");
-            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs"， "标记配置");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/One", "One");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Two", "Two");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Three", "Three");
@@ -191,10 +191,10 @@ namespace Lemegeton.Language
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Signs/Eight", "Eight");
             //AddEntry("Content/Ultimate/UltAlexander/WormholeAM/Test", "Test random assignment");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM", "Final Word automarker");
-            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Enabled"， "启用");
-            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/SelfMarkOnly"， "仅标记自己");
-            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/AsSoftmarker"， "显示客户端软标记");
-            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs"， "标记配置");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Enabled", "启用");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/SelfMarkOnly", "仅标记自己");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/AsSoftmarker", "显示客户端软标记");
+            AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/LightBeacon", "Light beacon");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/Light1", "Light 1");
             //AddEntry("Content/Ultimate/UltAlexander/FinalWordAM/Signs/Light2", "Light 2");

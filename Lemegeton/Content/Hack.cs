@@ -2,7 +2,7 @@
 using Lemegeton.Core;
 using System;
 using System.Numerics;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using Vector3 = System.Numerics.Vector3;
 
@@ -53,11 +53,11 @@ namespace Lemegeton.Content
             protected override bool ExecutionImplementation()
             {
                 ImDrawListPtr draw;
-                uint myid = _state.cs.LocalPlayer.ObjectId;
+                ulong myid = _state.cs.LocalPlayer.GameObjectId;
                 int plys = 0;
                 foreach (GameObject go in _state.ot)
                 {
-                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectId != myid)
+                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.GameObjectId != myid)
                     {
                         plys++;
                     }

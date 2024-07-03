@@ -13,6 +13,8 @@ using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using Dalamud.Interface.Utility;
 using System.Data.SqlTypes;
 using static Lemegeton.Core.State;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Lemegeton.Content
 {
@@ -59,7 +61,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
-            private List<uint> _meteors = new List<uint>();
+            private List<ulong> _meteors = new List<ulong>();
             private bool _fired = false;
 
             public MeteorAM(State state) : base(state)
@@ -479,8 +481,8 @@ namespace Lemegeton.Content
         public class DoubleDragons : Core.ContentItem
         {
 
-            public uint _idHraesvelgr = 0;
-            public uint _idNidhogg = 0;
+            public ulong _idHraesvelgr = 0;
+            public ulong _idNidhogg = 0;
 
             public override FeaturesEnum Features => FeaturesEnum.Drawing;
 
@@ -503,16 +505,16 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(968);
-                GameObject me = _state.cs.LocalPlayer as GameObject;
-                _idNidhogg = me.ObjectId;
-                _idHraesvelgr = me.ObjectId;
-                foreach (GameObject go in _state.ot)
+                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                _idNidhogg = me.GameObjectId;
+                _idHraesvelgr = me.GameObjectId;
+                foreach (IGameObject go in _state.ot)
                 {
                     if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
-                    if (go.ObjectId == me.ObjectId)
+                    if (go.GameObjectId == me.GameObjectId)
                     {
                         continue;
                     }
@@ -528,7 +530,7 @@ namespace Lemegeton.Content
                         continue;
                     }
                     Random r = new Random();
-                    _idNidhogg = go.ObjectId;
+                    _idNidhogg = go.GameObjectId;
                     Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
                     return;
                 }
@@ -553,19 +555,19 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                GameObject goH = _state.GetActorById(_idHraesvelgr);
+                IGameObject goH = _state.GetActorById(_idHraesvelgr);
                 if (goH == null)
                 {
                     return false;
                 }
-                GameObject goN = _state.GetActorById(_idNidhogg);
+                IGameObject goN = _state.GetActorById(_idNidhogg);
                 if (goN == null)
                 {
                     return false;
                 }
-                Character chH = (Character)goH;
-                Character chN = (Character)goN;
-                IDalamudTextureWrap bw, tw;
+                ICharacter chH = (ICharacter)goH;
+                ICharacter chN = (ICharacter)goN;
+                ISharedImmediateTexture bws, tws;
                 float x = 200.0f;
                 float y = 300.0f;
                 float w = 250.0f;
@@ -615,8 +617,10 @@ namespace Lemegeton.Content
                     }
                     wcol = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
                 }
-                tw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.DarkDragon);
-                bw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightCircle);
+                tws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.DarkDragon);
+                IDalamudTextureWrap tw = tws.GetWrapOrEmpty();
+                bws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightCircle);
+                IDalamudTextureWrap bw = tws.GetWrapOrEmpty();
                 draw.AddImage(
                     bw.ImGuiHandle,
                     new Vector2(x, y),
@@ -640,7 +644,8 @@ namespace Lemegeton.Content
                     new Vector2(1.0f, 0.0f),
                     new Vector2(0.0f, 1.0f)
                 );
-                tw = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightDragon);
+                tws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightDragon);
+                tw = tws.GetWrapOrEmpty();
                 draw.AddImage(
                     tw.ImGuiHandle,
                     new Vector2(x + w - tw.Width, y),
@@ -737,7 +742,7 @@ namespace Lemegeton.Content
             return false;
         }
 
-        private void OnCombatantRemoved(uint actorId, nint addr)
+        private void OnCombatantRemoved(ulong actorId, nint addr)
         {
             if (actorId == _doubleDragons._idNidhogg && actorId > 0)
             {
@@ -751,24 +756,24 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnCombatantAdded(Dalamud.Game.ClientState.Objects.Types.GameObject go)
+        private void OnCombatantAdded(Dalamud.Game.ClientState.Objects.Types.IGameObject go)
         {
-            if (go is Character)
+            if (go is ICharacter)
             {                
-                Character ch = go as Character;
+                ICharacter ch = go as ICharacter;
                 if (ch.MaxHp != 4535368)
                 {
                     return;
                 }
                 if (ch.NameId == NameNidhogg)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Nidhogg found as {0:X8}", go.ObjectId);
-                    _doubleDragons._idNidhogg = go.ObjectId;
+                    Log(State.LogLevelEnum.Debug, null, "Nidhogg found as {0:X8}", go.GameObjectId);
+                    _doubleDragons._idNidhogg = go.GameObjectId;
                 }
                 else if (ch.NameId == NameHraesvelgr)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Hraesvelgr found as {0:X8}", go.ObjectId);
-                    _doubleDragons._idHraesvelgr = go.ObjectId;
+                    Log(State.LogLevelEnum.Debug, null, "Hraesvelgr found as {0:X8}", go.GameObjectId);
+                    _doubleDragons._idHraesvelgr = go.GameObjectId;
                 }
             }
         }

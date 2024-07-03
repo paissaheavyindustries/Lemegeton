@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
 using ImGuiNET;
-using Character = Dalamud.Game.ClientState.Objects.Types.Character;
+using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
@@ -174,11 +174,11 @@ namespace Lemegeton.Content
                     StopLooking();
                     return;
                 }
-                foreach (GameObject go in _state.ot)
+                foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go is Character)
+                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go is ICharacter)
                     {
-                        Character bc = (Character)go;
+                        ICharacter bc = (ICharacter)go;
                         CharacterStruct* bcs = (CharacterStruct*)bc.Address;
                         CharacterData cd = bcs->CharacterData;
                         if (
@@ -620,7 +620,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(2000)]
             public System.Action Test { get; set; }
 
-            private uint _partnerId = 0;
+            private ulong _partnerId = 0;
             private uint _currentDebuff = 0;
 
             public GlitchTether(State state) : base(state)
@@ -638,7 +638,7 @@ namespace Lemegeton.Content
 
             public void FeedTether(uint actorId1, uint actorId2)
             {
-                uint myid = _state.cs.LocalPlayer.ObjectId;
+                ulong myid = _state.cs.LocalPlayer.GameObjectId;
                 if (actorId1 == myid || actorId2 == myid)
                 {
                     Log(State.LogLevelEnum.Debug, null, "Registered tether between {0:X} and {1:X}", actorId1, actorId2);
@@ -670,14 +670,14 @@ namespace Lemegeton.Content
                 _state.InvokeZoneChange(1122);
                 _currentDebuff = 0;
                 _partnerId = 0;
-                GameObject me = _state.cs.LocalPlayer as GameObject;
-                foreach (GameObject go in _state.ot)
+                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                foreach (IGameObject go in _state.ot)
                 {
                     if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
-                    if (go.ObjectId == me.ObjectId)
+                    if (go.GameObjectId == me.GameObjectId)
                     {
                         continue;
                     }
@@ -694,7 +694,7 @@ namespace Lemegeton.Content
                     }
                     Random r = new Random();
                     _currentDebuff = r.Next(0, 2) == 0 ? StatusMidGlitch : StatusRemoteGlitch;
-                    _partnerId = go.ObjectId;
+                    _partnerId = go.GameObjectId;
                     Log(State.LogLevelEnum.Debug, null, "Testing from {0} to {1}", me, go);
                     return;
                 }
@@ -711,7 +711,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                GameObject go = _state.GetActorById(_partnerId);
+                IGameObject go = _state.GetActorById(_partnerId);
                 if (go == null)
                 {
                     return false;
@@ -1227,11 +1227,11 @@ namespace Lemegeton.Content
                 Test = new System.Action(() => TestFunctionality());
             }
 
-            public void FeedAction(uint actorId, uint actionId)
+            public void FeedAction(ulong actorId, uint actionId)
             {
                 if (actionId > 0)
                 {
-                    GameObject omegachan = _state.GetActorById(actorId);
+                    IGameObject omegachan = _state.GetActorById(actorId);
                     Vector3 pos = omegachan.Position;
                     if (pos.X < 90.0f)
                     {
@@ -1264,7 +1264,7 @@ namespace Lemegeton.Content
                 _state.InvokeZoneChange(1122);
                 Random r = new Random();
                 int test = r.Next(0, 2);
-                FeedAction(_state.cs.LocalPlayer.ObjectId, (uint)(test == 0 ? AbilityBossMonitorDeltaLeft : AbilityBossMonitorDeltaRight));
+                FeedAction(_state.cs.LocalPlayer.GameObjectId, (uint)(test == 0 ? AbilityBossMonitorDeltaLeft : AbilityBossMonitorDeltaRight));
                 omegaPos = (DirectionsEnum)r.Next(0, 4);
             }
 
@@ -1352,7 +1352,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
-            private Dictionary<uint, GameObject> _debuffs = new Dictionary<uint, GameObject>();
+            private Dictionary<uint, IGameObject> _debuffs = new Dictionary<uint, IGameObject>();
 
             public DynamisDeltaAM(State state) : base(state)
             {

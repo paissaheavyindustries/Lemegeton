@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using static Lemegeton.Core.State;
-using GameObject = Dalamud.Game.ClientState.Objects.Types.GameObject;
+using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
 namespace Lemegeton.Content
@@ -246,7 +246,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                PlayerCharacter c = _state.cs.LocalPlayer;
+                IPlayerCharacter c = _state.cs.LocalPlayer;
                 Vector2 disp = ImGui.GetIO().DisplaySize;
                 foreach (GameObject go in _state.ot)
                 {
@@ -254,7 +254,7 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    if (OnlyCurrentTarget == true && (c.TargetObject == null || c.TargetObject.ObjectId != go.ObjectId))
+                    if (OnlyCurrentTarget == true && (c.TargetObject == null || c.TargetObject.GameObjectId != go.GameObjectId))
                     {
                         continue;
                     }
@@ -264,7 +264,7 @@ namespace Lemegeton.Content
                     }
                     try
                     {
-                        if (!(go is BattleChara))
+                        if (!(go is IBattleChara))
                         {
                             continue;
                         }
@@ -278,7 +278,7 @@ namespace Lemegeton.Content
                         {
                             continue;
                         }
-                        BattleChara bc = go as BattleChara;
+                        IBattleChara bc = go as IBattleChara;
                         if (bc.IsCasting == true && bc.CastActionId > 0)
                         {
                             Vector3 pos = _state.plug._ui.TranslateToScreen(
@@ -353,14 +353,14 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                PlayerCharacter c = _state.cs.LocalPlayer;
+                IPlayerCharacter c = _state.cs.LocalPlayer;
                 foreach (GameObject go in _state.ot)
                 {
                     if (go.ObjectKind != ObjectKind.BattleNpc && go.ObjectKind != ObjectKind.Player)
                     {
                         continue;
                     }
-                    if (OnlyCurrentTarget == true && (c.TargetObject == null || c.TargetObject.ObjectId != go.ObjectId))
+                    if (OnlyCurrentTarget == true && (c.TargetObject == null || c.TargetObject.GameObjectId != go.GameObjectId))
                     {
                         continue;
                     }
@@ -389,7 +389,7 @@ namespace Lemegeton.Content
                     }
                     if (ShowCasts == true)
                     {
-                        BattleChara bc = go as BattleChara;
+                        IBattleChara bc = go as IBattleChara;
                         if (bc.IsCasting == true && bc.CastActionId > 0)
                         {
                             float ex = go.HitboxRadius * bc.CurrentCastTime / bc.TotalCastTime;

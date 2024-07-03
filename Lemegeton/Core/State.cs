@@ -23,14 +23,15 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel.GeneratedSheets;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
-using Character = Dalamud.Game.ClientState.Objects.Types.Character;
-using BattleChara = Dalamud.Game.ClientState.Objects.Types.BattleChara;
+using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
+using BattleChara = Dalamud.Game.ClientState.Objects.Types.IBattleChara;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using System.Text.RegularExpressions;
+using Dalamud.Hooking;
 
 namespace Lemegeton.Core
 {
@@ -136,15 +137,16 @@ namespace Lemegeton.Core
                 {
                     if (Function != null)
                     {
-                        Function.DynamicInvoke(Params);
+                        Function.DynamicInvoke(Params);                        
                     }
                     else
                     {
                         InvokeCommand();
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    State.Log(LogLevelEnum.Error, null, "Exception in invoke: {0} {1}", ex.Message, ex.StackTrace);
                 }
             }
 
@@ -162,7 +164,7 @@ namespace Lemegeton.Core
 
         }
 
-        internal DalamudPluginInterface pi { get; init; }
+        internal IDalamudPluginInterface pi { get; init; }
         internal IGameNetwork gn { get; init; }
         internal IChatGui cg { get; init; }
         internal ICommandManager cm { get; init; }
@@ -176,6 +178,8 @@ namespace Lemegeton.Core
         internal ISigScanner ss { get; init; }
         internal IPartyList pl { get; init; }
         internal ITargetManager tm { get; init; }
+        internal IPluginLog lo { get; init; }
+        internal IGameInteropProvider io { get; init; }
 
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
@@ -199,11 +203,13 @@ namespace Lemegeton.Core
         internal List<ReactionExecution> ReactionQueue = new List<ReactionExecution>();
 
         private Dictionary<string, nint> _sigs = new Dictionary<string, nint>();
-        private delegate char MarkingFunctionDelegate(nint ctrl, byte markId, uint actorId);
+        internal delegate char MarkingFunctionDelegate(nint ctrl, byte markId, uint actorId);
         private MarkingFunctionDelegate _markingFuncPtr = null;
+        internal Dalamud.Hooking.Hook<MarkingFunctionDelegate> _markingFuncHook = null;
+
         private delegate void PostCommandDelegate(IntPtr ui, IntPtr cmd, IntPtr unk1, byte unk2);
         private PostCommandDelegate _postCmdFuncptr = null;
-        public Dictionary<AutomarkerSigns.SignEnum, uint> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, uint>();
+        public Dictionary<AutomarkerSigns.SignEnum, ulong> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, ulong>();
         internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
         internal Dictionary<ushort, string> TimelineOverrides = new Dictionary<ushort, string>();
 
@@ -229,7 +235,7 @@ namespace Lemegeton.Core
 
         private Dictionary<nint, bool> _objectsInCombat = new Dictionary<nint, bool>();
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
-        private Dictionary<nint, uint> _objectsToActors = new Dictionary<nint, uint>();
+        private Dictionary<nint, ulong> _objectsToActors = new Dictionary<nint, ulong>();
 
         internal delegate void ZoneChangeDelegate(ushort newZone);
         internal event ZoneChangeDelegate OnZoneChange;
@@ -261,10 +267,10 @@ namespace Lemegeton.Core
         internal delegate void MapEffectDelegate(byte[] data);
         internal event MapEffectDelegate OnMapEffect;
 
-        internal delegate void CombatantAddedDelegate(GameObject go);
+        internal delegate void CombatantAddedDelegate(IGameObject go);
         internal event CombatantAddedDelegate OnCombatantAdded;
 
-        internal delegate void CombatantRemovedDelegate(uint actorId, nint addr);
+        internal delegate void CombatantRemovedDelegate(ulong actorId, nint addr);
         internal event CombatantRemovedDelegate OnCombatantRemoved;
 
         internal delegate void EventPlayDelegate(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4);
@@ -340,12 +346,12 @@ namespace Lemegeton.Core
             OnStatusChange?.Invoke(src, dest, statusId, gained, duration, stacks);
         }
 
-        internal void InvokeCombatantAdded(GameObject go)
+        internal void InvokeCombatantAdded(IGameObject go)
         {
             OnCombatantAdded?.Invoke(go);
         }
 
-        internal void InvokeCombatantRemoved(uint actorId, nint addr)
+        internal void InvokeCombatantRemoved(ulong actorId, nint addr)
         {
             OnCombatantRemoved?.Invoke(actorId, addr);
         }
@@ -375,7 +381,7 @@ namespace Lemegeton.Core
             GetStatusFlags = GetStatusFlags1;
         }
 
-        internal void AddMarkerHistory(GameObject source, GameObject destination, bool soft, AutomarkerSigns.SignEnum sign)
+        internal void AddMarkerHistory(IGameObject source, IGameObject destination, bool soft, AutomarkerSigns.SignEnum sign)
         {
             if (source == null)
             {
@@ -626,6 +632,15 @@ namespace Lemegeton.Core
 
         private void FrameworkUpdate(IFramework framework)
         {
+            if (_markingFuncHook == null)
+            {
+                if (_sigs.ContainsKey("MarkingFunc") == true)
+                { 
+                    _markingFuncHook = io.HookFromAddress<MarkingFunctionDelegate>(_sigs["MarkingFunc"], MarkingHook);
+                    _markingFuncHook.Enable();
+                    Log(LogLevelEnum.Info, null, "Marking function hooked");
+                }
+            }
             if (_territoryNext != _territoryCurrent)
             {
                 Log(LogLevelEnum.Debug, null, "Territory changing from {0} to {1}", _territoryCurrent, _territoryNext);
@@ -940,12 +955,12 @@ namespace Lemegeton.Core
         {
             DeferredInvoke di = null;
             lock (queue)
-            {
+            {                
                 if (queue.Count > 0)
-                {
+                {                    
                     di = queue[0];
                     if (di.CanInvoke() == false)
-                    {
+                    {                        
                         return (int)(di.FireAt - DateTime.Now).TotalMilliseconds;
                     }
                     queue.RemoveAt(0);
@@ -954,7 +969,7 @@ namespace Lemegeton.Core
                 {
                     return Timeout.Infinite;
                 }
-            }
+            }            
             di.Invoke();
             return 0;
         }
@@ -1065,16 +1080,16 @@ namespace Lemegeton.Core
             switch (level)
             {
                 case LogLevelEnum.Error:
-                    PluginLog.Error(ex, message, args);
+                    lo.Error(ex, message, args);
                     break;
                 case LogLevelEnum.Warning:
-                    PluginLog.Warning(ex, message, args);
+                    lo.Warning(ex, message, args);
                     break;
                 case LogLevelEnum.Info:
-                    PluginLog.Information(ex, message, args);
+                    lo.Information(ex, message, args);
                     break;
                 case LogLevelEnum.Debug:
-                    PluginLog.Debug(ex, message, args);
+                    lo.Debug(ex, message, args);
                     break;
             }
         }
@@ -1091,10 +1106,10 @@ namespace Lemegeton.Core
                 FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* ii = ic->GetInventorySlot(i);
                 if (ii != null)
                 {
-                    var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemID);
+                    var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemId);
                     if (item.ItemUICategory.Row == 46)
                     {
-                        items.Add(new InventoryItem() { Type = ic->Type, Slot = i, HQ = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HQ) != 0, Item = item });
+                        items.Add(new InventoryItem() { Type = ic->Type, Slot = i, HQ = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HighQuality) != 0, Item = item });
                     }
                 }
             }
@@ -1112,9 +1127,9 @@ namespace Lemegeton.Core
                 FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* ii = ic->GetInventorySlot(i);
                 if (ii != null)
                 {
-                    bool isHq = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HQ) != 0;
+                    bool isHq = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HighQuality) != 0;
                     if (
-                        (ii->ItemID == itemId)
+                        (ii->ItemId == itemId)
                         &&
                         (
                             (isHq == true && hq == true)
@@ -1123,7 +1138,7 @@ namespace Lemegeton.Core
                         )
                     )
                     {
-                        var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemID);
+                        var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemId);
                         return new InventoryItem() { Type = ic->Type, Slot = i, HQ = isHq, Item = item };
                     }
                 }
@@ -1255,11 +1270,11 @@ namespace Lemegeton.Core
         {
             bool hostileTargettable = false;
             _runObject++;
-            List<GameObject> newobjs = new List<GameObject>();
-            Dictionary<nint, uint> repobjs = new Dictionary<nint, uint>();
+            List<IGameObject> newobjs = new List<IGameObject>();
+            Dictionary<nint, ulong> repobjs = new Dictionary<nint, ulong>();
             int numcurrent = _objectsSeen.Count;
             int numobjs = ot.Length;
-            foreach (GameObject go in ot)
+            foreach (IGameObject go in ot)
             {
                 if (
                     (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
@@ -1298,13 +1313,13 @@ namespace Lemegeton.Core
                 if (_objectsSeen.ContainsKey(go.Address) == false)
                 {
                     newobjs.Add(go);
-                    _objectsToActors[go.Address] = go.ObjectId;
+                    _objectsToActors[go.Address] = go.GameObjectId;
                 }
-                else if (_objectsToActors[go.Address] != go.ObjectId)
+                else if (_objectsToActors[go.Address] != go.GameObjectId)
                 {
                     repobjs[go.Address] = _objectsToActors[go.Address];
                     newobjs.Add(go);
-                    _objectsToActors[go.Address] = go.ObjectId;
+                    _objectsToActors[go.Address] = go.GameObjectId;
                 }
                 _objectsSeen[go.Address] = _runObject;
                 if (incombat == true)
@@ -1361,7 +1376,7 @@ namespace Lemegeton.Core
             }
             if (repobjs.Count > 0) 
             {
-                foreach (KeyValuePair<nint, uint> kp in repobjs)
+                foreach (KeyValuePair<nint, ulong> kp in repobjs)
                 {
                     InvokeCombatantRemoved(kp.Value, kp.Key);
                 }
@@ -1369,7 +1384,7 @@ namespace Lemegeton.Core
             if (newobjs.Count > 0)
             {
                 Timeline tl = _timeline;
-                foreach (GameObject go in newobjs)
+                foreach (IGameObject go in newobjs)
                 {                    
                     if (tl != null)
                     {
@@ -1380,15 +1395,15 @@ namespace Lemegeton.Core
             }
         }
 
-        internal GameObject GetActorById(uint id)
+        internal IGameObject GetActorById(ulong id)
         {
-            GameObject go = ot.SearchById(id);
+            IGameObject go = ot.SearchById(id);
             return go;
         }
 
-        internal GameObject GetActorByName(string name)
+        internal IGameObject GetActorByName(string name)
         {            
-            foreach (GameObject go in ot)
+            foreach (IGameObject go in ot)
             {
                 if (String.Compare(name, go.Name.ToString()) == 0)
                 {
@@ -1441,14 +1456,14 @@ namespace Lemegeton.Core
                 return;
             }
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<GameObject>> kp in ap.assignments)
+            foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<IGameObject>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
                 {
                     continue;
                 }
                 int delay;
-                foreach (GameObject go in kp.Value)
+                foreach (IGameObject go in kp.Value)
                 {
                     delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
                     Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1:X} with {2} on instance {3}", delay,go, kp.Key, _runInstance);
@@ -1475,7 +1490,7 @@ namespace Lemegeton.Core
             }
         }
 
-        internal GameObject ParsePlaceholder(string target)
+        internal IGameObject ParsePlaceholder(string target)
         {
             switch (target.ToLower())
             {
@@ -1546,7 +1561,7 @@ namespace Lemegeton.Core
                 case "triangle": sign = AutomarkerSigns.SignEnum.Triangle; break;
                 case "off":
                 case "clear":
-                    GameObject goc = ParsePlaceholder(target);
+                    IGameObject goc = ParsePlaceholder(target);
                     if (goc != null)
                     {
                         ClearMarkerOn(goc, false, true);
@@ -1557,7 +1572,7 @@ namespace Lemegeton.Core
             {
                 return;
             }
-            GameObject go = ParsePlaceholder(target);
+            IGameObject go = ParsePlaceholder(target);
             if (go != null)
             {
                 PerformMarking(0, go, sign, true);
@@ -1569,30 +1584,30 @@ namespace Lemegeton.Core
             AddonPartyList* apl = (AddonPartyList*)gg.GetAddonByName("_PartyList", 1);
             IntPtr pla = gg.FindAgentInterface(apl);
             Party pty = new Party();
-            Dictionary<string, GameObject> party = new Dictionary<string, GameObject>();
-            foreach (PartyMember pm in pl)
+            Dictionary<string, IGameObject> party = new Dictionary<string, IGameObject>();
+            foreach (IPartyMember pm in pl)
             {
                 party[pm.Name.ToString()] = pm.GameObject;                
-            }
+            }            
             for (int i = 0; i < apl->MemberCount; i++)
             {                
-                IntPtr p = (pla + (0x14ca + 0xd8 * i));
-                string fullname = Marshal.PtrToStringUTF8(p);
-                GameObject go = null;
+                IntPtr p = (pla + (0x1552 + 0xd8 * i));
+                string fullname = Marshal.PtrToStringUTF8(p).Trim();
+                IGameObject go = null;
                 if (party.ContainsKey(fullname) == true)
                 {
                     go = party[fullname];
                 }
                 else if (String.Compare(fullname, cs.LocalPlayer.Name.ToString()) == 0)
                 {
-                    go = cs.LocalPlayer as GameObject;
+                    go = cs.LocalPlayer as IGameObject;
                 }
                 else
                 {
                     go = GetActorByName(fullname);
                     
-                }
-                pty.Members.Add(new Party.PartyMember() { Index = i + 1, Name = fullname, ObjectId = go != null ? go.ObjectId : 0, GameObject = go });
+                }                
+                pty.Members.Add(new Party.PartyMember() { Index = i + 1, Name = fullname, ObjectId = go != null ? go.GameObjectId : 0, GameObject = go });
             }
             return pty;
         }
@@ -1633,7 +1648,7 @@ namespace Lemegeton.Core
             ClearMarkerOn(GetActorById(actorId), hard, soft);
         }
 
-        internal void ClearMarkerOn(GameObject go, bool hard, bool soft)
+        internal void ClearMarkerOn(IGameObject go, bool hard, bool soft)
         {
             if (go == null)
             {
@@ -1641,9 +1656,9 @@ namespace Lemegeton.Core
             }
             if (soft == true)
             {
-                foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp in SoftMarkers)
                 {
-                    if (kp.Value == go.ObjectId)
+                    if (kp.Value == go.GameObjectId)
                     {
                         Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
                         if (cfg.DebugOnlyLogAutomarkers == false)
@@ -1658,10 +1673,10 @@ namespace Lemegeton.Core
             {
                 return;
             }
-            bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
+            bool markfunc = (StatusMarkingFuncAvailable == true && cfg.AutomarkerCommands == false);
             if (markfunc == true)
             {
-                if (GetCurrentMarker(go.ObjectId, out AutomarkerSigns.SignEnum marker) == true)
+                if (GetCurrentMarker(go.GameObjectId, out AutomarkerSigns.SignEnum marker) == true)
                 {
                     if (marker != AutomarkerSigns.SignEnum.None)
                     {
@@ -1672,7 +1687,7 @@ namespace Lemegeton.Core
                             {
                                 State = this,
                                 Function = _markingFuncPtr,
-                                Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), go.ObjectId }
+                                Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), (uint)go.GameObjectId }
                             };                            
                             QueueInvocation(di);
                         }
@@ -1736,16 +1751,16 @@ namespace Lemegeton.Core
             return ((SoftMarkers.ContainsKey(sign) == false || SoftMarkers[sign] == 0) == false);
         }
 
-        internal GameObject GetSoftmarkHolder(AutomarkerSigns.SignEnum sign)
+        internal IGameObject GetSoftmarkHolder(AutomarkerSigns.SignEnum sign)
         {
-            if (SoftMarkers.TryGetValue(sign, out uint actorId) == false)
+            if (SoftMarkers.TryGetValue(sign, out ulong actorId) == false)
             {
                 return null;
             }
             return actorId > 0 ? GetActorById(actorId) : null;
         }
 
-        internal void PerformMarking(ulong run, GameObject go, AutomarkerSigns.SignEnum sign, bool soft)
+        internal void PerformMarking(ulong run, IGameObject go, AutomarkerSigns.SignEnum sign, bool soft)
         {
             if (go == null || (cfg.QuickToggleAutomarkers == false && soft == false) || (cfg.QuickToggleOverlays == false && soft == true))
             {
@@ -1780,9 +1795,9 @@ namespace Lemegeton.Core
                 }
                 if (sign != AutomarkerSigns.SignEnum.None)
                 {
-                    foreach (KeyValuePair<AutomarkerSigns.SignEnum, uint> kp in SoftMarkers)
+                    foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp in SoftMarkers)
                     {
-                        if (kp.Key != sign && kp.Value == go.ObjectId)
+                        if (kp.Key != sign && kp.Value == go.GameObjectId)
                         {
                             Log(LogLevelEnum.Debug, null, "Removing soft mark {0} from {1}", kp.Key, go);
                             if (cfg.DebugOnlyLogAutomarkers == false)
@@ -1796,14 +1811,14 @@ namespace Lemegeton.Core
                     cfg.AutomarkersServed++;
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
-                        SoftMarkers[sign] = go.ObjectId;
+                        SoftMarkers[sign] = go.GameObjectId;
                         AddMarkerHistory(null, go, true, sign);
                     }
                 }
                 return;
             }
             bool cleared = false;
-            if (GetCurrentMarker(go.ObjectId, out AutomarkerSigns.SignEnum marker) == false)
+            if (GetCurrentMarker(go.GameObjectId, out AutomarkerSigns.SignEnum marker) == false)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't determine marker on actor {0}, clearing marker first", go);
                 ClearMarkerOn(go, true, false);
@@ -1817,7 +1832,7 @@ namespace Lemegeton.Core
             }
             if (sign != AutomarkerSigns.SignEnum.AttackNext && sign != AutomarkerSigns.SignEnum.BindNext && sign != AutomarkerSigns.SignEnum.IgnoreNext)
             {
-                bool markfunc = (_markingFuncPtr != null && cfg.AutomarkerCommands == false);
+                bool markfunc = (StatusMarkingFuncAvailable == true && cfg.AutomarkerCommands == false);
                 if (markfunc == true)
                 {
                     Log(LogLevelEnum.Debug, null, "Using function pointer to assign mark {0} on actor {1}", sign, go);
@@ -1829,7 +1844,7 @@ namespace Lemegeton.Core
                         {
                             State = this,
                             Function = _markingFuncPtr,
-                            Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(sign), go.ObjectId },
+                            Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(sign), (uint)go.GameObjectId },
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
                         QueueInvocation(di);
@@ -1893,7 +1908,7 @@ namespace Lemegeton.Core
             Log(LogLevelEnum.Error, null, "Couldn't mark actor {0} with {1}", go, sign);
         }
 
-        internal unsafe bool GetCurrentMarker(uint actorId, out AutomarkerSigns.SignEnum marker)
+        internal unsafe bool GetCurrentMarker(ulong actorId, out AutomarkerSigns.SignEnum marker)
         {
             UIModule* ui = (UIModule*)gg.GetUIModule();
             if (ui == null)
@@ -1910,20 +1925,20 @@ namespace Lemegeton.Core
                 return false;
             }
             AddonNamePlate* np = (AddonNamePlate*)gg.GetAddonByName("NamePlate", 1);
-            if (ui3d == null)
+            if (np == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get AddonNamePlate");
                 marker = AutomarkerSigns.SignEnum.None;
                 return false;
-            }
+            }            
             for (int i = 0; i < ui3d->NamePlateObjectInfoCount; i++)
             {
-                var o = ((UI3DModule.ObjectInfo**)ui3d->NamePlateObjectInfoPointerArray)[i];
-                if (o == null || o->GameObject == null || o->GameObject->ObjectID != actorId)
-                {                    
+                var o = ui3d->NamePlateObjectInfoPointers[i];
+                if (o == null || o.Value->GameObject == null || o.Value->GameObject->GetGameObjectId() != actorId)
+                {
                     continue;
-                }
-                AddonNamePlate.NamePlateObject npo = np->NamePlateObjectArray[o->NamePlateIndex];
+                }                
+                AddonNamePlate.NamePlateObject npo = np->NamePlateObjectArray[o.Value->NamePlateIndex];
                 foreach (AtkImageNode* ain in new AtkImageNode*[] { npo.ImageNode2, npo.ImageNode3, npo.ImageNode4, npo.ImageNode5, npo.IconImageNode })
                 {
                     if (ain == null)
@@ -1946,7 +1961,7 @@ namespace Lemegeton.Core
                         {
                             continue;
                         }
-                        switch (p->UldAsset->AtkTexture.Resource->IconID)
+                        switch (p->UldAsset->AtkTexture.Resource->IconId)
                         {
                             case 61301: marker = AutomarkerSigns.SignEnum.Attack1; return true;
                             case 61302: marker = AutomarkerSigns.SignEnum.Attack2; return true;
@@ -1971,20 +1986,22 @@ namespace Lemegeton.Core
                 marker = AutomarkerSigns.SignEnum.None;
                 return true;
             }
-            nint addr = _sigs["MarkingCtrl"];            
-            foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
+            if (_sigs.TryGetValue("MarkingCtrl", out nint addr) == true)
             {
-                if (val == AutomarkerSigns.SignEnum.AttackNext || val == AutomarkerSigns.SignEnum.BindNext || val == AutomarkerSigns.SignEnum.IgnoreNext)
+                foreach (AutomarkerSigns.SignEnum val in Enum.GetValues(typeof(AutomarkerSigns.SignEnum)))
                 {
-                    continue;
+                    if (val == AutomarkerSigns.SignEnum.AttackNext || val == AutomarkerSigns.SignEnum.BindNext || val == AutomarkerSigns.SignEnum.IgnoreNext)
+                    {
+                        continue;
+                    }
+                    nint offset = 8 * (1 + AutomarkerSigns.GetSignIndex(val));
+                    int temp = Marshal.ReadInt32(addr + offset);
+                    if (temp == (int)actorId)
+                    {
+                        marker = val;
+                        return true;
+                    }
                 }
-                nint offset = 8 * (1 + AutomarkerSigns.GetSignIndex(val));
-                int temp = Marshal.ReadInt32(addr + offset);
-                if (temp == actorId)
-                {
-                    marker = val;
-                    return true;
-                }                
             }
             marker = AutomarkerSigns.SignEnum.None;
             return true;
@@ -2003,45 +2020,68 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void GetSignatures()
+        internal char MarkingHook(nint ctrl, byte markId, uint actorId)
         {
-            nint addr;
-            addr = _sig.ScanText("48 89 5C 24 10 48 89 6C 24 18 57 48 83 EC 20 8D 42");
-            if (addr != IntPtr.Zero)
+            if (_sigs.ContainsKey("MarkingCtrl") == false)
             {
-                _sigs["MarkingFunc"] = addr;
-                Log(LogLevelEnum.Debug, null, "Marking function found at {0}", addr.ToString("X"));
-                addr = _sig.OldGetStaticAddressFromSig("48 8B 94 24 ? ? ? ? 48 8D 0D ? ? ? ? 41 B0 01");
-                if (addr != IntPtr.Zero)
+                SetMarkingController(ctrl);
+            }
+            Log(LogLevelEnum.Info, null, "MarkingHook {0} {1} {2}", ctrl, markId, actorId);
+            return _markingFuncHook.Original(ctrl, markId, actorId);
+        }
+
+        internal void SetMarkingController(nint addr)
+        {
+            _sigs["MarkingCtrl"] = addr;
+            Log(LogLevelEnum.Debug, null, "Marking controller found at {0}", addr.ToString("X"));
+            if (_markingFuncPtr != null)
+            {
+                if (_markingFuncHook != null)
                 {
-                    _sigs["MarkingCtrl"] = addr;
-                    Log(LogLevelEnum.Debug, null, "Marking controller found at {0}", addr.ToString("X"));
-                    _markingFuncPtr = Marshal.GetDelegateForFunctionPointer<MarkingFunctionDelegate>(_sigs["MarkingFunc"]);
-                    StatusMarkingFuncAvailable = true;
+                    _markingFuncPtr = new MarkingFunctionDelegate(MarkingHook);
+                    Log(LogLevelEnum.Info, null, "Marking by function pointer available (hooked)");
                 }
                 else
                 {
-                    Log(LogLevelEnum.Warning, null, "Marking controller not found");
+                    Log(LogLevelEnum.Info, null, "Marking by function pointer available");
                 }
+                StatusMarkingFuncAvailable = true;                
+            }
+        }
+
+        internal void GetSignatures()
+        {
+            nint addr1, addr2;
+            addr1 = _sig.ScanText("48 89 5C 24 10 48 89 6C 24 18 57 48 83 EC 20 8D 42");
+            if (addr1 != IntPtr.Zero)
+            {
+                _sigs["MarkingFunc"] = addr1;
+                Log(LogLevelEnum.Debug, null, "Marking function found at {0}", addr1.ToString("X"));
+                _markingFuncPtr = Marshal.GetDelegateForFunctionPointer<MarkingFunctionDelegate>(addr1);
             }
             else
             {
                 Log(LogLevelEnum.Warning, null, "Marking function not found");
             }
-            if (_markingFuncPtr != null)
+            addr2 = _sig.OldGetStaticAddressFromSig("48 8B D0 48 8D 0D ? ? ? ? E8 ? ? ? ? 3B F8 48 8D 0D ? ? ? ? 8B D7");            
+            if (addr2 != IntPtr.Zero)
             {
-                Log(LogLevelEnum.Info, null, "Marking by function pointer available");
+                SetMarkingController(addr2);                
             }
             else
             {
+                Log(LogLevelEnum.Warning, null, "Marking controller not found");
+            }
+            if (addr1 == IntPtr.Zero || addr2 == IntPtr.Zero)
+            {                
                 Log(LogLevelEnum.Warning, null, "Marking by function pointer not available, falling back to command injection");
             }
             // sig from saltycog/ffxiv-startup-commands
-            addr = _sig.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-            if (addr != IntPtr.Zero)
+            addr1 = _sig.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+            if (addr1 != IntPtr.Zero)
             {
-                _postCmdFuncptr = Marshal.GetDelegateForFunctionPointer<PostCommandDelegate>(addr);
-                Log(LogLevelEnum.Debug, null, "Command post function found at {0}", addr.ToString("X"));
+                _postCmdFuncptr = Marshal.GetDelegateForFunctionPointer<PostCommandDelegate>(addr1);
+                Log(LogLevelEnum.Debug, null, "Command post function found at {0}", addr1.ToString("X"));
                 StatusPostCommandAvailable = true;
             }
             else

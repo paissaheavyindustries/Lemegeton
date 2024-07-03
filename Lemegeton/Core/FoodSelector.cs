@@ -60,7 +60,7 @@ namespace Lemegeton.Core
                     case InventoryType.Inventory4: funky += 0x30000; break;
                 }
                 funky += (uint)ii.Slot;
-                am->UseAction(ActionType.Item, (uint)(ii.Item.RowId + (ii.HQ == true ? 1000000 : 0)), 0xE0000000, funky, 0, 0, (void*)0);
+                am->UseAction(ActionType.Item, (uint)(ii.Item.RowId + (ii.HQ == true ? 1000000 : 0)), 0xE0000000, funky, ActionManager.UseActionMode.None, 0, null);
             }
             return false;
         }

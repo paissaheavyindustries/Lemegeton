@@ -267,7 +267,7 @@ namespace Lemegeton.Core
                 var player = (from px in pty.Members where px.Selection == roleId select px).FirstOrDefault();
                 if (player != null)
                 {
-                    st.Log(State.LogLevelEnum.Debug, null, "Assigning test role {0} with sign {1} to {2}", kp.Key, kp.Value, player.GameObject);
+                    st.Log(State.LogLevelEnum.Debug, null, "Assigning test role {0} with sign {1} to {2} (ID {3})", kp.Key, kp.Value, player.GameObject, player.ObjectId);
                     ap.Assign(kp.Value, player.GameObject);
                 }
                 roleId++;

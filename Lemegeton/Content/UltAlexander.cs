@@ -1,11 +1,10 @@
-﻿using System;
-using Dalamud.Game.ClientState.Objects.Types;
+﻿using Dalamud.Game.ClientState.Objects.Types;
 using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
 using ImGuiNET;
-using Character = Dalamud.Game.ClientState.Objects.Types.Character;
+using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
@@ -266,7 +265,7 @@ namespace Lemegeton.Content
                 {
                     case StatusCompressedWater:
                         {
-                            GameObject go = _state.GetActorById(actorId);
+                            IGameObject go = _state.GetActorById(actorId);
                             AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Water"], go);
                             _state.ExecuteAutomarkers(ap, Timing);
@@ -274,7 +273,7 @@ namespace Lemegeton.Content
                         break;
                     case StatusCompressedLightning:
                         {
-                            GameObject go = _state.GetActorById(actorId);
+                            IGameObject go = _state.GetActorById(actorId);
                             AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             ap.Assign(Signs.Roles["Lightning"], go);
                             _state.ExecuteAutomarkers(ap, Timing);
@@ -433,7 +432,7 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
-            public List<uint> _tethers = new List<uint>();
+            public List<ulong> _tethers = new List<ulong>();
             private bool _fired = false;
 
             public CrystalAM(State state) : base(state)

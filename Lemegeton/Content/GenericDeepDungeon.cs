@@ -47,11 +47,11 @@ namespace Lemegeton.Content
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
-                foreach (GameObject go in _state.ot)
+                foreach (IGameObject go in _state.ot)
                 {
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go.SubKind == 5 && go.IsDead == false)
                     {
-                        BattleChara bc = (BattleChara)go;
+                        IBattleChara bc = (IBattleChara)go;
                         if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
                         {
                             double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
@@ -138,7 +138,7 @@ namespace Lemegeton.Content
                 Vector2 pt = new Vector2();
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
-                foreach (GameObject go in _state.ot)
+                foreach (IGameObject go in _state.ot)
                 {
                     // 2007187 dead return
                     // 2009506 hoh return
@@ -238,7 +238,7 @@ namespace Lemegeton.Content
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
                 Vector4 itemcol = GoldColor;
-                foreach (GameObject go in _state.ot)
+                foreach (IGameObject go in _state.ot)
                 {
                     if (
                         (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Treasure)
