@@ -1930,61 +1930,68 @@ namespace Lemegeton.Core
                 Log(LogLevelEnum.Warning, null, "Couldn't get AddonNamePlate");
                 marker = AutomarkerSigns.SignEnum.None;
                 return false;
-            }            
-            for (int i = 0; i < ui3d->NamePlateObjectInfoCount; i++)
+            }
+            try
             {
-                var o = ui3d->NamePlateObjectInfoPointers[i];
-                if (o == null || o.Value->GameObject == null || o.Value->GameObject->GetGameObjectId() != actorId)
+                for (int i = 0; i < ui3d->NamePlateObjectInfoCount; i++)
                 {
-                    continue;
-                }                
-                AddonNamePlate.NamePlateObject npo = np->NamePlateObjectArray[o.Value->NamePlateIndex];
-                foreach (AtkImageNode* ain in new AtkImageNode*[] { npo.ImageNode2, npo.ImageNode3, npo.ImageNode4, npo.ImageNode5, npo.IconImageNode })
-                {
-                    if (ain == null)
+                    var o = ui3d->NamePlateObjectInfoPointers[i];
+                    if (o == null || o.Value->GameObject == null || o.Value->GameObject->GetGameObjectId() != actorId)
                     {
                         continue;
                     }
-                    AtkUldPartsList* upl = ain->PartsList;
-                    if (upl == null)
+                    AddonNamePlate.NamePlateObject npo = np->NamePlateObjectArray[o.Value->NamePlateIndex];
+                    foreach (AtkImageNode* ain in new AtkImageNode*[] { npo.MarkerIcon })
                     {
-                        continue;
-                    }
-                    for (int j = 0; j < upl->PartCount; j++)
-                    {
-                        AtkUldPart* p = &upl->Parts[j];
-                        if (p->UldAsset == null)
+                        if (ain == null)
                         {
                             continue;
                         }
-                        if (p->UldAsset->AtkTexture.Resource == null)
+                        AtkUldPartsList* upl = ain->PartsList;
+                        if (upl == null)
                         {
                             continue;
                         }
-                        switch (p->UldAsset->AtkTexture.Resource->IconId)
+                        for (int j = 0; j < upl->PartCount; j++)
                         {
-                            case 61301: marker = AutomarkerSigns.SignEnum.Attack1; return true;
-                            case 61302: marker = AutomarkerSigns.SignEnum.Attack2; return true;
-                            case 61303: marker = AutomarkerSigns.SignEnum.Attack3; return true;
-                            case 61304: marker = AutomarkerSigns.SignEnum.Attack4; return true;
-                            case 61305: marker = AutomarkerSigns.SignEnum.Attack5; return true;
-                            case 61306: marker = AutomarkerSigns.SignEnum.Attack6; return true;
-                            case 61307: marker = AutomarkerSigns.SignEnum.Attack7; return true;
-                            case 61308: marker = AutomarkerSigns.SignEnum.Attack8; return true;
-                            case 61311: marker = AutomarkerSigns.SignEnum.Bind1; return true;
-                            case 61312: marker = AutomarkerSigns.SignEnum.Bind2; return true;
-                            case 61313: marker = AutomarkerSigns.SignEnum.Bind3; return true;
-                            case 61321: marker = AutomarkerSigns.SignEnum.Ignore1; return true;
-                            case 61322: marker = AutomarkerSigns.SignEnum.Ignore2; return true;
-                            case 61331: marker = AutomarkerSigns.SignEnum.Square; return true;
-                            case 61332: marker = AutomarkerSigns.SignEnum.Circle; return true;
-                            case 61333: marker = AutomarkerSigns.SignEnum.Plus; return true;
-                            case 61334: marker = AutomarkerSigns.SignEnum.Triangle; return true;
+                            AtkUldPart* p = &upl->Parts[j];
+                            if (p->UldAsset == null)
+                            {
+                                continue;
+                            }
+                            if (p->UldAsset->AtkTexture.Resource == null)
+                            {
+                                continue;
+                            }
+                            switch (p->UldAsset->AtkTexture.Resource->IconId)
+                            {
+                                case 61301: marker = AutomarkerSigns.SignEnum.Attack1; return true;
+                                case 61302: marker = AutomarkerSigns.SignEnum.Attack2; return true;
+                                case 61303: marker = AutomarkerSigns.SignEnum.Attack3; return true;
+                                case 61304: marker = AutomarkerSigns.SignEnum.Attack4; return true;
+                                case 61305: marker = AutomarkerSigns.SignEnum.Attack5; return true;
+                                case 61306: marker = AutomarkerSigns.SignEnum.Attack6; return true;
+                                case 61307: marker = AutomarkerSigns.SignEnum.Attack7; return true;
+                                case 61308: marker = AutomarkerSigns.SignEnum.Attack8; return true;
+                                case 61311: marker = AutomarkerSigns.SignEnum.Bind1; return true;
+                                case 61312: marker = AutomarkerSigns.SignEnum.Bind2; return true;
+                                case 61313: marker = AutomarkerSigns.SignEnum.Bind3; return true;
+                                case 61321: marker = AutomarkerSigns.SignEnum.Ignore1; return true;
+                                case 61322: marker = AutomarkerSigns.SignEnum.Ignore2; return true;
+                                case 61331: marker = AutomarkerSigns.SignEnum.Square; return true;
+                                case 61332: marker = AutomarkerSigns.SignEnum.Circle; return true;
+                                case 61333: marker = AutomarkerSigns.SignEnum.Plus; return true;
+                                case 61334: marker = AutomarkerSigns.SignEnum.Triangle; return true;
+                            }
                         }
                     }
+                    marker = AutomarkerSigns.SignEnum.None;
+                    return true;
                 }
-                marker = AutomarkerSigns.SignEnum.None;
-                return true;
+            }
+            catch (Exception ex)
+            {
+                Log(LogLevelEnum.Error, ex, "NamePlateObject failed");
             }
             if (_sigs.TryGetValue("MarkingCtrl", out nint addr) == true)
             {
@@ -2026,7 +2033,7 @@ namespace Lemegeton.Core
             {
                 SetMarkingController(ctrl);
             }
-            Log(LogLevelEnum.Info, null, "MarkingHook {0} {1} {2}", ctrl, markId, actorId);
+            //Log(LogLevelEnum.Info, null, "MarkingHook {0} {1} {2}", ctrl, markId, actorId);
             return _markingFuncHook.Original(ctrl, markId, actorId);
         }
 

@@ -303,12 +303,17 @@ namespace Lemegeton.Content
                         {
                             bool ret;
                             AutomarkerSigns.SignEnum currentSign;
+                            if (expectedActor == null)
+                            {
+                                Log(LogLevelEnum.Warning, null, "Actor for {0} is null, are they in a different zone?", kp.Key);
+                                continue;
+                            }
                             if (_state.cfg.AutomarkerSoft == true)
                             {
                                 ret = true;
                                 currentSign = AutomarkerSigns.SignEnum.None;
                                 foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp2 in _state.SoftMarkers)
-                                {
+                                {                                    
                                     if (kp2.Value == expectedActor.GameObjectId)
                                     {
                                         currentSign = kp2.Key;
