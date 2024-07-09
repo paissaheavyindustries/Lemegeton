@@ -419,7 +419,7 @@ namespace Lemegeton.Core
             Vector2 pt = ImGui.GetCursorPos();
             string text = TranslateOrderableItem(item);
             ISharedImmediateTexture t = RetrieveOrderableIcon(item);
-            IDalamudTextureWrap icon = t.GetWrapOrEmpty();
+            IDalamudTextureWrap icon = t != null ? t.GetWrapOrEmpty() : null;
             float icospace = 0.0f;
             if (icon != null)
             {

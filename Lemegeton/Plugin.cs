@@ -55,7 +55,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.8";
+        public string Version = "1.0.3.9";
 
         internal class Downloadable
         {
