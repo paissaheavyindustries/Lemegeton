@@ -777,8 +777,12 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 8653 },
                 // Agrippa the Mighty
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2969 },
+                // Arch Aethereater
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13406 },
                 // Armstrong
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 10619 },
+                // Atticus the Primogenitor
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13156 },
                 // Bird of Paradise
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 4378 },
                 // Bone Crawler
@@ -831,6 +835,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2966 },
                 // Narrow-rift
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 10622 },
+                // Neyoozoteel
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 12754 },
                 // Nunyunuwi
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2960 },
                 // Okina
@@ -847,12 +853,16 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2968 },
                 // Salt and Light
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 5989 },
+                // Sansheya
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13399 },
                 // Senmurv
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 4375 },
                 // sphatika
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 10618 },
                 // Tarchia
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 8900 },
+                // The Forecaster
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13437 },
                 // Thousand-cast Theda
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2956 },
                 // Tyger
@@ -885,6 +895,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4368 },
                 // Campacti
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4372 },
+                // Cat's Eye
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13436 },
                 // Cornu
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2950 },
                 // Dalvag's Final Flame
@@ -913,10 +925,14 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 10631 },
                 // Hellsclaw
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2947 },
+                // Heshuala
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13157 },
                 // hulder
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 10624 },
                 // Huracan
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 8912 },
+                // Keheniheyamewi
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13401 },
                 // Kurrea
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2952 },
                 // Li'l Murderer
@@ -965,14 +981,20 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 10632 },
                 // Pylraster
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4364 },
+                // Rrax Yity'a
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 12753 },
                 // Rusalka
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 8896 },
                 // Sabotender Bailarina
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2941 },
+                // Sally the Sweeper
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13435 },
                 // Sisiutl
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4371 },
                 // Slipkinx Steeljoints
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4366 },
+                // Starcrier
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 12692 },
                 // stench blossom
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4373 },
                 // Stolas
@@ -989,10 +1011,14 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 8891 },
                 // Unktehi
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2946 },
+                // Urna Variabilis
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13158 },
                 // Vochstein
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 5992 },
                 // Vogaal Ja
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2945 },
+                // Yehehetoaua'pyo
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13400 },
                 // Yilan
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 10625 },
                 // Zanig'oh
@@ -1001,6 +1027,8 @@ namespace Lemegeton.Content
 
             private List<Entry> _defaultsBRanks = new List<Entry>()
             {
+                // 13th Child
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13155 },
                 // Albin the Ashen
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2926 },
                 // Alteci
@@ -1027,6 +1055,10 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4355 },
                 // Flame Sergeant Dalvag
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2927 },
+                // Gallowsbeak
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13152 },
+                // Gargant
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13153 },
                 // Gatling
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2925 },
                 // Gauki Strongblade
@@ -1051,6 +1083,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10638 },
                 // Itzpapalotl
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 8909 },
+                // Jewel Bearer
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13154 },
                 // Kiwa
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 6013 },
                 // Kreutzet
@@ -1059,6 +1093,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 6006 },
                 // La Velue
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 8908 },
+                // Leafscourge Hadoll Ja
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13148 },
                 // Leech King
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2935 },
                 // level cheater
@@ -1075,6 +1111,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2932 },
                 // Naul
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2934 },
+                // Nopalitender Fabuloso
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13150 },
                 // Omni
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4361 },
                 // Oskh Rhei
@@ -1109,6 +1147,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2920 },
                 // Thextera
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4353 },
+                // Uktena
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13151 },
                 // Vajrakumara
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10637 },
                 // Vulpangue
@@ -1121,6 +1161,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2919 },
                 // Worm of the Well
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 8903 },
+                // Xty'iinbek
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13149 },
                 // Yumcax
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10643 },
                 // ü-u-ü-u

@@ -43,6 +43,7 @@ using Dalamud.Plugin.Services;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
+using System.Threading.Channels;
 
 namespace Lemegeton
 {
@@ -55,7 +56,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.3.9";
+        public string Version = "1.0.4.0";
 
         internal class Downloadable
         {
@@ -74,6 +75,12 @@ namespace Lemegeton
             public Core.Action Instance;
 
         }
+
+        internal List<Tuple<Version, string>> ChangeLog = new List<Tuple<Version, string>>()
+        {
+            new Tuple<Version, string>(new System.Version("1.0.4.0"), "Changelog/1.0.4.0")
+        };
+        internal List<Version> ChangeLogVersions = null;        
 
         internal delegate void DownloadableCompletionDelegate(Downloadable d);
         private List<Tuple<Core.Language, string>> _fontBuilderQueue = new List<Tuple<Core.Language, string>>();
@@ -345,12 +352,17 @@ namespace Lemegeton
             {
                 Log(LogLevelEnum.Info, "Plugin version changed from {0} to {1}", _state.cfg.PlogonVersion, Version);
                 BackupConfig();
-                if (new Version(_state.cfg.PlogonVersion) < new Version("1.0.1.0"))
+                Version oldv = new Version(_state.cfg.PlogonVersion);
+                Version thisv = new Version(Version);
+                if (oldv < new Version("1.0.1.0"))
                 {
                     // 1.0.1.0 - change tasks to always queue on framework thread
                     Log(LogLevelEnum.Info, "Applying config fixes for version 1.0.1.0");
                     _state.cfg.QueueFramework = true;
                 }
+                ChangeLogVersions = new List<Version>();
+                ChangeLogVersions.AddRange(from vx in ChangeLog where vx.Item1 > oldv && vx.Item1 <= thisv orderby vx.Item1 descending select vx.Item1);
+                Log(LogLevelEnum.Info, "Changelog has {0} items", ChangeLogVersions.Count);
                 _state.cfg.PlogonVersion = Version;
             }
         }
@@ -4009,8 +4021,11 @@ namespace Lemegeton
                     _lemmyShortcutPopped = now.AddSeconds(2);
                     _lemmyShortcutJustPopped = false;
                 }
+                float scale = _state.cfg.ShortcutScale / 100.0f;
                 IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton).GetWrapOrEmpty();
-                winSize = new Vector2(tw.Width + 10, tw.Height + 10);
+                int scw = (int)Math.Ceiling(tw.Width * scale);
+                int sch = (int)Math.Ceiling(tw.Height * scale);
+                winSize = new Vector2(scw + 10, sch + 10);
                 ImGui.SetWindowSize(winSize);
                 ImGui.SetCursorPos(new Vector2(5, 5));
                 if (now < _lemmyShortcutPopped)
@@ -4018,7 +4033,7 @@ namespace Lemegeton
                     float time = (float)(_lemmyShortcutPopped - now).TotalMilliseconds / 200.0f;
                     _lemmyShortcutOpacity = (float)Math.Abs(Math.Cos(time));
                 }
-                ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, _lemmyShortcutOpacity));
+                ImGui.Image(tw.ImGuiHandle, new Vector2(scw, sch), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, _lemmyShortcutOpacity));
                 if (ImGui.IsItemHovered() == true)
                 {
                     if (ImGui.IsItemClicked(ImGuiMouseButton.Left) == true)
@@ -4125,6 +4140,13 @@ namespace Lemegeton
                 {
                     _state.cfg.ShowShortcut = shortcut;
                 }
+                int shortsc = _state.cfg.ShortcutScale;
+                ImGui.Text(Environment.NewLine + I18n.Translate("Notifications/Settings/ShortcutScale"));
+                if (ImGui.SliderInt("##ShortcutScale", ref shortsc, 50, 300, "%d %%") == true)
+                {
+                    _state.cfg.ShortcutScale = shortsc;
+                }
+                ImGui.Text("");
                 bool streamNag = _state.cfg.NagAboutStreaming;
                 if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/NagAboutStreaming"), ref streamNag) == true)
                 {
@@ -4759,6 +4781,17 @@ namespace Lemegeton
             }
             ImGui.BeginChild("LemmyFrame", fsz);
             ImGui.BeginTabBar("Lemmytabs");
+            // changelog
+            if (ChangeLogVersions != null)
+            {
+                if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Changelog")) == true)
+                {
+                    ImGui.BeginChild("MainMenu/Changelog");
+                    RenderChangeLog();
+                    ImGui.EndChild();
+                    ImGui.EndTabItem();
+                }
+            }
             // status
             if (ImGui.BeginTabItem(I18n.Translate("MainMenu/Status")) == true)
             {
@@ -5220,6 +5253,28 @@ namespace Lemegeton
                     k++;
                 }
                 del.Method.Invoke(_state, conversions.Count > 0 ? conversions.ToArray() : null);
+            }
+        }
+
+        private void RenderChangeLog()
+        {
+            ImGui.BeginDisabled();
+            ImGui.CollapsingHeader("  " + I18n.Translate("Changelog/SinceYourLastUpdate"), ImGuiTreeNodeFlags.Leaf);
+            ImGui.EndDisabled();
+            if (ImGui.BeginTable("TableChangelog", 2, ImGuiTableFlags.SizingFixedFit) == true)
+            {
+                ImGui.TableSetupColumn(I18n.Translate("Changelog/Version"), ImGuiTableColumnFlags.WidthFixed);
+                ImGui.TableSetupColumn(I18n.Translate("Changelog/Description"), ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableNextRow();
+                Vector4 col = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+                foreach (Version v in ChangeLogVersions)
+                {
+                    ImGui.TableSetColumnIndex(0);
+                    ImGui.TextColored(col, v.ToString());
+                    ImGui.TableSetColumnIndex(1);
+                    ImGui.TextWrapped(I18n.Translate("Changelog/" + v.ToString()));
+                }
+                ImGui.EndTable();
             }
         }
 

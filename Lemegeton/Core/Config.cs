@@ -26,6 +26,7 @@ namespace Lemegeton.Core
         public string PlogonVersion { get; set; } = "1.0.0.0";
         public bool Opened { get; set; } = true;
         public bool ShowShortcut { get; set; } = true;
+        public int ShortcutScale { get; set; } = 100;
         public bool FirstRun { get; set; } = true;
         public bool AdvancedOptions { get; set; } = false;
 

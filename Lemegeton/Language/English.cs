@@ -14,6 +14,14 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.4.0
+            AddEntry("MainMenu/Changelog", "Updates");
+            AddEntry("Notifications/Settings/ShortcutScale", "Shortcut icon scale");
+            AddEntry("Changelog/SinceYourLastUpdate", "Updates since your last version");
+            AddEntry("Changelog/Version", "Version");
+            AddEntry("Changelog/Description", "Description");
+            AddEntry("Changelog/1.0.4.0", " added all new Dawntrail hunts (S, A, B ranks) to Radar\n added an option to resize shortcut icon\n added a change log");
+            #endregion
             #region 1.0.3.6
             AddEntry("Job/VPR", "Viper");
             AddEntry("Job/PCT", "Pictomancer");
