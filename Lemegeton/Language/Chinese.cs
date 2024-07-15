@@ -16,7 +16,7 @@ namespace Lemegeton.Language
         {
             #region 1.0.4.1
             //AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeHP", "Include HP % on the name tag");
-            //AddEntry("Changelog/1.0.4.1", " added an option to show HP & on the name tag of Radar/Finder");
+            //AddEntry("Changelog/1.0.4.1", " added an option to show HP % on the name tag of Radar/Finder");
             #endregion
             #region 1.0.4.0
             //AddEntry("MainMenu/Changelog", "Updates");
