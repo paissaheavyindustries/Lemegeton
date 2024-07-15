@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ImGuiNET;
@@ -702,6 +703,8 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(5001)]
             public bool IncludeDistance { get; set; } = true;
             [AttributeOrderNumber(5002)]
+            public bool IncludeHP { get; set; } = true;
+            [AttributeOrderNumber(5003)]
             public Vector4 TextColor { get; set; } = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
             [AttributeOrderNumber(6000)]
@@ -1208,23 +1211,7 @@ namespace Lemegeton.Content
                 Vector2 pt = new Vector2();
                 Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                 double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
-                string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
-                Vector2 sz = ImGui.CalcTextSize(name);
-                float defSize = ImGui.GetFontSize();
-                float mul = 20.0f / defSize;
-                sz.X *= mul;
-                sz.Y *= mul;
-                pt.X = temp.X - (sz.X / 2.0f);
-                pt.Y = temp.Y + 10.0f;
-                Vector3 tf = _state.cs.LocalPlayer.Position;
-                Vector3 tt = go.Position;
-                float distance = Vector3.Distance(tf, tt);
-                double anglexz = Math.Atan2(tf.Z - tt.Z, tf.X - tt.X);
-                distance = Math.Max(distance, 5.0f);
-                Vector4 col;
-                DateTime now = DateTime.Now;
-                float ang = 1.0f;
-                Vector4 mycol = ObjectColor;
+                Vector4 mycol = ObjectColor;                
                 switch (e.Type)
                 {
                     case Entry.EntryTypeEnum.Custom:
@@ -1243,6 +1230,35 @@ namespace Lemegeton.Content
                         mycol = RareAnimalColor;
                         break;
                 }
+                string name = String.Format("{0}", go.Name.ToString());
+                if (IncludeHP == true)
+                {
+                    if (go is ICharacter)
+                    {
+                        ICharacter c = (ICharacter)go;
+                        float hp = (float)c.CurrentHp / (float)c.MaxHp * 100.0f;
+                        name += string.Format(" {0:0}%", (int)Math.Ceiling(hp));
+                    }                    
+                }
+                if (IncludeDistance == true)
+                {
+                    name += string.Format(" ({0:0})", dist);
+                }
+                Vector2 sz = ImGui.CalcTextSize(name);
+                float defSize = ImGui.GetFontSize();
+                float mul = 20.0f / defSize;
+                sz.X *= mul;
+                sz.Y *= mul;
+                pt.X = temp.X - (sz.X / 2.0f);
+                pt.Y = temp.Y + 10.0f;
+                Vector3 tf = _state.cs.LocalPlayer.Position;
+                Vector3 tt = go.Position;
+                float distance = Vector3.Distance(tf, tt);
+                double anglexz = Math.Atan2(tf.Z - tt.Z, tf.X - tt.X);
+                distance = Math.Max(distance, 5.0f);
+                Vector4 col;
+                DateTime now = DateTime.Now;
+                float ang = 1.0f;
                 if (now < _firstSeen[go.Address])
                 {
                     float time = (float)(now - _firstSeen[go.Address]).TotalMilliseconds / 200.0f;

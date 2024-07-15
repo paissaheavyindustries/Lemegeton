@@ -14,6 +14,10 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.4.1
+            AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeHP", "Include HP % on the name tag");
+            AddEntry("Changelog/1.0.4.1", " added an option to show HP & on the name tag of Radar/Finder");
+            #endregion
             #region 1.0.4.0
             AddEntry("MainMenu/Changelog", "Updates");
             AddEntry("Notifications/Settings/ShortcutScale", "Shortcut icon scale");
@@ -852,7 +856,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/ARankColor", "A-rank highlight color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/BRankColor", "B-rank highlight color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/RareAnimalColor", "Rare animal highlight color");
-            AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNames", "Show name tags");
+            AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNames", "Show name tags");            
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeDistance", "Include distance on the name tag");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/TextColor", "Name tag text color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNameBg", "Show name tag background");

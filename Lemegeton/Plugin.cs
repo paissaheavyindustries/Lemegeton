@@ -56,7 +56,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.4.0";
+        public string Version = "1.0.4.1";
 
         internal class Downloadable
         {
@@ -78,7 +78,8 @@ namespace Lemegeton
 
         internal List<Tuple<Version, string>> ChangeLog = new List<Tuple<Version, string>>()
         {
-            new Tuple<Version, string>(new System.Version("1.0.4.0"), "Changelog/1.0.4.0")
+            new Tuple<Version, string>(new System.Version("1.0.4.0"), "Changelog/1.0.4.0"),
+            new Tuple<Version, string>(new System.Version("1.0.4.1"), "Changelog/1.0.4.1")
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -5265,10 +5266,10 @@ namespace Lemegeton
             {
                 ImGui.TableSetupColumn(I18n.Translate("Changelog/Version"), ImGuiTableColumnFlags.WidthFixed);
                 ImGui.TableSetupColumn(I18n.Translate("Changelog/Description"), ImGuiTableColumnFlags.WidthStretch);
-                ImGui.TableNextRow();
                 Vector4 col = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
                 foreach (Version v in ChangeLogVersions)
                 {
+                    ImGui.TableNextRow();
                     ImGui.TableSetColumnIndex(0);
                     ImGui.TextColored(col, v.ToString());
                     ImGui.TableSetColumnIndex(1);
