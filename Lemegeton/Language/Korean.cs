@@ -14,6 +14,9 @@ namespace Lemegeton.Language
 
         public Korean(State st) : base(st)
         {
+            #region 1.0.4.2            
+            //AddEntry("Changelog/1.0.4.2", " added all the missing A/B ranks for Dawntrail");
+            #endregion
             #region 1.0.4.1
             //AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeHP", "Include HP % on the name tag");
             //AddEntry("Changelog/1.0.4.1", " added an option to show HP % on the name tag of Radar/Finder");

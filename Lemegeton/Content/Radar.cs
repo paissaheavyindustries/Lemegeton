@@ -972,6 +972,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 2948 },
                 // Nariphon
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 8907 },
+                // Nechuciho
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13362 },
                 // Nuckelavee
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 8906 },
                 // O Poorest Pauldia
@@ -982,8 +984,14 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 5990 },
                 // petalodus
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 10632 },
+                // Pkuucha
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13443 },
                 // Pylraster
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 4364 },
+                // Queen Hawk
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13361 },
+                // Raintriller
+                new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 13442 },
                 // Rrax Yity'a
                 new Entry() { Type = Entry.EntryTypeEnum.ARank, Kind = ObjectKind.BattleNpc, NameId = 12753 },
                 // Rusalka
@@ -1040,6 +1048,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 6007 },
                 // Barbastelle
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2929 },
+                // Chupacabra
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13145 },
                 // Coquecigrue
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 8913 },
                 // daphnia magna
@@ -1072,6 +1082,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 8898 },
                 // Gnath cometdrone
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4352 },
+                // Go'ozoabek'be
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13147 },
                 // green Archon
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10635 },
                 // Guhuo Niao
@@ -1104,6 +1116,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10645 },
                 // Lycidas
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4360 },
+                // Mad Maguey
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13144 },
                 // Manes
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 6012 },
                 // Mindmaker
@@ -1144,6 +1158,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10644 },
                 // Skogs Fru
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 2928 },
+                // The Slammer
+                new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 13146 },
                 // Squonk
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 4358 },
                 // Stinging Sophie
