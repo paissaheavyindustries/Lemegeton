@@ -20,6 +20,11 @@ namespace Lemegeton.Core
             softMarker = (_st.cfg.AutomarkerSoft == true || soft == true);
         }
 
+        public void Assign(AutomarkerSigns.SignEnum sign, Party.PartyMember pm)
+        {
+            Assign(sign, pm.GameObject);
+        }
+        
         public void Assign(AutomarkerSigns.SignEnum sign, IGameObject go)
         {
             if (markSelfOnly == true)

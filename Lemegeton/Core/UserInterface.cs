@@ -63,7 +63,7 @@ namespace Lemegeton.Core
 
         internal void LoadTextures()
         {            
-            _misc[MiscIconEnum.Lemegeton] = GetTexture(33237);
+            _misc[MiscIconEnum.Lemegeton] = GetTexture(33237, true);
             _misc[MiscIconEnum.BlueDiamond] = GetTexture(63937);
             _misc[MiscIconEnum.PurpleDiamond] = GetTexture(63939);
             _misc[MiscIconEnum.RedDiamond] = GetTexture(63938);
@@ -175,9 +175,9 @@ namespace Lemegeton.Core
             return new Vector3(tenp.X, tenp.Y, (float)z);
         }
 
-        internal ISharedImmediateTexture GetTexture(uint id)
+        internal ISharedImmediateTexture GetTexture(uint id, bool hires = false)
         {                                
-            return _state.tp.GetFromGameIcon(new GameIconLookup() { IconId = id });
+            return _state.tp.GetFromGameIcon(new GameIconLookup() { IconId = id, HiRes = hires });
         }
 
         internal static ImGuiMouseButton ImageButton(ISharedImmediateTexture t, bool enabled, string tooltip)

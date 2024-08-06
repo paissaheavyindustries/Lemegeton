@@ -56,7 +56,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.4.2";
+        public string Version = "1.0.4.3";
 
         internal class Downloadable
         {
@@ -80,7 +80,8 @@ namespace Lemegeton
         {
             new Tuple<Version, string>(new System.Version("1.0.4.0"), "Changelog/1.0.4.0"),
             new Tuple<Version, string>(new System.Version("1.0.4.1"), "Changelog/1.0.4.1"),
-            new Tuple<Version, string>(new System.Version("1.0.4.2"), "Changelog/1.0.4.2")
+            new Tuple<Version, string>(new System.Version("1.0.4.2"), "Changelog/1.0.4.2"),
+            new Tuple<Version, string>(new System.Version("1.0.4.3"), "Changelog/1.0.4.3"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -4025,8 +4026,8 @@ namespace Lemegeton
                 }
                 float scale = _state.cfg.ShortcutScale / 100.0f;
                 IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Lemegeton).GetWrapOrEmpty();
-                int scw = (int)Math.Ceiling(tw.Width * scale);
-                int sch = (int)Math.Ceiling(tw.Height * scale);
+                int scw = (int)Math.Ceiling(tw.Width / 2.0 * scale);
+                int sch = (int)Math.Ceiling(tw.Height / 2.0 * scale);
                 winSize = new Vector2(scw + 10, sch + 10);
                 ImGui.SetWindowSize(winSize);
                 ImGui.SetCursorPos(new Vector2(5, 5));
