@@ -14,6 +14,36 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.4.4
+            //AddEntry("Changelog/1.0.4.4", " fixes and better uptime strategy for M4s Electrical Condenser AM");
+            #endregion
+            #region 1.0.4.3
+            //AddEntry("Changelog/1.0.4.3", " added AM for M4s Electrical Condenser");
+            //AddEntry("Content/DawntrailRaids", "Dawntrail (7.x)");
+            //AddEntry("Content/DawntrailRaids/Enabled", "Enabled");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy", "AAC Light-heavyweight (7.0)");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/Enabled", "Enabled");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM", "(M4s) Electrical Condenser automarker");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Enabled", "Enabled");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/SelfMarkOnly", "Self-marking only");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/AsSoftmarker", "Show as client-side soft markers");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs", "Electrical Condenser spreads");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2", "Four Star pairs");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Prio", "Priority configuration");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Test", "Test random assignment");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs/DPS2", "DPS 2 charge");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs/DPS3", "DPS 3 charge");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs/Support2", "Support 2 charge");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs/Support3", "Support 3 charge");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair1_S", "Short #1");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair2_S", "Short #2");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair3_S", "Short #3");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair4_S", "Short #4");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair1_L", "Long #1");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair2_L", "Long #2");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair3_L", "Long #3");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/CondenserAM/Signs2/Pair4_L", "Long #4");
+            #endregion
             #region 1.0.4.2            
             //AddEntry("Changelog/1.0.4.2", " added all the missing A/B ranks for Dawntrail");
             #endregion
@@ -50,10 +80,10 @@ namespace Lemegeton.Language
             #endregion
             #region 1.0.3.1
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons", "(P6) Dragon HP difference indicator");
-            //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Enabled", "Activé");
             //AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Test", "Test on self and closest enemy");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar", "Enemy cast bar");
-            //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/Enabled", "Enabled");
+            AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/Enabled", "Activé");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/CastColor", "Cast bar color");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/WarningColor", "Cast bar time warning color");
             //AddEntry("Content/Miscellaneous/VisualEnhancement/Castbar/InterruptColor", "Interrupt highlight color");
@@ -71,7 +101,7 @@ namespace Lemegeton.Language
             #endregion
             #region 1.0.2.9
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether", "Statice Present Box tether indicator");
-            //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Enabled");
+            //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Enabled", "Activé");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/TetherColor", "Add tether color");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePresentTether/Test", "Test random bullets on player");
             //AddEntry("Content/Criterion/EwCritAloalo/StaticePinwheelAM", "Pinwheeling Dartboard automarker");

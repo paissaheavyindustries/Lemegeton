@@ -107,14 +107,14 @@ namespace Lemegeton.Content
                 Signs.SetRole("Support2", AutomarkerSigns.SignEnum.Bind2, false);
                 Signs.SetRole("Support3", AutomarkerSigns.SignEnum.Bind3, false);
                 Signs2 = new AutomarkerSigns();
-                Signs2.SetRole("Pair1DPS", AutomarkerSigns.SignEnum.Attack1, false);
-                Signs2.SetRole("Pair1Support", AutomarkerSigns.SignEnum.Attack2, false);
-                Signs2.SetRole("Pair2DPS", AutomarkerSigns.SignEnum.Bind1, false);
-                Signs2.SetRole("Pair2Support", AutomarkerSigns.SignEnum.Bind2, false);
-                Signs2.SetRole("Pair3DPS", AutomarkerSigns.SignEnum.Ignore1, false);
-                Signs2.SetRole("Pair3Support", AutomarkerSigns.SignEnum.Ignore2, false);
-                Signs2.SetRole("Pair4DPS", AutomarkerSigns.SignEnum.Square, false);
-                Signs2.SetRole("Pair4Support", AutomarkerSigns.SignEnum.Circle, false);
+                Signs2.SetRole("Pair1_S", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs2.SetRole("Pair1_L", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs2.SetRole("Pair2_S", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs2.SetRole("Pair2_L", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs2.SetRole("Pair3_S", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs2.SetRole("Pair3_L", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs2.SetRole("Pair4_S", AutomarkerSigns.SignEnum.Square, false);
+                Signs2.SetRole("Pair4_L", AutomarkerSigns.SignEnum.Circle, false);
                 Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
             }
 
@@ -171,7 +171,11 @@ namespace Lemegeton.Content
                     case AbilitySidewiseSpark2:
                         if (_step == AutomarkerStepEnum.Spreads || _step == AutomarkerStepEnum.Pairs)
                         {
-                            _step = AutomarkerStepEnum.Longs;
+                            if (_step == AutomarkerStepEnum.Pairs)
+                            {
+                                _state.ClearAutoMarkers();
+                            }
+                            _step = AutomarkerStepEnum.Longs;                            
                             _state.ExecuteAutomarkers(_apLongs, Timing);
                         }
                         break;
@@ -227,30 +231,12 @@ namespace Lemegeton.Content
                 _apShorts.Assign(Signs.Roles["Support2"], (from px in hits2.Intersect(allshorts) where AutomarkerPrio.JobToTrinity(px.Job) != AutomarkerPrio.PrioTrinityEnum.DPS select px).First());
                 _apShorts.Assign(Signs.Roles["Support3"], (from px in hits3.Intersect(allshorts) where AutomarkerPrio.JobToTrinity(px.Job) != AutomarkerPrio.PrioTrinityEnum.DPS select px).First());
                 _apPairs = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                List<Party.PartyMember> alldps = (from px in pty.Members where AutomarkerPrio.JobToTrinity(px.Job) == AutomarkerPrio.PrioTrinityEnum.DPS select px).ToList();
-                Prio.SortByPriority(alldps);
-                Party.PartyMember[] dps = [ alldps.ElementAt(0), alldps.ElementAt(1), alldps.ElementAt(2), alldps.ElementAt(3) ];
-                _apPairs.Assign(Signs2.Roles["Pair1DPS"], dps[0]);
-                _apPairs.Assign(Signs2.Roles["Pair2DPS"], dps[1]);
-                _apPairs.Assign(Signs2.Roles["Pair3DPS"], dps[2]);
-                _apPairs.Assign(Signs2.Roles["Pair4DPS"], dps[3]);
-                List<Party.PartyMember> allsupp = (from px in pty.Members where AutomarkerPrio.JobToTrinity(px.Job) != AutomarkerPrio.PrioTrinityEnum.DPS select px).ToList();
-                Prio.SortByPriority(allsupp);
+                Prio.SortByPriority(allshorts);
+                Prio.SortByPriority(alllongs);
                 for (int i = 0; i < 4; i++)
                 {
-                    Party.PartyMember sup = null;
-                    if (allshorts.Contains(dps[i]) == true)
-                    {
-                        // short dps
-                        sup = (from ax in allsupp where alllongs.Contains(ax) == true select ax).First();
-                    }
-                    else
-                    {
-                        // long dps
-                        sup = (from ax in allsupp where allshorts.Contains(ax) == true select ax).First();
-                    }
-                    allsupp.Remove(sup);
-                    _apPairs.Assign(Signs2.Roles["Pair" + (i + 1) + "Support"], sup);
+                    _apPairs.Assign(Signs2.Roles[string.Format("Pair{0}_S", i + 1)], allshorts[i]);
+                    _apPairs.Assign(Signs2.Roles[string.Format("Pair{0}_L", i + 1)], alllongs[i]);
                 }
                 _apLongs = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 _apLongs.Assign(Signs.Roles["DPS2"], (from px in hits2.Intersect(alllongs) where AutomarkerPrio.JobToTrinity(px.Job) == AutomarkerPrio.PrioTrinityEnum.DPS select px).First());
@@ -306,6 +292,13 @@ namespace Lemegeton.Content
                         _condenserAM.FeedHit(dest);
                     }
                     break;
+                case AbilitySidewiseSpark1:
+                case AbilitySidewiseSpark2:
+                    if (CurrentZone == ZoneEnum.M4s && _condenserAM.Active == true)
+                    {
+                        _condenserAM.FeedAction(actionId);
+                    }
+                    break;
             }
         }
 
@@ -336,13 +329,6 @@ namespace Lemegeton.Content
             switch (actionId)
             {
                 case AbilityElectropeEdge:
-                    if (CurrentZone == ZoneEnum.M4s && _condenserAM.Active == true)
-                    {
-                        _condenserAM.FeedAction(actionId);
-                    }
-                    break;
-                case AbilitySidewiseSpark1:
-                case AbilitySidewiseSpark2:
                     if (CurrentZone == ZoneEnum.M4s && _condenserAM.Active == true)
                     {
                         _condenserAM.FeedAction(actionId);
