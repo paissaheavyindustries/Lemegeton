@@ -14,6 +14,12 @@ namespace Lemegeton.Language
 
         public Korean(State st) : base(st)
         {
+            #region 1.0.4.5
+            //AddEntry("Changelog/1.0.4.3", " added indicator for M2s Alarm Pheromones");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/Groupbees", "(M2s) Alarm Pheromones indicator");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/Groupbees/Enabled", "Enabled");
+            //AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/Groupbees/Test", "Test through the center");
+            #endregion
             #region 1.0.4.4
             //AddEntry("Changelog/1.0.4.4", " fixes and better uptime strategy for M4s Electrical Condenser AM");
             #endregion

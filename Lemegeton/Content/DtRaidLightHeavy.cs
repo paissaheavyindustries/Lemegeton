@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Numerics;
 using System.Security.Cryptography;
 using Dalamud.Game.ClientState.Objects.Types;
+using ImGuiNET;
 using Lemegeton.Core;
+using Lumina.Excel.GeneratedSheets2;
 using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
@@ -18,6 +22,8 @@ namespace Lemegeton.Content
         private enum ZoneEnum
         {
             None = 0,
+            M2 = 1227,
+            M2s = 1228,
             M4s = 1232,
         }
 
@@ -44,12 +50,150 @@ namespace Lemegeton.Content
         private const int AbilityWitchgleamHit = 38790;
         private const int AbilitySidewiseSpark1 = 38380;
         private const int AbilitySidewiseSpark2 = 38381;
+        private const int AbilityBlindingLoveNormal = 37246;
+        private const int AbilityBlindingLoveSavage = 37272;
 
         private const int StatusElectricalCondenser = 3999;
         private const int StatusSpecial = 2970;
-        private const int StatusSpecialPair = 752;        
+        private const int StatusSpecialPair = 752;
 
+        private Groupbees _groupbees;
         private CondenserAM _condenserAM;
+
+        #region Groupbees
+
+        public class Groupbees : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            internal class Groupbee
+            {
+                public float X { get; set; }
+                public float Z { get; set; }
+                public float Rotation { get; set; }
+                public DateTime StartTime { get; set; }
+                public DateTime EndTime { get; set; }
+            }
+
+            internal List<Groupbee> _groupbees = new List<Groupbee>();
+
+            public Groupbees(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                lock (_groupbees)
+                {
+                    _groupbees.Clear();
+                }
+            }
+
+            public void TestFunctionality()
+            {
+                _state.InvokeZoneChange((int)ZoneEnum.M2s);
+                Random r = new Random();
+                float spawnangle = (float)(r.NextDouble() * Math.PI * 2.0f);
+                DateTime startTime = DateTime.Now;
+                DateTime endTime = startTime.AddSeconds(6);                
+                lock (_groupbees)
+                {                    
+                    _groupbees.Add(new Groupbee()
+                    {
+                        X = 100.0f + (float)Math.Sin(spawnangle) * 20.0f,
+                        Z = 100.0f + (float)Math.Cos(spawnangle) * 20.0f,
+                        Rotation = spawnangle + (float)Math.PI,
+                        StartTime = startTime,
+                        EndTime = endTime
+                    });
+                }
+            }
+
+            internal void FeedGroupbee(IGameObject go)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                DateTime startTime = DateTime.Now;
+                DateTime endTime = startTime.AddSeconds(6);
+                Groupbee gp = new Groupbee()
+                {
+                    X = go.Position.X,
+                    Z = go.Position.Z,
+                    Rotation = go.Rotation,
+                    StartTime = startTime,
+                    EndTime = endTime
+                };
+                lock (_groupbees)
+                {
+                    _groupbees.Add(gp);
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered groupbee {0} @ {1},{2},{3}", go, gp.X, gp.Z, gp.Rotation);
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                List<Groupbee> temp;
+                lock (_groupbees)
+                {
+                    temp = new List<Groupbee>(_groupbees);
+                }                
+                if (temp.Count == 0)
+                {
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                DateTime dt = DateTime.Now;
+                foreach (Groupbee g in temp)
+                {
+                    if (dt >= g.EndTime)
+                    {
+                        lock (_groupbees)
+                        {
+                            _groupbees.Remove(g);
+                        }
+                        continue;
+                    }
+                    float prog = (float)((dt - g.StartTime).TotalMilliseconds / (g.EndTime - g.StartTime).TotalMilliseconds);
+                    float prot = g.Rotation + (float)(Math.PI / 2.0f);
+                    float wid = 4.0f;
+                    Vector3 ps1 = new Vector3(g.X + ((float)Math.Sin(prot) * wid), 0.0f, g.Z + ((float)Math.Cos(prot) * wid));
+                    Vector3 ps2 = new Vector3(g.X - ((float)Math.Sin(prot) * wid), 0.0f, g.Z - ((float)Math.Cos(prot) * wid));
+                    float ex = (float)(g.X + (Math.Sin(g.Rotation) * 45.0f));
+                    float ez = (float)(g.Z + (Math.Cos(g.Rotation) * 45.0f));
+                    Vector3 es1 = new Vector3(ex + ((float)Math.Sin(prot) * wid), 0.0f, ez + ((float)Math.Cos(prot) * wid));
+                    Vector3 es2 = new Vector3(ex - ((float)Math.Sin(prot) * wid), 0.0f, ez - ((float)Math.Cos(prot) * wid));
+                    Vector3 ts1 = _state.plug._ui.TranslateToScreen(ps1.X, ps1.Y, ps1.Z);
+                    Vector3 ts2 = _state.plug._ui.TranslateToScreen(ps2.X, ps2.Y, ps2.Z);
+                    Vector3 te1 = _state.plug._ui.TranslateToScreen(es1.X, es1.Y, es1.Z);
+                    Vector3 te2 = _state.plug._ui.TranslateToScreen(es2.X, es2.Y, es2.Z);
+                    draw.AddQuadFilled(
+                        new Vector2(ts1.X, ts1.Y),
+                        new Vector2(ts2.X, ts2.Y),
+                        new Vector2(te2.X, te2.Y),
+                        new Vector2(te1.X, te1.Y),
+                        ImGui.GetColorU32(new Vector4(1.0f, 1.0f - prog, 0.0f, 0.3f))
+                    );
+                }
+                return true;
+            }
+
+        }
+
+        #endregion
 
         #region CondenserAM
 
@@ -328,6 +472,13 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
+                case AbilityBlindingLoveNormal:
+                case AbilityBlindingLoveSavage:
+                    if ((CurrentZone == ZoneEnum.M2 || CurrentZone == ZoneEnum.M2s) && _groupbees.Active == true)
+                    {
+                        _groupbees.FeedGroupbee(_state.GetActorById(dest));                        
+                    }
+                    break;
                 case AbilityElectropeEdge:
                     if (CurrentZone == ZoneEnum.M4s && _condenserAM.Active == true)
                     {
@@ -391,6 +542,10 @@ namespace Lemegeton.Content
                 _state.OnCombatChange += OnCombatChange;
                 switch (CurrentZone)
                 {
+                    case ZoneEnum.M2: // make groupbees available on normal mode as well for easier testing
+                    case ZoneEnum.M2s:
+                        _groupbees = (Groupbees)Items["Groupbees"];
+                        break;
                     case ZoneEnum.M4s:
                         _condenserAM = (CondenserAM)Items["CondenserAM"];
                         break;
