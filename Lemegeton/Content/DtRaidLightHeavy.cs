@@ -50,8 +50,8 @@ namespace Lemegeton.Content
         private const int AbilityWitchgleamHit = 38790;
         private const int AbilitySidewiseSpark1 = 38380;
         private const int AbilitySidewiseSpark2 = 38381;
-        private const int AbilityBlindingLoveNormal = 37246;
-        private const int AbilityBlindingLoveSavage = 37272;
+        private const int AbilityBlindingLoveNormal = 39525;
+        private const int AbilityBlindingLoveSavage = 39629;
 
         private const int StatusElectricalCondenser = 3999;
         private const int StatusSpecial = 2970;
