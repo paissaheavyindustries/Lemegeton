@@ -14,6 +14,11 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.4.7
+            AddEntry("Changelog/1.0.4.7", " Radar/Finder can now point out special FATE targets");
+            AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeFateSpecial", "Include special FATE targets");
+            AddEntry("Content/Miscellaneous/Radar/AlertFinder/FateSpecialColor", "Special FATE target highlight color");
+            #endregion
             #region 1.0.4.6
             AddEntry("Changelog/1.0.4.6", " small fix to M2s Alarm Pheromones angles");
             #endregion

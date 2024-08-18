@@ -435,6 +435,7 @@ namespace Lemegeton.Content
                     ARank,
                     BRank,
                     RareAnimal,
+                    FateSpecial,
                 }
 
                 public ObjectKind Kind { get; set; }
@@ -689,6 +690,10 @@ namespace Lemegeton.Content
             public bool IncludeIslandRare { get; set; } = true;
             [AttributeOrderNumber(1031)]
             public Vector4 RareAnimalColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+            [AttributeOrderNumber(1040)]
+            public bool IncludeFateSpecial { get; set; } = true;
+            [AttributeOrderNumber(1041)]
+            public Vector4 FateSpecialColor { get; set; } = new Vector4(1.0f, 0.0f, 1.0f, 1.0f);
 
             [AttributeOrderNumber(2000)]
             public AlertEditor LookFor { get; set; }
@@ -1188,6 +1193,14 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.BRank, Kind = ObjectKind.BattleNpc, NameId = 10636 },
             };
 
+            private List<Entry> _defaultsFateSpecial = new List<Entry>()
+            {
+                // the Forlorn
+                new Entry() { Type = Entry.EntryTypeEnum.FateSpecial, Kind = ObjectKind.BattleNpc, NameId = 6738 },
+                // Forlorn maiden
+                new Entry() { Type = Entry.EntryTypeEnum.FateSpecial, Kind = ObjectKind.BattleNpc, NameId = 6737 },
+            };
+
             private Dictionary<nint, DateTime> _seen = new Dictionary<nint, DateTime>();
             private Dictionary<nint, DateTime> _firstSeen = new Dictionary<nint, DateTime>();
             private DateTime _loaded;
@@ -1244,6 +1257,9 @@ namespace Lemegeton.Content
                         break;
                     case Entry.EntryTypeEnum.RareAnimal:
                         mycol = RareAnimalColor;
+                        break;
+                    case Entry.EntryTypeEnum.FateSpecial:
+                        mycol = FateSpecialColor;
                         break;
                 }
                 string name = String.Format("{0}", go.Name.ToString());
@@ -1423,6 +1439,14 @@ namespace Lemegeton.Content
                         lookup[ObjectKind.BattleNpc] = new List<Entry>();
                     }
                     lookup[ObjectKind.BattleNpc].AddRange(_defaultsIsland);
+                }
+                if (IncludeFateSpecial == true)
+                {
+                    if (lookup.ContainsKey(ObjectKind.BattleNpc) == false)
+                    {
+                        lookup[ObjectKind.BattleNpc] = new List<Entry>();
+                    }
+                    lookup[ObjectKind.BattleNpc].AddRange(_defaultsFateSpecial);
                 }
                 foreach (GameObject go in _state.ot)
                 {
