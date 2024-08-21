@@ -14,6 +14,10 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.4.8
+            //AddEntry("Changelog/1.0.4.8", " fixed a problem where minions could not be marked\n Radar\\Finder can now handle regular expressions as well\n added missing Kozama'uka S ranks to Radar\\Finder");
+            //AddEntry("PatternType/RegularExpressionShort", "Regex");
+            #endregion
             #region 1.0.4.7
             //AddEntry("Changelog/1.0.4.7", " Radar/Finder can now point out special FATE targets");
             //AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeFateSpecial", "Include special FATE targets");

@@ -493,7 +493,13 @@ namespace Lemegeton.Content
                         }
                         if (IsRegex == true)
                         {
-                            Regex = new Regex(Name);
+                            try
+                            {
+                                Regex = new Regex(Name, RegexOptions.IgnoreCase);
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
                 }
@@ -508,6 +514,7 @@ namespace Lemegeton.Content
 
                 private string inputbuffer = "";
                 private ObjectKind selKind = ObjectKind.Player;
+                private bool selRegex = false;
 
                 public override void Deserialize(string data)
                 {
@@ -522,6 +529,7 @@ namespace Lemegeton.Content
                         e.Deserialize(t);
                         entries.Add(e);
                     }
+                    SortEntries();
                 }
 
                 public override string Serialize()
@@ -542,11 +550,16 @@ namespace Lemegeton.Content
                         {
                             return i;
                         }
+                        i = -1 * a.IsRegex.CompareTo(b.IsRegex);
+                        if (i != 0)
+                        {
+                            return i;
+                        }
                         return a.Name.CompareTo(b.Name);
                     });
                 }
 
-                private void AcceptInput(ObjectKind kind, string name)
+                private void AcceptInput(ObjectKind kind, bool isRegex, string name)
                 {
                     name = name.Trim();
                     if (name.Length > 0)
@@ -555,9 +568,18 @@ namespace Lemegeton.Content
                         {
                             return;
                         }
-
-                        Entry e = new Entry() { Kind = kind, IsRegex = false, Name = name, Territory = 0 };
-                        entries.Add(e);
+                        Entry e = new Entry() { Kind = kind, IsRegex = isRegex, Name = name, Territory = 0 };
+                        if (isRegex == true)
+                        {
+                            try
+                            {
+                                e.Regex = new Regex(name, RegexOptions.IgnoreCase);
+                            }
+                            catch (Exception)
+                            {                                
+                            }
+                        }
+                        entries.Add(e);                        
                         SortEntries();
                     }
                 }
@@ -594,7 +616,7 @@ namespace Lemegeton.Content
                         foreach (Entry e in entries)
                         {
                             string label = String.Format("[{0}] {1} ({2}: {3})", 
-                                I18n.Translate("ObjectKind/" + e.Kind.ToString()), 
+                                I18n.Translate("ObjectKind/" + e.Kind.ToString()) + (e.IsRegex == true ? " \xE0AF" : ""),
                                 e.Name,
                                 I18n.Translate("Content/Miscellaneous/Radar/AlertFinder/LastSeen"),
                                 e.LastSeen != DateTime.MinValue ? e.LastSeen : I18n.Translate("Content/Miscellaneous/Radar/AlertFinder/Never")
@@ -627,19 +649,25 @@ namespace Lemegeton.Content
                     }
                     ImGui.PopItemWidth();
                     ImGui.SameLine();
+                    bool shb = selRegex;
+                    if (ImGui.Checkbox(I18n.Translate("PatternType/RegularExpressionShort"), ref shb) == true)
+                    {
+                        selRegex = shb;
+                    }
+                    ImGui.SameLine();
                     ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
                     unsafe
                     {
                         if (ImGui.InputText("##Add" + proptr, ref inputbuffer, 256, ImGuiInputTextFlags.EnterReturnsTrue) == true)
                         {
-                            AcceptInput(selKind, inputbuffer);
+                            AcceptInput(selKind, selRegex, inputbuffer);
                             inputbuffer = "";
                         }
                     }
                     ImGui.PopItemWidth();
                     if (ImGui.Button(I18n.Translate(path + "/AddNew")) == true)
                     {
-                        AcceptInput(selKind, inputbuffer);
+                        AcceptInput(selKind, selRegex, inputbuffer);
                         inputbuffer = "";
                     }
                     ImGui.SameLine();
@@ -821,6 +849,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2964 },
                 // Gunitt
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 8895 },
+                // Ihnuxokiy
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13444 },
                 // Ixtab
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 8890 },
                 // kaiser behemoth
@@ -829,6 +859,8 @@ namespace Lemegeton.Content
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 10615 },
                 // Ker shroud (spawn trigger)
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 10616 },
+                // Kirlirger the Abhorrent
+                new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 13360 },
                 // Laideronnette
                 new Entry() { Type = Entry.EntryTypeEnum.SRank, Kind = ObjectKind.BattleNpc, NameId = 2953 },
                 // Lampalagua

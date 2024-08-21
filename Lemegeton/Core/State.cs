@@ -632,6 +632,7 @@ namespace Lemegeton.Core
 
         private void FrameworkUpdate(IFramework framework)
         {
+            /*
             if (_markingFuncHook == null)
             {
                 if (_sigs.ContainsKey("MarkingFunc") == true)
@@ -640,7 +641,7 @@ namespace Lemegeton.Core
                     _markingFuncHook.Enable();
                     Log(LogLevelEnum.Info, null, "Marking function hooked");
                 }
-            }
+            }*/
             if (_territoryNext != _territoryCurrent)
             {
                 Log(LogLevelEnum.Debug, null, "Territory changing from {0} to {1}", _territoryCurrent, _territoryNext);
@@ -2033,7 +2034,6 @@ namespace Lemegeton.Core
             {
                 SetMarkingController(ctrl);
             }
-            //Log(LogLevelEnum.Info, null, "MarkingHook {0} {1} {2}", ctrl, markId, actorId);
             return _markingFuncHook.Original(ctrl, markId, actorId);
         }
 
