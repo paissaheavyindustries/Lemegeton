@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
 using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
@@ -31,7 +31,8 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using System.Text.RegularExpressions;
-using Dalamud.Hooking;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
+using Dalamud.IoC;
 
 namespace Lemegeton.Core
 {
@@ -164,22 +165,22 @@ namespace Lemegeton.Core
 
         }
 
-        internal IDalamudPluginInterface pi { get; init; }
-        internal IGameNetwork gn { get; init; }
-        internal IChatGui cg { get; init; }
-        internal ICommandManager cm { get; init; }
-        internal IObjectTable ot { get; init; }
-        internal IGameGui gg { get; init; }
-        internal IClientState cs { get; init; }
-        internal IDataManager dm { get; init; }
-        internal ITextureProvider tp { get; init; }
-        internal ICondition cd { get; init; }
-        internal IFramework fw { get; init; }
-        internal ISigScanner ss { get; init; }
-        internal IPartyList pl { get; init; }
-        internal ITargetManager tm { get; init; }
-        internal IPluginLog lo { get; init; }
-        internal IGameInteropProvider io { get; init; }
+        [PluginService] public IDalamudPluginInterface pi { get; private set; }
+        [PluginService] public IGameNetwork gn { get; private set; }
+        [PluginService] public IChatGui cg { get; private set; }
+        [PluginService] public ICommandManager cm { get; private set; }
+        [PluginService] public IObjectTable ot { get; private set; }
+        [PluginService] public IGameGui gg { get; private set; }
+        [PluginService] public IClientState cs { get; private set; }
+        [PluginService] public IDataManager dm { get; private set; }
+        [PluginService] public ITextureProvider tp { get; private set; }
+        [PluginService] public ICondition cd { get; private set; }
+        [PluginService] public IFramework fw { get; private set; }
+        [PluginService] public ISigScanner ss { get; private set; }
+        [PluginService] public IPartyList pl { get; private set; }
+        [PluginService] public ITargetManager tm { get; private set; }
+        [PluginService] public IPluginLog lo { get; private set; }
+        [PluginService] public IGameInteropProvider io { get; private set; }
 
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
@@ -699,7 +700,7 @@ namespace Lemegeton.Core
                 tl = CheckTimelineReload(tl);
                 _timeline = tl;
                 _timeline.Reset(this);
-                int num = tl.SelectProfiles(cs.LocalPlayer.ClassJob.Id);
+                int num = tl.SelectProfiles(cs.LocalPlayer.ClassJob.RowId);
                 if (num > 0)
                 {
                     Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, {1} selected profile(s)", territory, num);
@@ -732,7 +733,7 @@ namespace Lemegeton.Core
                 {
                     if (t != null)
                     {
-                        int num = t.SelectProfiles(cs.LocalPlayer.ClassJob.Id);
+                        int num = t.SelectProfiles(cs.LocalPlayer.ClassJob.RowId);
                         if (num > 0)
                         {
                             Log(LogLevelEnum.Debug, null, "Resetting timeline on combat end, {0} selected profile(s)", num);
@@ -1108,7 +1109,7 @@ namespace Lemegeton.Core
                 if (ii != null)
                 {
                     var item = dm.Excel.GetSheet<Item>().GetRow(ii->ItemId);
-                    if (item.ItemUICategory.Row == 46)
+                    if (item.ItemUICategory.RowId == 46)
                     {
                         items.Add(new InventoryItem() { Type = ic->Type, Slot = i, HQ = (ii->Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HighQuality) != 0, Item = item });
                     }
@@ -1185,7 +1186,7 @@ namespace Lemegeton.Core
             items = items.GroupBy(x => new { x.Item.RowId, x.HQ }).Select(x => x.First()).ToList();
             items.Sort((a, b) =>
             {
-                int ex = b.Item.LevelItem.Row.CompareTo(a.Item.LevelItem.Row);
+                int ex = b.Item.LevelItem.RowId.CompareTo(a.Item.LevelItem.RowId);
                 if (ex != 0)
                 {
                     return ex;
@@ -1295,7 +1296,7 @@ namespace Lemegeton.Core
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;                        
-                        isavatar = (chs->CharacterData.ModelCharaId == 0);
+                        isavatar = (/*todo chs->CharacterData.ModelCharaId*/0 == 0);
                     }
                 }
                 if (go is BattleChara)
@@ -1437,7 +1438,7 @@ namespace Lemegeton.Core
             Log(LogLevelEnum.Debug, null, "Clearing automarkers, hard markers applied: {0}", _markersApplied);
             Party pty = GetPartyMembers();
             foreach (Party.PartyMember pm in pty.Members)
-            {
+            {                
                 ClearMarkerOn(pm.GameObject, _markersApplied, true);
             }
             _markersApplied = false;
@@ -1582,35 +1583,35 @@ namespace Lemegeton.Core
 
         internal unsafe Party GetPartyMembers()
         {
-            AddonPartyList* apl = (AddonPartyList*)gg.GetAddonByName("_PartyList", 1);
-            IntPtr pla = gg.FindAgentInterface(apl);
             Party pty = new Party();
-            Dictionary<string, IGameObject> party = new Dictionary<string, IGameObject>();
+            int i = 1;
             foreach (IPartyMember pm in pl)
-            {
-                party[pm.Name.ToString()] = pm.GameObject;                
-            }            
-            for (int i = 0; i < apl->MemberCount; i++)
             {                
-                IntPtr p = (pla + (0x1552 + 0xd8 * i));
-                string fullname = Marshal.PtrToStringUTF8(p).Trim();
-                IGameObject go = null;
-                if (party.ContainsKey(fullname) == true)
+                pty.Members.Add(new Party.PartyMember()
                 {
-                    go = party[fullname];
-                }
-                else if (String.Compare(fullname, cs.LocalPlayer.Name.ToString()) == 0)
+                    Index = i++,
+                    Name = pm.GameObject != null ? pm.GameObject.Name.ToString() : pm.Name.ToString(),
+                    ObjectId = pm.GameObject != null ? pm.GameObject.GameObjectId : pm.ObjectId,
+                    GameObject = pm.GameObject
+                });
+            }
+            if (pty.Members.Count == 0)
+            {                
+                pty.Members.Add(new Party.PartyMember()
                 {
-                    go = cs.LocalPlayer as IGameObject;
-                }
-                else
-                {
-                    go = GetActorByName(fullname);
-                    
-                }                
-                pty.Members.Add(new Party.PartyMember() { Index = i + 1, Name = fullname, ObjectId = go != null ? go.GameObjectId : 0, GameObject = go });
+                    Index = 1,
+                    Name = cs.LocalPlayer.Name.ToString(),
+                    ObjectId = cs.LocalPlayer.GameObjectId,
+                    GameObject = cs.LocalPlayer
+                });
             }
             return pty;
+        }
+
+        internal unsafe Alliance GetAllianceMembers()
+        {
+            Alliance al = new Alliance();
+            return al;
         }
 
         internal unsafe int GetPartyMemberIndex(string name)

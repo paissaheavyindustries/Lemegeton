@@ -183,10 +183,10 @@ namespace Lemegeton.Content
                         CharacterData cd = bcs->CharacterData;
                         if (
                             // normal mode beetle, useful for testing
-                            (cd.ModelCharaId == 327 && ApplyP1 == true)
+                            (/*todo cd.ModelCharaId*/0 == 327 && ApplyP1 == true)
                             ||
                             // p1 beetle omega
-                            (cd.ModelCharaId == 3771 && cd.Health == 8557964 && ApplyP1 == true)
+                            (/*todo cd.ModelCharaId*/0 == 3771 && cd.Health == 8557964 && ApplyP1 == true)
                         )
                         {
                             GameObjectStruct* gos = (GameObjectStruct*)go.Address;
@@ -202,10 +202,10 @@ namespace Lemegeton.Content
                         }
                         else if (
                             // normal mode beetle, useful for testing
-                            (cd.ModelCharaId == 327 && ApplyP3 == true)
+                            (/*todo cd.ModelCharaId*/0 == 327 && ApplyP3 == true)
                             ||
                             // p3 not-really-final omega
-                            (cd.ModelCharaId == 3775 && cd.Health == 11125976 && ApplyP3 == true)
+                            (/*todo cd.ModelCharaId*/0 == 3775 && cd.Health == 11125976 && ApplyP3 == true)
                         )
                         {
                             GameObjectStruct* gos = (GameObjectStruct*)go.Address;

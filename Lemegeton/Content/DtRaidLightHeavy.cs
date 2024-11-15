@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using Dalamud.Game.ClientState.Objects.Types;
 using ImGuiNET;
 using Lemegeton.Core;
-using Lumina.Excel.GeneratedSheets2;
+using Lumina.Excel.Sheets;
 using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
@@ -54,11 +54,15 @@ namespace Lemegeton.Content
         private const int AbilityBlindingLoveSavage = 39629;
 
         private const int StatusElectricalCondenser = 3999;
-        private const int StatusSpecial = 2970;
+        private const int StatusSpecial1 = 2970;
+        private const int StatusSpecial2 = 2056;
         private const int StatusSpecialPair = 752;
+        private const int StatusSpecialCleaveLeft = 794;
+        private const int StatusSpecialCleaveRight = 793;
 
         private Groupbees _groupbees;
         private CondenserAM _condenserAM;
+        private DrawSidewiseSpark _drawSidewise;
 
         #region Groupbees
 
@@ -396,6 +400,157 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region DrawSidewiseSpark
+
+        public class DrawSidewiseSpark : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 HighlightColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.2f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            public int _activeLr = 0;
+            public int _activeUd = 0;
+            public DateTime _active = DateTime.MinValue;
+
+            public DrawSidewiseSpark(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public override void Reset()
+            {
+                base.Reset();
+                _activeLr = 0;
+                _activeUd = 0;
+            }
+
+            public void FeedSpecialStatus(IGameObject go, int actionId)
+            {
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} on {1}", actionId, go);
+                if (go.Position.X < 95.0f)
+                {
+                    _activeUd = (actionId == StatusSpecialCleaveLeft) ? 1 : 2;
+                }
+                else if (go.Position.X > 105.0f)
+                {
+                    _activeUd = (actionId == StatusSpecialCleaveLeft) ? 2 : 1;
+                }
+                else
+                {
+                    if (go.Position.Z < 160.0f)
+                    {                        
+                        _activeLr = (actionId == StatusSpecialCleaveLeft) ? 2 : 1;
+                    }
+                    else
+                    {
+                        _activeLr = (actionId == StatusSpecialCleaveLeft) ? 1 : 2;
+                    }
+                }
+                Log(State.LogLevelEnum.Debug, null, "Cleaves are now {0},{1}", _activeLr, _activeUd);
+                _active = DateTime.Now;
+            }
+
+            public void TestFunctionality()
+            {
+                if (_activeLr != 0 || _activeUd != 0)
+                {
+                    _activeLr = 0;
+                    _activeUd = 0;
+                    return;
+                }
+                _state.InvokeZoneChange(1232);
+                Random r = new Random();
+                _activeUd = r.Next(1, 3);
+                _activeLr = r.Next(1, 3);
+                _active = DateTime.Now;
+                Log(State.LogLevelEnum.Debug, null, "Testing with {0},{1}", _activeUd, _activeLr);
+            }
+
+            private void DrawRectangle(ImDrawListPtr draw, float x1, float y1, float x2, float y2, float z)
+            {
+                Vector3 t1 = new Vector3(x1, z, y1);
+                Vector3 t2 = new Vector3(x2, z, y1);
+                Vector3 t3 = new Vector3(x2, z, y2);
+                Vector3 t4 = new Vector3(x1, z, y2);
+                Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                draw.PathLineTo(new Vector2(v1.X, v1.Y));
+                draw.PathLineTo(new Vector2(v2.X, v2.Y));
+                draw.PathLineTo(new Vector2(v3.X, v3.Y));
+                draw.PathLineTo(new Vector2(v4.X, v4.Y));
+                draw.PathLineTo(new Vector2(v1.X, v1.Y));
+                draw.PathFillConvex(
+                    ImGui.GetColorU32(HighlightColor)
+                );
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                if (_activeLr == 0 && _activeUd == 0)
+                {
+                    return false;
+                }
+                var temp = _state.cs.LocalPlayer.Position;
+                if ((DateTime.Now - _active).TotalMilliseconds > 4000.0f)
+                {
+                    _activeLr = 0;
+                    _activeUd = 0;
+                    Log(State.LogLevelEnum.Debug, null, "Expired");
+                    return false;
+                }                
+                float x = 100.0f;
+                float y = 165.0f;
+                float z = 0.0f;
+                float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
+                y1 = y - 10.0f;
+                y2 = y + 10.0f;
+                switch (_activeLr)
+                {
+                    case 1:
+                        x1 = x - 10.0f;
+                        x2 = x;
+                        break;
+                    case 2:
+                        x1 = x;
+                        x2 = x + 10.0f;
+                        break;
+                }
+                DrawRectangle(draw, x1, y1, x2, y2, z);
+                x1 = x - 10.0f;
+                x2 = x + 10.0f;
+                switch (_activeUd)
+                {
+                    case 1:
+                        y1 = y - 10.0f;
+                        y2 = y;
+                        break;
+                    case 2:
+                        y1 = y;
+                        y2 = y + 10.0f;
+                        break;
+                }
+                DrawRectangle(draw, x1, y1, x2, y2, z);
+                return true;
+            }
+
+        }
+
+        #endregion
+
         public DtRaidLightHeavy(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -456,13 +611,22 @@ namespace Lemegeton.Content
                         _condenserAM.FeedStatus(dest, gained, duration);
                     }
                     break;
-                case StatusSpecial:
+                case StatusSpecial1:
                     if (CurrentZone == ZoneEnum.M4s && _condenserAM.Active == true)
                     {
                         if (stacks == StatusSpecialPair)
                         {
                             _condenserAM.FeedSpecialStatus(stacks);
                         }                        
+                    }
+                    break;
+                case StatusSpecial2:
+                    if (CurrentZone == ZoneEnum.M4s && _drawSidewise.Active == true)
+                    {
+                        if (stacks == StatusSpecialCleaveLeft || stacks == StatusSpecialCleaveRight)
+                        {
+                            _drawSidewise.FeedSpecialStatus(_state.GetActorById(dest), stacks);
+                        }
                     }
                     break;
             }
@@ -548,6 +712,7 @@ namespace Lemegeton.Content
                         break;
                     case ZoneEnum.M4s:
                         _condenserAM = (CondenserAM)Items["CondenserAM"];
+                        _drawSidewise = (DrawSidewiseSpark)Items["DrawSidewiseSpark"];
                         break;
                 }
                 LogItems();

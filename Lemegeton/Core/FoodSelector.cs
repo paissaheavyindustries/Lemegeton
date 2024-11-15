@@ -84,7 +84,7 @@ namespace Lemegeton.Core
                 }
                 else
                 {
-                    selname = ii.Item.Name;
+                    selname = ii.Item.Name.ExtractText();
                     if (SelectedHQ == true)
                     {
                         selname += " (" + hq + ")";
@@ -110,7 +110,7 @@ namespace Lemegeton.Core
                 }
                 foreach (InventoryItem ii in FoodList)
                 {
-                    string itemname = ii.Item.Name;
+                    string itemname = ii.Item.Name.ExtractText();
                     string dispname = itemname;
                     if (ii.HQ == true)
                     {

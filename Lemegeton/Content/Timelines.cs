@@ -13,7 +13,7 @@ using Vector3 = System.Numerics.Vector3;
 using System.Collections.Generic;
 using static Lemegeton.Core.Timeline.Encounter;
 using static Lemegeton.Core.Timeline;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace Lemegeton.Content
 {
@@ -247,7 +247,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (chs->CharacterData.ModelCharaId == 0)
+                        if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
                         {
                             return;
                         }
@@ -258,8 +258,8 @@ namespace Lemegeton.Content
                     IBattleChara bc = (IBattleChara)go;
                     if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                     {
-                        Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(actionId);
-                        if (IgnoreAutoAttacks == true && a.ActionCategory.Row == 1)
+                        Lumina.Excel.Sheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.Action>().GetRow(actionId);
+                        if (IgnoreAutoAttacks == true && a.ActionCategory.RowId == 1)
                         {
                             return;
                         }
@@ -343,7 +343,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (chs->CharacterData.ModelCharaId == 0)
+                        if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
                         {
                             return;
                         }

@@ -119,7 +119,7 @@ namespace Lemegeton.Core
         }
 
         public nint GetStaticAddressFromSig(string signature, int offset = 0)
-        {
+        {            
             if (_state.ss.TryGetStaticAddressFromSig(signature, out nint addr, offset) == true)
             {
                 return addr;

@@ -241,7 +241,7 @@ namespace Lemegeton.Core
                 unsafe
                 {
                     CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                    if (chs->CharacterData.ModelCharaId == 0)
+                    if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
                     {
                         return;
                     }
@@ -252,8 +252,8 @@ namespace Lemegeton.Core
                 IBattleChara bc = (IBattleChara)go;
                 if ((_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0)
                 {
-                    Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(actionId);
-                    if ((RecordedEvents & RecordedEventsEnum.AutoAttack) == 0 && a.ActionCategory.Row == 1)
+                    Lumina.Excel.Sheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.Action>().GetRow(actionId);
+                    if ((RecordedEvents & RecordedEventsEnum.AutoAttack) == 0 && a.ActionCategory.RowId == 1)
                     {
                         return;
                     }
@@ -337,7 +337,7 @@ namespace Lemegeton.Core
                 unsafe
                 {
                     CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                    if (chs->CharacterData.ModelCharaId == 0)
+                    if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
                     {
                         return;
                     }

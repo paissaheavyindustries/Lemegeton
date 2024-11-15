@@ -1,10 +1,16 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Lemegeton.Core
 {
+
+    internal class Alliance
+    {
+
+        public List<Party> Alliances = new List<Party>();
+
+    }
 
     internal class Party
     {
@@ -22,7 +28,7 @@ namespace Lemegeton.Core
             {
                 get
                 {
-                    return GameObject != null ? ((IBattleChara)GameObject).ClassJob.Id : 0;
+                    return GameObject != null ? ((IBattleChara)GameObject).ClassJob.RowId : 0;
                 }
             }
 

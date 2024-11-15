@@ -47,6 +47,8 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(4002)]
             public bool OnlyTargettable { get; set; } = true;
 
+            private DateTime _lastLine = DateTime.MinValue;
+
             protected override bool ExecutionImplementation()
             {
                 ImDrawListPtr draw;
@@ -60,6 +62,7 @@ namespace Lemegeton.Content
                 float defSize = ImGui.GetFontSize();
                 float mul = 18.0f / defSize;
                 Vector2 disp = ImGui.GetIO().DisplaySize;
+                int objs = 0, objsi = 0;
                 foreach (GameObject go in _state.ot)
                 {
                     int renderFlags;
@@ -70,6 +73,7 @@ namespace Lemegeton.Content
                         renderFlags = gop->RenderFlags;
                         targettable = gop->GetIsTargetable();
                     }
+                    objs++;
                     if (targettable == false && OnlyTargettable == true)
                     {
                         continue;
@@ -77,7 +81,7 @@ namespace Lemegeton.Content
                     if (renderFlags != 0 && OnlyVisible == true)
                     {
                         continue;
-                    }
+                    }                    
                     switch (go.ObjectKind)
                     {
                         case Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player:
@@ -105,6 +109,7 @@ namespace Lemegeton.Content
                             }
                             break;
                     }
+                    objsi++;
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine(String.Format("ID: {0} ({1})", go.GameObjectId.ToString(), go.GameObjectId.ToString("X8")));
                     sb.AppendLine(String.Format("Addr: {0} ({1})", go.Address.ToString(), go.Address.ToString("X8")));
@@ -130,12 +135,12 @@ namespace Lemegeton.Content
                             unsafe
                             {
                                 CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                                sb.AppendLine(String.Format("Job: {0} Omen: {1:X} VFX: {2:X} VFX2: {3:X}", bc.ClassJob.Id, (IntPtr)chs->Vfx.Omen, (IntPtr)chs->Vfx.VfxData, (IntPtr)chs->Vfx.VfxData2));
+                                sb.AppendLine(String.Format("Job: {0} Omen: {1:X} VFX: {2:X} VFX2: {3:X}", bc.ClassJob.RowId, (IntPtr)chs->Vfx.Omen, (IntPtr)chs->Vfx.VfxData, (IntPtr)chs->Vfx.VfxData2));
                             }
                         }
                         else
                         {
-                            sb.AppendLine(String.Format("Job: {0}", bc.ClassJob.Id));
+                            sb.AppendLine(String.Format("Job: {0}", bc.ClassJob.RowId));
                         }
                         sb.AppendLine(String.Format("Flags: {0}", _state.GetStatusFlags(bc)));
                         if (bc.CastActionId > 0)
@@ -149,7 +154,7 @@ namespace Lemegeton.Content
                         unsafe
                         {
                             CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                            sb.AppendLine(String.Format("ObjectKind: {0} ModelId: {1}", go.ObjectKind, chs->CharacterData.ModelCharaId));
+                            sb.AppendLine(String.Format("ObjectKind: {0} ModelId: {1}", go.ObjectKind, /*todo chs->CharacterData.ModelCharaId*/0));
                         }
                     }
                     else
@@ -161,6 +166,10 @@ namespace Lemegeton.Content
                     string text = sb.ToString();
                     Vector2 sz = ImGui.CalcTextSize(text);
                     Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
+                    if (go.GameObjectId == _state.cs.LocalPlayer.GameObjectId)
+                    {
+                        Log(LogLevelEnum.Debug, null, string.Format("me {0},{1},{2} -> {0},{1},{2}", go.Position.X, go.Position.Y, go.Position.Z, temp.X, temp.Y, temp.Z));
+                    }
                     sz.X *= mul;
                     sz.Y *= mul;
                     pt.X = temp.X - (sz.X / 2.0f);
@@ -189,6 +198,11 @@ namespace Lemegeton.Content
                         ImGui.GetColorU32(TextColor),
                         text
                     );
+                }
+                if ((DateTime.Now - _lastLine).TotalSeconds >= 10)
+                {
+                    Log(LogLevelEnum.Debug, null, string.Format("{0} objects in total, {1} objects of interest", objs, objsi));
+                    _lastLine = DateTime.Now;
                 }
                 return true;
             }

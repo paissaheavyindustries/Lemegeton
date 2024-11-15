@@ -52,7 +52,7 @@ namespace Lemegeton.Content
                     if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc && go.SubKind == 5 && go.IsDead == false)
                     {
                         IBattleChara bc = (IBattleChara)go;
-                        if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.Id == 0)
+                        if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.RowId == 0)
                         {
                             double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
                             Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);

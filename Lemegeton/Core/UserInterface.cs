@@ -167,7 +167,7 @@ namespace Lemegeton.Core
 
         internal Vector3 TranslateToScreen(double x, double y, double z)
         {
-            Vector2 tenp;
+            Vector2 tenp;            
             _state.gg.WorldToScreen(
                 new Vector3((float)x, (float)y, (float)z),
                 out tenp

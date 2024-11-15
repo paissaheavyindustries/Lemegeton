@@ -265,7 +265,7 @@ namespace Lemegeton.Content
 
             protected override bool ExecutionImplementation()
             {
-                if (DateTime.Now < _reeval || _state.cs.LocalPlayer.ClassJob.Id != 18)
+                if (DateTime.Now < _reeval || _state.cs.LocalPlayer.ClassJob.RowId != 18)
                 {
                     return false;
                 }

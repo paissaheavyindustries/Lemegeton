@@ -26,8 +26,8 @@ namespace Lemegeton.Core
         public virtual string Author { get; } = "";
 
         protected State _state = null;
-        private bool _enabled = true;
-        private bool _active = true;
+        private bool _enabled = false;
+        private bool _active = false;
         internal bool _debugDisplayToggled = false;
         private ContentModule _owner = null;
         internal State.LogLevelEnum LogLevel { get; set; } = State.LogLevelEnum.Debug;

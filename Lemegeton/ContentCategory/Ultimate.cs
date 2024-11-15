@@ -26,6 +26,7 @@ namespace Lemegeton.ContentCategory
             items["UltAlexander"] = new UltAlexander(st);
             items["UltDragonsongReprise"] = new UltDragonsongReprise(st);
             items["UltOmegaProtocol"] = new UltOmegaProtocol(st);
+            items["UltFuturesRewritten"] = new UltFuturesRewritten(st);
             return items;
         }
 

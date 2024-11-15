@@ -37,13 +37,21 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using static Lemegeton.Core.AutomarkerPrio;
 using System.Net.Http;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 using System.Threading.Channels;
+
+using Dalamud.Game;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Interface.Windowing;
+using Dalamud.IoC;
+using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
+using Dalamud.Storage.Assets;
 
 namespace Lemegeton
 {
@@ -56,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.4.8";
+        public string Version = "1.0.4.9";
 
         internal class Downloadable
         {
@@ -87,6 +95,7 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.4.6"), "Changelog/1.0.4.6"),
             new Tuple<Version, string>(new System.Version("1.0.4.7"), "Changelog/1.0.4.7"),
             new Tuple<Version, string>(new System.Version("1.0.4.8"), "Changelog/1.0.4.8"),
+            new Tuple<Version, string>(new System.Version("1.0.4.9"), "Changelog/1.0.4.9"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -273,45 +282,10 @@ namespace Lemegeton
             "automarkers served to date: $auto",
         };
 
-        public Plugin(
-            IDalamudPluginInterface pluginInterface,
-            IGameNetwork gameNetwork,
-            IChatGui chatGui,
-            ICommandManager commandManager,
-            IObjectTable objectTable,
-            IGameGui gameGui,
-            IClientState clientState,
-            IDataManager dataManager,
-            ITextureProvider textureProvider,
-            ICondition condition,
-            IFramework framework,
-            ISigScanner sigScanner,
-            IPartyList partylist,
-            ITargetManager targetManager,
-            IPluginLog log,
-            IGameInteropProvider interop
-        )
+        public Plugin(IDalamudPluginInterface pluginInterface)
         {
-            _state = new State()
-            {
-                pi = pluginInterface,
-                gn = gameNetwork,
-                cg = chatGui,
-                cm = commandManager,
-                ot = objectTable,
-                gg = gameGui,
-                cs = clientState,
-                dm = dataManager,
-                tp = textureProvider,
-                cd = condition,
-                fw = framework,
-                ss = sigScanner,
-                pl = partylist,
-                tm = targetManager,
-                lo = log,
-                io = interop,
-                plug = this
-            };
+            _state = pluginInterface.Create<State>();
+            _state.plug = this;
             _ui._state = _state;
             Log(LogLevelEnum.Info, "This is Lemegeton {0}", Version);
             LoadConfig();
@@ -446,7 +420,7 @@ namespace Lemegeton
             }
         }
 
-        private void Cs_Logout()
+        private void Cs_Logout(int type, int code)
         {
             lock (this)
             {
@@ -471,7 +445,7 @@ namespace Lemegeton
             I18n.OnFontDownload -= I18n_OnFontDownload;
             _state.cs.Logout -= Cs_Logout;
             _state.cs.Login -= Cs_Login;
-            Cs_Logout();
+            Cs_Logout(0, 0);
             _state.Uninitialize();
             _stopEvent.Set();
             //_state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts; todo            
@@ -892,7 +866,7 @@ namespace Lemegeton
                                 }
                                 else
                                 {
-                                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
                                 }
                             }
                         }
@@ -1753,8 +1727,8 @@ namespace Lemegeton
 
         internal string GetActionName(uint key)
         {
-            Lumina.Excel.GeneratedSheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>().GetRow(key);
-            string name = Capitalize(a.Name);
+            Lumina.Excel.Sheets.Action a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.Action>().GetRow(key);
+            string name = Capitalize(a.Name.ExtractText());
             if (name.Contains("_rsv_") == true)
             {
                 name = I18n.Translate(String.Format("RSV/Ability_{0}", key));
@@ -1764,8 +1738,8 @@ namespace Lemegeton
 
         internal string GetStatusName(uint key)
         {
-            Lumina.Excel.GeneratedSheets.Status a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Status>().GetRow(key);
-            string name = Capitalize(a.Name);
+            Lumina.Excel.Sheets.Status a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.Status>().GetRow(key);
+            string name = Capitalize(a.Name.ExtractText());
             if (name.Contains("_rsv_") == true)
             {
                 name = I18n.Translate(String.Format("RSV/Status_{0}", key));
@@ -1798,8 +1772,8 @@ namespace Lemegeton
                             List<string> temp = new List<string>();
                             foreach (uint key in e.KeyValues)
                             {
-                                Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(key);
-                                string name = Capitalize(a.Singular) + " \xE0AF";
+                                Lumina.Excel.Sheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.BNpcName>().GetRow(key);
+                                string name = Capitalize(a.Singular.ExtractText()) + " \xE0AF";
                                 if (temp.Contains(name) == false)
                                 {
                                     temp.Add(name);
@@ -1837,8 +1811,8 @@ namespace Lemegeton
                 case Timeline.Entry.EntryTypeEnum.Spawn:
                     {
                         int index = (int)Math.Floor((DateTime.Now - _loaded).TotalSeconds / 2.0f) % e.KeyValues.Count;
-                        Lumina.Excel.GeneratedSheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.BNpcName>().GetRow(e.KeyValues[index]);
-                        return Capitalize(a.Singular + " \xE0AF");
+                        Lumina.Excel.Sheets.BNpcName a = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.BNpcName>().GetRow(e.KeyValues[index]);
+                        return Capitalize(a.Singular.ExtractText() + " \xE0AF");
                     }
                 case Timeline.Entry.EntryTypeEnum.Targettable:
                     return I18n.Translate("Timelines/SpecialTags/Targettable");
@@ -1854,18 +1828,18 @@ namespace Lemegeton
 
         internal string GetInstanceNameForTerritory(ushort territory)
         {
-            TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.TerritoryType>().GetRow(territory);
-            ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>().Where(x => x.TerritoryType.Value == tt).FirstOrDefault();
-            if (cfc != null)
+            TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.TerritoryType>().GetRow(territory);
+            ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.ContentFinderCondition>().Where(x => x.TerritoryType.IsValid == true && x.TerritoryType.Value.RowId == tt.RowId).FirstOrDefault();
+            if (cfc.RowId == tt.RowId)
             {
-                return cfc.Name;
+                return cfc.Name.ExtractText();
             }
-            PlaceName pn = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.PlaceName>().GetRow(tt.PlaceName.Row);
-            if (pn != null)
+            PlaceName pn = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.PlaceName>().GetRow(tt.PlaceName.RowId);
+            if (pn.RowId == tt.PlaceName.RowId)
             {
-                return pn.Name;
+                return pn.Name.ExtractText();
             }
-            return tt.Name;
+            return tt.Name.ExtractText();
         }
 
         private string GetInstanceNameForTimeline(Timeline tl)
@@ -2096,7 +2070,7 @@ namespace Lemegeton
             if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/DeleteProfile")) == true)
             {
                 Log(LogLevelEnum.Debug, "Deleting profile {0}", SelectedProfile.Name);
-                SelectedTimeline.RemoveProfile(SelectedProfile, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                SelectedTimeline.RemoveProfile(SelectedProfile, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
                 SelectedProfile = SelectedTimeline.DefaultProfile;
             }
             if (SelectedProfile == null || SelectedProfile.Default == true)
@@ -2122,7 +2096,7 @@ namespace Lemegeton
                     string prname = _newProfileName.Trim();
                     Log(LogLevelEnum.Debug, "Creating new blank profile as {0}", prname);
                     Timeline.Profile pro = new Timeline.Profile() { Name = prname };
-                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);                    
+                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);                    
                     SelectedProfile = pro;
                     ImGui.CloseCurrentPopup();
                 }
@@ -2155,7 +2129,7 @@ namespace Lemegeton
                     Timeline.Profile pro = orp.Duplicate();
                     pro.Default = false;
                     pro.Name = prname;
-                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
                     SelectedProfile = pro;
                     ImGui.CloseCurrentPopup();
                 }
@@ -2347,7 +2321,7 @@ namespace Lemegeton
                         SelectedProfile.ApplyOnJobs = newmap;
                         if (_state._timeline != null)
                         {
-                            _state._timeline.SelectProfiles(_state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.Id : 0);
+                            _state._timeline.SelectProfiles(_state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
                         }
                     }
                 }

@@ -266,11 +266,11 @@ namespace Lemegeton.Content
 
             private void AddDotSpec(DotSpecification spec)
             {
-                Lumina.Excel.GeneratedSheets.Status st = _state.dm.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Status>().GetRow(spec.Id);
+                Lumina.Excel.Sheets.Status st = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.Status>().GetRow(spec.Id);
                 string name;
-                if (st != null)
+                if (st.RowId == spec.Id)
                 {                    
-                    name = st.Name;
+                    name = st.Name.ExtractText();
                     spec.StatusIcon = _state.plug._ui.GetOnDemandIcon(st.Icon);
                 }
                 else
