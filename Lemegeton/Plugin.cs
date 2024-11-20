@@ -64,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.4.9";
+        public string Version = "1.0.5.0";
 
         internal class Downloadable
         {
@@ -96,6 +96,7 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.4.7"), "Changelog/1.0.4.7"),
             new Tuple<Version, string>(new System.Version("1.0.4.8"), "Changelog/1.0.4.8"),
             new Tuple<Version, string>(new System.Version("1.0.4.9"), "Changelog/1.0.4.9"),
+            new Tuple<Version, string>(new System.Version("1.0.5.0"), "Changelog/1.0.5.0"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -3688,7 +3689,7 @@ namespace Lemegeton
                                 }
                                 if (n.SoundEffect != SoundEffectEnum.None)
                                 {
-                                    UIModule.PlayChatSoundEffect((uint)n.SoundEffect);
+                                    UIGlobals.PlayChatSoundEffect((uint)n.SoundEffect);
                                 }
                             }
                         }

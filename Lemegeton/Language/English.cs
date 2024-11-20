@@ -14,9 +14,11 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.5.0            
+            AddEntry("Changelog/1.0.5.0", " minor housekeeping updates");
+            #endregion
             #region 1.0.4.9
-            AddEntry("Changelog/1.0.4.9", " fixed automarker issues with blacklisted characters");
-            AddEntry("Changelog/1.0.4.9", " Dalamud API11 update");
+            AddEntry("Changelog/1.0.4.9", " fixed automarker issues with blacklisted characters\n Dalamud API11 update");
             AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/DrawSidewiseSpark", "(M4s) Sidewise Spark indicator");
             AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/DrawSidewiseSpark/Enabled", "Enabled");
             AddEntry("Content/DawntrailRaids/DTRaidLightHeavy/DrawSidewiseSpark/HighlightColor", "Sidewise Spark indicator color");

@@ -2083,9 +2083,8 @@ namespace Lemegeton.Core
             if (addr1 == IntPtr.Zero || addr2 == IntPtr.Zero)
             {                
                 Log(LogLevelEnum.Warning, null, "Marking by function pointer not available, falling back to command injection");
-            }
-            // sig from saltycog/ffxiv-startup-commands
-            addr1 = _sig.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+            }            
+            addr1 = _sig.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B F2 48 8B F9 45 84 C9");
             if (addr1 != IntPtr.Zero)
             {
                 _postCmdFuncptr = Marshal.GetDelegateForFunctionPointer<PostCommandDelegate>(addr1);

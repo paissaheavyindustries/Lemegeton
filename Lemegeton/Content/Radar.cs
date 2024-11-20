@@ -1248,7 +1248,7 @@ namespace Lemegeton.Content
                         return;
                     }
                     _lastSoundAlert = DateTime.Now;
-                    UIModule.PlayChatSoundEffect(6);
+                    UIGlobals.PlayChatSoundEffect(6);
                 }
             }
 
