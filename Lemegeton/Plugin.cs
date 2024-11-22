@@ -64,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.5.0";
+        public string Version = "1.0.5.1";
 
         internal class Downloadable
         {
@@ -97,6 +97,7 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.4.8"), "Changelog/1.0.4.8"),
             new Tuple<Version, string>(new System.Version("1.0.4.9"), "Changelog/1.0.4.9"),
             new Tuple<Version, string>(new System.Version("1.0.5.0"), "Changelog/1.0.5.0"),
+            new Tuple<Version, string>(new System.Version("1.0.5.1"), "Changelog/1.0.5.1"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -524,6 +525,11 @@ namespace Lemegeton
                     AutomarkerTiming v = (AutomarkerTiming)pi.GetValue(o);
                     val = v.Serialize();
                 }
+                else if (pi.PropertyType == typeof(Overlay))
+                {
+                    Overlay v = (Overlay)pi.GetValue(o);
+                    val = v.Serialize();
+                }
                 else if (pi.PropertyType == typeof(Percentage))
                 {
                     Percentage v = (Percentage)pi.GetValue(o);
@@ -693,6 +699,11 @@ namespace Lemegeton
                     else if (pi.PropertyType == typeof(AutomarkerTiming))
                     {
                         AutomarkerTiming v = (AutomarkerTiming)pi.GetValue(cm);
+                        v.Deserialize(attr.Value);
+                    }
+                    else if (pi.PropertyType == typeof(Overlay))
+                    {
+                        Overlay v = (Overlay)pi.GetValue(cm);
                         v.Deserialize(attr.Value);
                     }
                     else if (pi.PropertyType == typeof(Percentage))
@@ -1334,6 +1345,66 @@ namespace Lemegeton
             }
         }
 
+        private void RenderOverlaySettings(string id, Overlay o)
+        {
+            int padding = o.Padding;
+            Vector4 bgcolor = o.BackgroundColor;
+            if (ImGui.ColorEdit4(I18n.Translate("Overlay/Settings/BackgroundColor"), ref bgcolor, ImGuiColorEditFlags.NoInputs) == true)
+            {
+                o.BackgroundColor = bgcolor;
+            }
+            ImGui.Text(Environment.NewLine + I18n.Translate("Overlay/Settings/Padding"));
+            if (ImGui.SliderInt("##OverlayPadding", ref padding, 0, 10) == true)
+            {
+                o.Padding = padding;
+            }
+            ImGuiWindowFlags flax = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBackground;
+            ImGui.SetNextWindowPos(new Vector2(
+                o.X,
+                o.Y),
+                ImGuiCond.FirstUseEver
+            );
+            ImGui.SetNextWindowSize(new Vector2(
+                o.Width,
+                o.Height),
+                ImGuiCond.FirstUseEver
+            );
+            if (ImGui.Begin(id + "OverlaySettings", flax) == true)
+            {
+                UserInterface.KeepWindowInSight();
+                Vector2 pt = ImGui.GetWindowPos();
+                Vector2 szy = ImGui.GetWindowSize();
+                ImDrawListPtr draw = ImGui.GetWindowDrawList();
+                o.Renderer(draw, true);
+                float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
+                draw.AddRect(
+                    new Vector2(o.X + 2.0f, o.Y + 2.0f),
+                    new Vector2(o.X + o.Width - 2.0f, o.Y + o.Height - 2.0f),
+                    ImGui.GetColorU32(new Vector4(1.0f, (float)Math.Abs(Math.Cos(time)), 0.0f, 1.0f)),
+                    0.0f, ImDrawFlags.None, 5.0f
+                );
+                o.X = (int)Math.Floor(pt.X);
+                o.Y = (int)Math.Floor(pt.Y);
+                o.Width = (int)Math.Floor(szy.X);
+                o.Height = (int)Math.Floor(szy.Y);
+                ImGui.End();
+            }
+        }
+
+        private void RenderOverlay(string path, PropertyInfo pi, object o)
+        {
+            Overlay ov = (Overlay)pi.GetValue(o);
+            string proptr = I18n.Translate(path + "/" + pi.Name);
+            if (ImGui.CollapsingHeader(I18n.Translate(proptr)) == true)
+            {
+                ImGui.PushID(proptr + "OverlayConfig");
+                ImGui.Indent(30.0f);
+                RenderOverlaySettings(proptr, ov);
+                ImGui.Unindent(30.0f);
+                ImGui.PopID();
+            }            
+        }
+
         private void RenderPercentage(string path, PropertyInfo pi, object o)
         {
             Percentage pr = (Percentage)pi.GetValue(o);
@@ -1676,6 +1747,10 @@ namespace Lemegeton
                 else if (pi.PropertyType == typeof(AutomarkerPrio))
                 {
                     RenderAutomarkerPrio(path, pi, cm);
+                }
+                else if (pi.PropertyType == typeof(Overlay))
+                {
+                    RenderOverlay(path, pi, cm);
                 }
                 else if (pi.PropertyType == typeof(Percentage))
                 {

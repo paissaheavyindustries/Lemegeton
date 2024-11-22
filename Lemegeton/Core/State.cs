@@ -33,6 +33,8 @@ using Dalamud.Interface.Utility;
 using System.Text.RegularExpressions;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using Dalamud.IoC;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using System.Xml.Linq;
 
 namespace Lemegeton.Core
 {
@@ -1583,13 +1585,21 @@ namespace Lemegeton.Core
 
         internal unsafe Party GetPartyMembers()
         {
-            Party pty = new Party();
-            int i = 1;
+            Party pty = new Party();            
+            Dictionary<string, int> idx = new Dictionary<string, int>();
+            AgentHUD* ah = AgentHUD.Instance();            
+            for (int i = 0; i < ah->PartyMemberCount; i++)
+            {
+                var pm = ah->PartyMembers[i];
+                string temp = Marshal.PtrToStringUTF8((nint)pm.Name);
+                idx[temp] = pm.Index;
+            }
             foreach (IPartyMember pm in pl)
-            {                
+            {
+                string name = pm.Name.ToString();
                 pty.Members.Add(new Party.PartyMember()
                 {
-                    Index = i++,
+                    Index = idx.ContainsKey(name) == true ? idx[name] + 1 : 0,
                     Name = pm.GameObject != null ? pm.GameObject.Name.ToString() : pm.Name.ToString(),
                     ObjectId = pm.GameObject != null ? pm.GameObject.GameObjectId : pm.ObjectId,
                     GameObject = pm.GameObject

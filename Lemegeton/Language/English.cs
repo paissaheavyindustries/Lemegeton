@@ -14,7 +14,13 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
-            #region 1.0.5.0            
+            #region 1.0.5.1
+            AddEntry("Changelog/1.0.5.1", " DSR Dragon HP indicator now much more configurable\n additional minor housekeeping");
+            AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Area", "Overlay configuration");
+            AddEntry("Overlay/Settings/BackgroundColor", "Background color");
+            AddEntry("Overlay/Settings/Padding", "Padding");
+            #endregion
+            #region 1.0.5.0
             AddEntry("Changelog/1.0.5.0", " minor housekeeping updates");
             #endregion
             #region 1.0.4.9

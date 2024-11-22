@@ -486,6 +486,9 @@ namespace Lemegeton.Content
 
             public override FeaturesEnum Features => FeaturesEnum.Drawing;
 
+            [AttributeOrderNumber(2000)]
+            public Overlay Area { get; set; }
+
             [DebugOption]
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
@@ -493,6 +496,8 @@ namespace Lemegeton.Content
             public DoubleDragons(State state) : base(state)
             {
                 Enabled = false;
+                Area = new Overlay();
+                Area.Renderer += Render;
                 Test = new System.Action(() => TestFunctionality());
             }
 
@@ -544,33 +549,26 @@ namespace Lemegeton.Content
                 _idNidhogg = 0;
             }
 
-            protected override bool ExecutionImplementation()
+            protected void Render(ImDrawListPtr draw, bool configuring)
             {
-                ImDrawListPtr draw;
-                if (_idHraesvelgr == 0 || _idNidhogg == 0)
-                {
-                    return false;
-                }
-                if (_state.StartDrawing(out draw) == false)
-                {
-                    return false;
-                }
-                IGameObject goH = _state.GetActorById(_idHraesvelgr);
+                IGameObject goH = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idHraesvelgr);
                 if (goH == null)
                 {
-                    return false;
+                    return;
                 }
-                IGameObject goN = _state.GetActorById(_idNidhogg);
+                IGameObject goN = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idNidhogg);
                 if (goN == null)
                 {
-                    return false;
+                    return;
                 }
                 ICharacter chH = (ICharacter)goH;
                 ICharacter chN = (ICharacter)goN;
                 ISharedImmediateTexture bws, tws;
-                float x = 200.0f;
-                float y = 300.0f;
-                float w = 250.0f;
+                float x = Area.X;
+                float y = Area.Y;
+                float w = Area.Width;
+                float h = Area.Height;
+                int pad = Area.Padding;
                 float hhp = (float)chH.CurrentHp / (float)chH.MaxHp * 100.0f;
                 float nhp = (float)chN.CurrentHp / (float)chN.MaxHp * 100.0f;
                 float dhp = Math.Abs(hhp - nhp);
@@ -578,17 +576,17 @@ namespace Lemegeton.Content
                 hcol = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
                 ncol = hcol;
                 wcol = hcol;
-                float time = (float)(DateTime.Now - DateTime.Today).TotalMilliseconds / 200.0f;                
+                float time = (float)(DateTime.Now - DateTime.Today).TotalMilliseconds / 200.0f;
                 if (dhp > 3.0f)
                 {
                     float ang = (float)Math.Abs(Math.Cos(time * 2.0f));
                     if (hhp > nhp)
                     {
-                        hcol = new Vector4(1.0f, 0.0f, 0.0f, ang);                        
+                        hcol = new Vector4(1.0f, 0.0f, 0.0f, ang);
                     }
                     else
                     {
-                        ncol = new Vector4(1.0f, 0.0f, 0.0f, ang);                        
+                        ncol = new Vector4(1.0f, 0.0f, 0.0f, ang);
                     }
                     wcol = new Vector4(1.0f, ang, 0.0f, 1.0f);
                 }
@@ -617,30 +615,35 @@ namespace Lemegeton.Content
                     }
                     wcol = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
                 }
+                draw.AddRectFilled(
+                    new Vector2(x, y),
+                    new Vector2(x + w, y + h),
+                    ImGui.GetColorU32(Area.BackgroundColor)
+                );
                 tws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.DarkDragon);
                 IDalamudTextureWrap tw = tws.GetWrapOrEmpty();
                 bws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightCircle);
-                IDalamudTextureWrap bw = tws.GetWrapOrEmpty();
+                IDalamudTextureWrap bw = bws.GetWrapOrEmpty();
                 draw.AddImage(
                     bw.ImGuiHandle,
-                    new Vector2(x, y),
-                    new Vector2(x + tw.Width, y + tw.Height),
+                    new Vector2(x + pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
+                    new Vector2(x + tw.Width + pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
                     new Vector2(0.0f, 1.0f),
                     ImGui.GetColorU32(hcol)
                 );
                 draw.AddImage(
                     bw.ImGuiHandle,
-                    new Vector2(x + w - tw.Width, y),
-                    new Vector2(x + w, y + tw.Height),
+                    new Vector2(x + w - tw.Width - pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
+                    new Vector2(x + w - pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
                     new Vector2(0.0f, 1.0f),
                     ImGui.GetColorU32(ncol)
                 );
                 draw.AddImage(
                     tw.ImGuiHandle,
-                    new Vector2(x, y),
-                    new Vector2(x + tw.Width, y + tw.Height),
+                    new Vector2(x + pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
+                    new Vector2(x + tw.Width + pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
                     new Vector2(0.0f, 1.0f)
                 );
@@ -648,8 +651,8 @@ namespace Lemegeton.Content
                 tw = tws.GetWrapOrEmpty();
                 draw.AddImage(
                     tw.ImGuiHandle,
-                    new Vector2(x + w - tw.Width, y),
-                    new Vector2(x + w, y + tw.Height),
+                    new Vector2(x + w - tw.Width - pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
+                    new Vector2(x + w - pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(0.0f, 0.0f),
                     new Vector2(1.0f, 1.0f)
                 );
@@ -660,33 +663,47 @@ namespace Lemegeton.Content
                 sz = ImGui.CalcTextSize(temp);
                 scale = textSize / sz.Y;
                 sz = new Vector2(sz.X * scale, sz.Y * scale);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y + tw.Height + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f), y + tw.Height), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(Area.Padding + x + (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, -Area.Padding + y + Area.Height - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(Area.Padding + x + (tw.Width / 2.0f) - (sz.X / 2.0f), -Area.Padding + y + Area.Height - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
                 temp = String.Format("{0:0.0} %", nhp);
                 sz = ImGui.CalcTextSize(temp);
                 scale = textSize / sz.Y;
                 sz = new Vector2(sz.X * scale, sz.Y * scale);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y + tw.Height + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f), y + tw.Height), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(-Area.Padding + x + w - (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, -Area.Padding + y + Area.Height - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(-Area.Padding + x + w - (tw.Width / 2.0f) - (sz.X / 2.0f), -Area.Padding + y + Area.Height - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
                 temp = chH.Name.ToString();
                 sz = ImGui.CalcTextSize(temp);
                 scale = textSize / sz.Y;
                 sz = new Vector2(sz.X * scale, sz.Y * scale);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (tw.Width / 2.0f) - (sz.X / 2.0f), y - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(Area.Padding + x + 1.0f, Area.Padding + y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(Area.Padding + x, Area.Padding + y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
                 temp = chN.Name.ToString();
                 sz = ImGui.CalcTextSize(temp);
                 scale = textSize / sz.Y;
                 sz = new Vector2(sz.X * scale, sz.Y * scale);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f) + 1.0f, y - sz.Y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + w - (tw.Width / 2.0f) - (sz.X / 2.0f), y - sz.Y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(-Area.Padding + x + Area.Width - sz.X + 1.0f, Area.Padding + y + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(-Area.Padding + x + Area.Width - sz.X, Area.Padding + y), ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), temp);
                 temp = String.Format("{0:0.0} %", dhp);
                 textSize = 40.0f;
                 sz = ImGui.CalcTextSize(temp);
                 scale = textSize / sz.Y;
                 sz = new Vector2(sz.X * scale, sz.Y * scale);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f) + 1.0f, y + (tw.Height / 2.0f) - (sz.Y / 2.0f) + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
-                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f), y + (tw.Height / 2.0f) - (sz.Y / 2.0f)), ImGui.GetColorU32(wcol), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f) + 1.0f, y + (h / 2.0f) - (sz.Y / 2.0f) + 1.0f), ImGui.GetColorU32(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)), temp);
+                draw.AddText(ImGui.GetFont(), textSize, new Vector2(x + (w / 2.0f) - (sz.X / 2.0f), y + (h / 2.0f) - (sz.Y / 2.0f)), ImGui.GetColorU32(wcol), temp);
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_idHraesvelgr == 0 || _idNidhogg == 0)
+                {
+                    return false;
+                }
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                Render(draw, false);
                 return true;
             }
 
