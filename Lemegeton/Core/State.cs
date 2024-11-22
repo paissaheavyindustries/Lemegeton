@@ -1298,7 +1298,7 @@ namespace Lemegeton.Core
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;                        
-                        isavatar = (/*todo chs->CharacterData.ModelCharaId*/0 == 0);
+                        isavatar = (chs->ModelContainer.ModelCharaId == 0);
                     }
                 }
                 if (go is BattleChara)

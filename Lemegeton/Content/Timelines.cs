@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using static Lemegeton.Core.Timeline.Encounter;
 using static Lemegeton.Core.Timeline;
 using Lumina.Excel.Sheets;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 
 namespace Lemegeton.Content
 {
@@ -247,7 +248,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
+                        if (chs->ModelContainer.ModelCharaId == 0)
                         {
                             return;
                         }
@@ -343,7 +344,7 @@ namespace Lemegeton.Content
                     unsafe
                     {
                         CharacterStruct* chs = (CharacterStruct*)ch.Address;
-                        if (/*todo chs->CharacterData.ModelCharaId*/0 == 0)
+                        if (chs->ModelContainer.ModelCharaId == 0)
                         {
                             return;
                         }
