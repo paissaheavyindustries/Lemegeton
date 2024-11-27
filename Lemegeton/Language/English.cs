@@ -14,6 +14,24 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.5.2
+            AddEntry("Changelog/1.0.5.2", " Added automarker for FRU P1 Fall of Faith");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM", "(P1) Fall of Faith automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs", "Marker configuration");            
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether1", "Tether 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether2", "Tether 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether3", "Tether 3");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether4", "Tether 4");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow1", "Overflow 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow2", "Overflow 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow3", "Overflow 3");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow4", "Overflow 4");            
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Test", "Test random assignment");
+            #endregion
             #region 1.0.5.1
             AddEntry("Changelog/1.0.5.1", " DSR Dragon HP indicator now much more configurable\n additional minor housekeeping");
             AddEntry("Content/Ultimate/UltDragonsongReprise/DoubleDragons/Area", "Overlay configuration");
