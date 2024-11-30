@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -19,6 +20,7 @@ namespace Lemegeton.Core
             Role,
             Job,
             Player,
+            Clockspots,
             CongaX,
             CongaY,
             Alphabetic,
@@ -72,8 +74,21 @@ namespace Lemegeton.Core
             BLU = 36,
         }
 
+        public enum PrioDirectionEnum
+        {            
+            N = 1,
+            NE = 2,
+            E = 3,
+            SE = 4,
+            S = 5,
+            SW = 6,
+            W = 7,
+            NW = 8,
+        }
+
         public PrioTypeEnum Priority { get; set; } = PrioTypeEnum.Job;
         public bool Reversed { get; set; } = false;
+        public PrioDirectionEnum StartingFrom = PrioDirectionEnum.N;
 
         public List<PrioTrinityEnum> _prioByTrinity = new List<PrioTrinityEnum>();
         public List<PrioRoleEnum> _prioByRole = new List<PrioRoleEnum>();
@@ -291,6 +306,77 @@ namespace Lemegeton.Core
                         );
                         break;
                     }
+                case PrioTypeEnum.Clockspots:
+                    {
+                        Dictionary<PrioDirectionEnum, Party.PartyMember> diractors = new Dictionary<PrioDirectionEnum, Party.PartyMember>();
+                        float midx = actors.Count > 0 ? (from ax in actors select ax.X).Average() : 0.0f;
+                        float midy = actors.Count > 0 ? (from ax in actors select ax.Z).Average() : 0.0f;
+                        var angles = (from ax in actors select new { Object = ax, Angle = Math.Atan2(midy - ax.Z, midx - ax.X) }).ToList();
+                        List<Party.PartyMember> plops = new List<Party.PartyMember>();
+                        var west = (from ax in angles where Math.Abs(ax.Angle) < Math.PI / 8.0f orderby Math.Abs(ax.Angle) ascending select ax).FirstOrDefault();
+                        plops.Add(west?.Object);
+                        diractors[PrioDirectionEnum.W] = west?.Object;
+                        var northwest = (from ax in angles where ax.Angle > 0.0f && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(northwest?.Object);
+                        diractors[PrioDirectionEnum.NW] = northwest?.Object;
+                        var north = (from ax in angles where ax.Angle > Math.PI / 4.0f && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(north?.Object);
+                        diractors[PrioDirectionEnum.N] = north?.Object;
+                        var northeast = (from ax in angles where ax.Angle > Math.PI / 2.0f && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(northeast?.Object);
+                        diractors[PrioDirectionEnum.NE] = northeast?.Object;
+                        var east = (from ax in angles where Math.Abs(ax.Angle) >= Math.PI - (Math.PI / 8.0f) && plops.Contains(ax.Object) == false orderby Math.Abs(ax.Angle) descending select ax).FirstOrDefault();
+                        plops.Add(east?.Object);
+                        diractors[PrioDirectionEnum.E] = east?.Object;
+                        var southeast = (from ax in angles where ax.Angle > 0.0f - Math.PI && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(southeast?.Object);
+                        diractors[PrioDirectionEnum.SE] = southeast?.Object;
+                        var south = (from ax in angles where ax.Angle > (Math.PI / 4.0f) - Math.PI && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(south?.Object);
+                        diractors[PrioDirectionEnum.S] = south?.Object;
+                        var southwest = (from ax in angles where ax.Angle > (Math.PI / 2.0f) - Math.PI && plops.Contains(ax.Object) == false orderby ax.Angle ascending select ax).FirstOrDefault();
+                        plops.Add(southwest?.Object);
+                        diractors[PrioDirectionEnum.SW] = southwest?.Object;
+                        foreach (Party.PartyMember pm in actors)
+                        {
+                            if (plops.Contains(pm) == false)
+                            {
+                                for (int i = 1; i <= 8; i++)
+                                {
+                                    if (diractors[(PrioDirectionEnum)i] == null)
+                                    {
+                                        diractors[(PrioDirectionEnum)i] = pm;
+                                    }
+                                }
+                            }
+                        }
+                        int k = (int)StartingFrom;
+                        for (int j = 1; j < 8; j++)
+                        {
+                            if (diractors[(PrioDirectionEnum)k] != null)
+                            {
+                                diractors[(PrioDirectionEnum)k].Index = j;
+                            }
+                            if (Reversed == true)
+                            {
+                                k--;
+                                if (k < 1)
+                                {
+                                    k = 8;
+                                }
+                            }
+                            else
+                            {
+                                k++;
+                                if (k > 8)
+                                {
+                                    k = 1;
+                                }
+                            }
+                        }
+                        actors.Sort((a, b) => a.Index.CompareTo(b.Index));
+                        break;
+                    }
             }
         }
 
@@ -299,6 +385,7 @@ namespace Lemegeton.Core
             StringBuilder sb = new StringBuilder();
             sb.Append(String.Format("Priority={0};", Priority));
             sb.Append(String.Format("Reversed={0};", Reversed));
+            sb.Append(String.Format("StartingFrom={0};", StartingFrom));
             sb.Append(String.Format("Trinity={0};", String.Join(",", from ix in _prioByTrinity select ix.ToString())));
             sb.Append(String.Format("Role={0};", String.Join(",", from ix in _prioByRole select ix.ToString())));
             sb.Append(String.Format("Job={0};", String.Join(",", from ix in _prioByJob select ix.ToString())));
@@ -318,6 +405,11 @@ namespace Lemegeton.Core
                     case "Priority":
                         {
                             Priority = (PrioTypeEnum)Enum.Parse(typeof(PrioTypeEnum), kp[1]);
+                            break;
+                        }
+                    case "StartingFrom":
+                        {
+                            StartingFrom = (PrioDirectionEnum)Enum.Parse(typeof(PrioDirectionEnum), kp[1]);
                             break;
                         }
                     case "Reversed":

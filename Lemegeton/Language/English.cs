@@ -14,6 +14,38 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.5.4
+            AddEntry("Changelog/1.0.5.4", " Added automarker for FRU P2 Light Rampant\n Added a new 'Clockspots' priority configuration method, available for all AMs");
+            AddEntry("Automarker/PrioType/Clockspots", "Clockspots");
+            AddEntry("Automarker/PrioType/Clockspots/StartingFrom", "Select priority starting point");
+            AddEntry("Automarker/PrioType/Clockspots/Reversed", "Sort counter-clockwise instead of clockwise");
+            AddEntry("Automarker/PrioDirection/N", "N");
+            AddEntry("Automarker/PrioDirection/NE", "NE");
+            AddEntry("Automarker/PrioDirection/NW", "NW");
+            AddEntry("Automarker/PrioDirection/E", "E");
+            AddEntry("Automarker/PrioDirection/W", "W");
+            AddEntry("Automarker/PrioDirection/SE", "SE");
+            AddEntry("Automarker/PrioDirection/SW", "SW");
+            AddEntry("Automarker/PrioDirection/S", "S");
+            #endregion
+            #region 1.0.5.3
+            AddEntry("Changelog/1.0.5.3", " Fixes to FRU P1 Fall of Faith");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM", "(P2) Light Rampant automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerN", "Tower N");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNE", "Tower NE");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSE", "Tower SE");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerS", "Tower S");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSW", "Tower SW");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNW", "Tower NW");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle1", "Puddle 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle2", "Puddle 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Test", "Test random assignment");
+            #endregion
             #region 1.0.5.2
             AddEntry("Changelog/1.0.5.2", " Added automarker for FRU P1 Fall of Faith");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM", "(P1) Fall of Faith automarker");

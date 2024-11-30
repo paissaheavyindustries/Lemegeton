@@ -64,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.5.2";
+        public string Version = "1.0.5.4";
 
         internal class Downloadable
         {
@@ -99,6 +99,8 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.5.0"), "Changelog/1.0.5.0"),
             new Tuple<Version, string>(new System.Version("1.0.5.1"), "Changelog/1.0.5.1"),
             new Tuple<Version, string>(new System.Version("1.0.5.2"), "Changelog/1.0.5.2"),
+            new Tuple<Version, string>(new System.Version("1.0.5.3"), "Changelog/1.0.5.3"),
+            new Tuple<Version, string>(new System.Version("1.0.5.4"), "Changelog/1.0.5.4"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -1224,6 +1226,139 @@ namespace Lemegeton
             _ui.RenderOrderableList<string>(amp._prioByPlayer);
         }
 
+        private void RenderAutomarkerPrioClockspots(AutomarkerPrio amp)
+        {
+            Vector2 maxsize = ImGui.GetContentRegionAvail();
+            float radius = Math.Min(300.0f, maxsize.X) / 2.0f;
+            ImDrawListPtr dl = ImGui.GetWindowDrawList();
+            //string caption = I18n.Translate("Automarker/PrioType/Clockspots/StartingFrom");
+            Vector2 screenpos = ImGui.GetCursorScreenPos();
+            float px = screenpos.X + radius;
+            float py = screenpos.Y + radius;
+            Vector2 cursor = ImGui.GetCursorPos();
+            ImGuiStylePtr style = ImGui.GetStyle();
+            AutomarkerPrio.PrioDirectionEnum hovered = 0;
+            if (ImGui.BeginChild(1337, new Vector2(radius * 2.0f, radius * 2.0f), false) == true)
+            {
+                Vector2 mus = ImGui.GetMousePos();
+                double ma = Math.Atan2(mus.Y - py, mus.X - px);
+                if (ma < 0.0f - (Math.PI / 2.0f) - (Math.PI / 4.0f) + (Math.PI / 8.0f))
+                {
+                    ma = Math.PI + (Math.PI + ma);
+                }                
+                foreach (AutomarkerPrio.PrioDirectionEnum p in Enum.GetValues(typeof(AutomarkerPrio.PrioDirectionEnum)))
+                {
+                    string caption = I18n.Translate("Automarker/PrioDirection/" + p.ToString());
+                    Vector2 sz = ImGui.CalcTextSize(caption);
+                    double ang = ((int)p - 3) * Math.PI / 4.0;
+                    if (p == amp.StartingFrom)
+                    {
+                        Vector2[] vrtx = new Vector2[]
+                        {
+                            new Vector2(
+                                px,
+                                py
+                            ),
+                            new Vector2(
+                                px + (float)(Math.Cos(ang - Math.PI / 8.0)) * radius,
+                                py + (float)(Math.Sin(ang - Math.PI / 8.0)) * radius
+                            ),
+                            new Vector2(
+                                px + (float)Math.Cos(ang) * radius,
+                                py + (float)Math.Sin(ang) * radius
+                            ),
+                            new Vector2(
+                                px + (float)(Math.Cos(ang + Math.PI / 8.0)) * radius,
+                                py + (float)(Math.Sin(ang + Math.PI / 8.0)) * radius
+                            )
+                        };
+                        dl.AddConvexPolyFilled
+                        (
+                            ref vrtx[0],
+                            4,
+                            ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 0.0f, 0.3f))
+                        );
+                        dl.AddLine(
+                            new Vector2(
+                                px,
+                                py
+                            ),
+                            new Vector2(
+                                px + (float)(Math.Cos(ang + Math.PI / 8.0)) * radius,
+                                py + (float)(Math.Sin(ang + Math.PI / 8.0)) * radius
+                            ),
+                            ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 0.0f, 1.0f)),
+                            3.0f
+                        );
+                        dl.AddLine(
+                            new Vector2(
+                                px,
+                                py
+                            ),
+                            new Vector2(
+                                px + (float)(Math.Cos(ang - Math.PI / 8.0)) * radius,
+                                py + (float)(Math.Sin(ang - Math.PI / 8.0)) * radius
+                            ),
+                            ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 0.0f, 1.0f)),
+                            3.0f
+                        );
+                    }
+                    else
+                    {
+                        if (ma >= ang - Math.PI / 8.0 && ma <= ang + Math.PI / 8.0 && Vector2.Distance(mus, new Vector2(px, py)) < radius)
+                        {
+                            Vector2[] vrtx = new Vector2[]
+                            {
+                                new Vector2(
+                                    px,
+                                    py
+                                ),
+                                new Vector2(
+                                    px + (float)(Math.Cos(ang - Math.PI / 8.0)) * radius,
+                                    py + (float)(Math.Sin(ang - Math.PI / 8.0)) * radius
+                                ),
+                                new Vector2(
+                                    px + (float)Math.Cos(ang) * radius,
+                                    py + (float)Math.Sin(ang) * radius
+                                ),
+                                new Vector2(
+                                    px + (float)(Math.Cos(ang + Math.PI / 8.0)) * radius,
+                                    py + (float)(Math.Sin(ang + Math.PI / 8.0)) * radius
+                                )
+                            };
+                            dl.AddConvexPolyFilled
+                            (
+                                ref vrtx[0],
+                                4,
+                                ImGui.GetColorU32(style.Colors[(int)ImGuiCol.ButtonHovered])
+                            );
+                            hovered = p;
+                        }
+                    }
+                    dl.AddText(
+                        new Vector2(
+                            px + (float)(Math.Cos(ang) * (radius - 20.0f)) - (sz.X / 2.0f),
+                            py + (float)(Math.Sin(ang) * (radius - 20.0f)) - (sz.Y / 2.0f)
+                        ),
+                        ImGui.GetColorU32(p == amp.StartingFrom || p == hovered ? style.Colors[(int)ImGuiCol.Text] : style.Colors[(int)ImGuiCol.TextDisabled]),
+                        caption
+                    );
+                }
+                dl.AddCircle(new Vector2(px, py), radius, ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f)), 16, 3.0f);
+                ImGui.EndChild();
+            }
+            if (ImGui.IsItemHovered() == true)
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text(I18n.Translate("Automarker/PrioType/Clockspots/StartingFrom"));
+                ImGui.EndTooltip();
+            }
+            if (ImGui.IsItemClicked() == true && hovered != 0)
+            {
+                amp.StartingFrom = hovered;
+            }
+        }
+
         private void RenderAutomarkerPrio(string path, PropertyInfo pi, object o)
         {
             AutomarkerPrio amp = (AutomarkerPrio)pi.GetValue(o);
@@ -1302,6 +1437,18 @@ namespace Lemegeton
                     ImGui.Text(Environment.NewLine);
                     RenderAutomarkerPrioPlayer(amp);
                     break;
+                case AutomarkerPrio.PrioTypeEnum.Clockspots:
+                    {
+                        bool reverse = amp.Reversed;
+                        if (ImGui.Checkbox(I18n.Translate("Automarker/PrioType/" + amp.Priority.ToString() + "/Reversed"), ref reverse) == true)
+                        {
+                            amp.Reversed = reverse;
+                        }
+                        ImGui.Text(Environment.NewLine);
+                        RenderAutomarkerPrioClockspots(amp);
+                    }
+                    break;
+
             }
         }
 

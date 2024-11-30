@@ -1,6 +1,11 @@
-﻿using Lemegeton.Core;
+﻿using Dalamud.Game.ClientState.Objects.Types;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Lemegeton.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using static FFXIVClientStructs.FFXIV.Client.Game.Character.VfxContainer;
+using static Lemegeton.Core.AutomarkerPrio;
 using static Lemegeton.Core.State;
 
 namespace Lemegeton.Content
@@ -14,13 +19,17 @@ namespace Lemegeton.Content
         private bool ZoneOk = false;
         private bool _subbed = false;
 
-        private const int AbilityFallOfFaith = 40140;
+        private const int AbilityBoundOfFaith = 40165;
         private const int AbilityQuadrupleSlap = 40191;
+        
+        private const int StatusPrey = 1051;
+        private const int StatusChains = 4157;
 
         private const int TetherFire = 249;
         private const int TetherLightning = 287;
 
         private FallOfFaithAM _fallFaithAm;
+        private LightRampantAM _lightRampantAm;
 
         private enum PhaseEnum
         {
@@ -67,6 +76,7 @@ namespace Lemegeton.Content
 
             private bool _fired = false;
             private List<ulong> _tethers = new List<ulong>();
+            private int _preysLost = 0;
 
             public FallOfFaithAM(State state) : base(state)
             {
@@ -90,7 +100,24 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;
+                _preysLost = 0;
                 _tethers.Clear();
+            }
+
+            internal void FeedStatus(uint actor)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (_tethers.Count > 0)
+                {
+                    _preysLost++;
+                    if (_preysLost == 4)
+                    {
+                        _state.ClearAutoMarkers();
+                    }
+                }
             }
 
             internal void FeedTether(uint src, uint dest, uint tetherId)
@@ -123,6 +150,155 @@ namespace Lemegeton.Content
 
         #endregion
 
+        #region LightRampantAM
+        
+        public class LightRampantAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [AttributeOrderNumber(2000)]
+            public AutomarkerPrio Prio { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private bool _fired = false;
+            private List<IGameObject> _chaingang = new List<IGameObject>();            
+
+            public LightRampantAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Prio = new AutomarkerPrio();
+                Prio.Priority = AutomarkerPrio.PrioTypeEnum.Clockspots;
+                Prio.StartingFrom = AutomarkerPrio.PrioDirectionEnum.NW;
+                Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
+                Signs.SetRole("TowerNW", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("TowerN", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("TowerNE", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("TowerSE", AutomarkerSigns.SignEnum.Bind3, false);
+                Signs.SetRole("TowerS", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("TowerSW", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("Puddle1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Puddle2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;                
+                _chaingang.Clear();                
+            }
+
+            internal void FeedStatus(uint actor, bool gained)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (gained == false)
+                {
+                    if (_fired == true)
+                    {
+                        _state.ClearAutoMarkers();
+                        Reset();
+                    }
+                    return;
+                }
+                IGameObject go = _state.GetActorById(actor);
+                Log(State.LogLevelEnum.Debug, null, "Registered chain on {0}", go);
+                _chaingang.Add(go);
+                if (_chaingang.Count != 6)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Ready for markers");
+                Party pty = _state.GetPartyMembers();
+                List<Party.PartyMember> _chainsGo = new List<Party.PartyMember>(
+                    from ix in pty.Members where _chaingang.Contains(ix.GameObject) == true select ix
+                );
+                List<Party.PartyMember> _puddlesGo = new List<Party.PartyMember>(
+                    from ix in pty.Members where _chainsGo.Contains(ix) == false select ix
+                );
+                List<string> towers;
+                Prio.SortByPriority(_chainsGo);
+                Log(State.LogLevelEnum.Debug, null, "Chain prio: {0}", String.Join(",", from cx in _chainsGo select cx.Name));
+                Prio.SortByPriority(_puddlesGo);
+                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                towers = new List<string>() { "TowerNW", "TowerS", "TowerNE", "TowerSW", "TowerN", "TowerSE", };
+                for (int i = 0; i < 6; i++)
+                {
+                    if (_chaingang[i] == _chainsGo[0].GameObject)
+                    {
+                        int pi = i > 1 ? i - 2 : 5;
+                        int ni = i < 4 ? 1 + 2 : 0;
+                        int pip = 99;
+                        int nip = 99;
+                        int k = 0;
+                        int dir = 1;
+                        foreach (Party.PartyMember p in _chainsGo)
+                        {
+                            if (p.GameObject == _chaingang[i])
+                            {
+                                continue;
+                            }
+                            if (p == _chainsGo[pi])
+                            {
+                                Log(State.LogLevelEnum.Debug, null, "Previous at index: {0}", k);
+                                pip = k;
+                            }
+                            if (p == _chainsGo[ni])
+                            {
+                                Log(State.LogLevelEnum.Debug, null, "Next at index: {0}", k);
+                                nip = k;
+                            }
+                            k++;
+                        }
+                        if (pip < nip)
+                        {
+                            dir = -1;
+                        }
+                        for (int j = 0; j < 6; j++)
+                        {
+                            ap.Assign(Signs.Roles[towers[j]], _chaingang[i]);
+                            if (dir == -1)
+                            {
+                                i--;
+                                if (i < 0)
+                                {
+                                    i = 5;
+                                }
+                            }
+                            else
+                            {
+                                i++;
+                                if (i > 5)
+                                {
+                                    i = 0;
+                                }
+                            }
+                        }
+                        i = 99;
+                    }
+                }
+                ap.Assign(Signs.Roles["Puddle1"], _puddlesGo[0].GameObject);
+                ap.Assign(Signs.Roles["Puddle2"], _puddlesGo[1].GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+
+        }
+
+        #endregion
+
         public UltFuturesRewritten(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -132,7 +308,7 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
-                case AbilityFallOfFaith:
+                case AbilityBoundOfFaith:
                     CurrentPhase = PhaseEnum.P1_Faith;
                     break;
                 case AbilityQuadrupleSlap:
@@ -166,6 +342,26 @@ namespace Lemegeton.Content
                 Log(LogLevelEnum.Debug, null, "Subscribing to events");
                 _state.OnCastBegin += OnCastBegin;
                 _state.OnTether += OnTether;
+                _state.OnStatusChange += _state_OnStatusChange;
+            }
+        }
+
+        private void _state_OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+        {
+            switch (statusId)
+            {
+                case StatusPrey:
+                    if (CurrentPhase == PhaseEnum.P1_Faith && gained == false)
+                    {
+                        _fallFaithAm.FeedStatus(dest);
+                    }
+                    break;
+                case StatusChains:
+                    if (CurrentPhase == PhaseEnum.P2_Shiva)
+                    {
+                        _lightRampantAm.FeedStatus(dest, gained);
+                    }
+                    break;
             }
         }
 
@@ -178,6 +374,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                _state.OnStatusChange -= _state_OnStatusChange;
                 _state.OnTether -= OnTether;
                 _state.OnCastBegin -= OnCastBegin;
                 _subbed = false;
@@ -214,6 +411,7 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");                
                 _fallFaithAm = (FallOfFaithAM)Items["FallOfFaithAM"];
+                _lightRampantAm = (LightRampantAM)Items["LightRampantAM"];
                 _state.OnCombatChange += OnCombatChange;
                 LogItems();
             }
