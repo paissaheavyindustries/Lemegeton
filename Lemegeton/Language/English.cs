@@ -14,6 +14,12 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.5.5
+            AddEntry("Changelog/1.0.5.5", " Added AB1234 strategy for FRU P2 Light Rampant automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy", "Solver strategy");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Generic");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234 / JP");
+            #endregion
             #region 1.0.5.4
             AddEntry("Changelog/1.0.5.4", " Added automarker for FRU P2 Light Rampant\n Added a new 'Clockspots' priority configuration method, available for all AMs");
             AddEntry("Automarker/PrioType/Clockspots", "Clockspots");

@@ -64,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.5.4";
+        public string Version = "1.0.5.5";
 
         internal class Downloadable
         {
@@ -101,6 +101,7 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.5.2"), "Changelog/1.0.5.2"),
             new Tuple<Version, string>(new System.Version("1.0.5.3"), "Changelog/1.0.5.3"),
             new Tuple<Version, string>(new System.Version("1.0.5.4"), "Changelog/1.0.5.4"),
+            new Tuple<Version, string>(new System.Version("1.0.5.5"), "Changelog/1.0.5.5"),
         };
         internal List<Version> ChangeLogVersions = null;        
 

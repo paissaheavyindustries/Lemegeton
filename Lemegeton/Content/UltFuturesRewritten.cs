@@ -1,10 +1,15 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using ImGuiNET;
 using Lemegeton.Core;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using static FFXIVClientStructs.FFXIV.Client.Game.Character.VfxContainer;
+using static Lemegeton.Content.Overlays;
+using static Lemegeton.Content.Overlays.DotTracker;
 using static Lemegeton.Core.AutomarkerPrio;
 using static Lemegeton.Core.State;
 
@@ -24,6 +29,7 @@ namespace Lemegeton.Content
         
         private const int StatusPrey = 1051;
         private const int StatusChains = 4157;
+        private const int StatusWeightOfLight = 4159;
 
         private const int TetherFire = 249;
         private const int TetherLightning = 287;
@@ -151,11 +157,74 @@ namespace Lemegeton.Content
         #endregion
 
         #region LightRampantAM
-        
+
         public class LightRampantAM : Automarker
         {
 
+            public class StrategyWidget : CustomPropertyInterface
+            {
+
+                public override void Deserialize(string data)
+                {
+                    string[] temp = data.Split(";");
+                    foreach (string t in temp)
+                    {
+                        string[] item = t.Split("=", 2);
+                        switch (item[0])
+                        {
+                            case "Strategy":
+                                if (int.TryParse(item[1], out int stratid) == false)
+                                {
+                                    continue;
+                                }
+                                _lr._strat = (StratEnum)stratid;
+                                break;
+                        }
+                    }
+                }
+
+                public override string Serialize()
+                {
+                    return string.Format("Strategy={0}", (int)_lr._strat);
+                }
+
+                public override void RenderEditor(string path)
+                {
+                    ImGui.TextWrapped(I18n.Translate(path) + Environment.NewLine + Environment.NewLine);
+                    string selname = I18n.Translate(path + "/" + _lr._strat.ToString());
+                    if (ImGui.BeginCombo("##" + path, selname) == true)
+                    {
+                        foreach (LightRampantAM.StratEnum p in Enum.GetValues(typeof(LightRampantAM.StratEnum)))
+                        {
+                            string name = I18n.Translate(path + "/" + p.ToString());
+                            if (ImGui.Selectable(name, String.Compare(name, selname) == 0) == true)
+                            {
+                                _lr._strat = p;
+                            }
+                        }
+                        ImGui.EndCombo();
+                    }
+                }
+
+                private LightRampantAM _lr;
+
+                public StrategyWidget(LightRampantAM lr)
+                {
+                    _lr = lr;
+                }
+
+            }
+
+            public enum StratEnum
+            {
+                Generic,
+                AB1234,
+            }
+
             [AttributeOrderNumber(1000)]
+            public StrategyWidget Strategy { get; set; }
+
+            [AttributeOrderNumber(1010)]
             public AutomarkerSigns Signs { get; set; }
 
             [AttributeOrderNumber(2000)]
@@ -170,11 +239,14 @@ namespace Lemegeton.Content
             public System.Action Test { get; set; }
 
             private bool _fired = false;
-            private List<IGameObject> _chaingang = new List<IGameObject>();            
+            private List<IGameObject> _chaingang = new List<IGameObject>();
+            private List<IGameObject> _weightgang = new List<IGameObject>();
+            internal StratEnum _strat { get; set; } = StratEnum.AB1234;
 
             public LightRampantAM(State state) : base(state)
             {
                 Enabled = false;
+                Strategy = new StrategyWidget(this);
                 Signs = new AutomarkerSigns();
                 Prio = new AutomarkerPrio();
                 Prio.Priority = AutomarkerPrio.PrioTypeEnum.Clockspots;
@@ -183,9 +255,9 @@ namespace Lemegeton.Content
                 Signs.SetRole("TowerNW", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs.SetRole("TowerN", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs.SetRole("TowerNE", AutomarkerSigns.SignEnum.Attack3, false);
-                Signs.SetRole("TowerSE", AutomarkerSigns.SignEnum.Bind3, false);
-                Signs.SetRole("TowerS", AutomarkerSigns.SignEnum.Bind2, false);
                 Signs.SetRole("TowerSW", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("TowerS", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("TowerSE", AutomarkerSigns.SignEnum.Bind3, false);
                 Signs.SetRole("Puddle1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Puddle2", AutomarkerSigns.SignEnum.Ignore2, false);
                 Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
@@ -195,10 +267,11 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
                 _fired = false;                
-                _chaingang.Clear();                
+                _chaingang.Clear();
+                _weightgang.Clear();
             }
 
-            internal void FeedStatus(uint actor, bool gained)
+            internal void FeedStatus(uint statusId, uint actor, bool gained)
             {
                 if (Active == false)
                 {
@@ -206,7 +279,7 @@ namespace Lemegeton.Content
                 }
                 if (gained == false)
                 {
-                    if (_fired == true)
+                    if (_fired == true && statusId == StatusChains)
                     {
                         _state.ClearAutoMarkers();
                         Reset();
@@ -214,13 +287,29 @@ namespace Lemegeton.Content
                     return;
                 }
                 IGameObject go = _state.GetActorById(actor);
-                Log(State.LogLevelEnum.Debug, null, "Registered chain on {0}", go);
-                _chaingang.Add(go);
+                switch (statusId)
+                {
+                    case StatusChains:
+                        Log(State.LogLevelEnum.Debug, null, "Registered chain on {0}", go);
+                        _chaingang.Add(go);
+                        break;
+                    case StatusWeightOfLight:
+                        Log(State.LogLevelEnum.Debug, null, "Registered weight on {0}", go);
+                        _weightgang.Add(go);
+                        break;
+                }
                 if (_chaingang.Count != 6)
                 {
                     return;
                 }
-                Log(State.LogLevelEnum.Debug, null, "Ready for markers");
+                if (_strat == StratEnum.AB1234)
+                {
+                    if (_weightgang.Count != 6)
+                    {
+                        return;
+                    }
+                }
+                Log(State.LogLevelEnum.Debug, null, string.Format("Ready for {0} markers", Strategy));
                 Party pty = _state.GetPartyMembers();
                 List<Party.PartyMember> _chainsGo = new List<Party.PartyMember>(
                     from ix in pty.Members where _chaingang.Contains(ix.GameObject) == true select ix
@@ -228,66 +317,87 @@ namespace Lemegeton.Content
                 List<Party.PartyMember> _puddlesGo = new List<Party.PartyMember>(
                     from ix in pty.Members where _chainsGo.Contains(ix) == false select ix
                 );
-                List<string> towers;
                 Prio.SortByPriority(_chainsGo);
                 Log(State.LogLevelEnum.Debug, null, "Chain prio: {0}", String.Join(",", from cx in _chainsGo select cx.Name));
                 Prio.SortByPriority(_puddlesGo);
                 AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                towers = new List<string>() { "TowerNW", "TowerS", "TowerNE", "TowerSW", "TowerN", "TowerSE", };
-                for (int i = 0; i < 6; i++)
+                switch (_strat)
                 {
-                    if (_chaingang[i] == _chainsGo[0].GameObject)
-                    {
-                        int pi = i > 1 ? i - 2 : 5;
-                        int ni = i < 4 ? 1 + 2 : 0;
-                        int pip = 99;
-                        int nip = 99;
-                        int k = 0;
-                        int dir = 1;
-                        foreach (Party.PartyMember p in _chainsGo)
+                    default:
+                    case StratEnum.Generic:
                         {
-                            if (p.GameObject == _chaingang[i])
+                            List<string> towers;
+                            towers = new List<string>() { "TowerNW", "TowerS", "TowerNE", "TowerSW", "TowerN", "TowerSE", };
+                            for (int i = 0; i < 6; i++)
                             {
-                                continue;
-                            }
-                            if (p == _chainsGo[pi])
-                            {
-                                Log(State.LogLevelEnum.Debug, null, "Previous at index: {0}", k);
-                                pip = k;
-                            }
-                            if (p == _chainsGo[ni])
-                            {
-                                Log(State.LogLevelEnum.Debug, null, "Next at index: {0}", k);
-                                nip = k;
-                            }
-                            k++;
-                        }
-                        if (pip < nip)
-                        {
-                            dir = -1;
-                        }
-                        for (int j = 0; j < 6; j++)
-                        {
-                            ap.Assign(Signs.Roles[towers[j]], _chaingang[i]);
-                            if (dir == -1)
-                            {
-                                i--;
-                                if (i < 0)
+                                if (_chaingang[i] == _chainsGo[0].GameObject)
                                 {
-                                    i = 5;
+                                    int pi = i > 1 ? i - 2 : 5;
+                                    int ni = i < 4 ? 1 + 2 : 0;
+                                    int pip = 99;
+                                    int nip = 99;
+                                    int k = 0;
+                                    int dir = 1;
+                                    foreach (Party.PartyMember p in _chainsGo)
+                                    {
+                                        if (p.GameObject == _chaingang[i])
+                                        {
+                                            continue;
+                                        }
+                                        if (p == _chainsGo[pi])
+                                        {
+                                            Log(State.LogLevelEnum.Debug, null, "Previous at index: {0}", k);
+                                            pip = k;
+                                        }
+                                        if (p == _chainsGo[ni])
+                                        {
+                                            Log(State.LogLevelEnum.Debug, null, "Next at index: {0}", k);
+                                            nip = k;
+                                        }
+                                        k++;
+                                    }
+                                    if (pip < nip)
+                                    {
+                                        dir = -1;
+                                    }
+                                    for (int j = 0; j < 6; j++)
+                                    {
+                                        ap.Assign(Signs.Roles[towers[j]], _chaingang[i]);
+                                        if (dir == -1)
+                                        {
+                                            i--;
+                                            if (i < 0)
+                                            {
+                                                i = 5;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            i++;
+                                            if (i > 5)
+                                            {
+                                                i = 0;
+                                            }
+                                        }
+                                    }
+                                    i = 99;
                                 }
                             }
-                            else
+                        }
+                        break;
+                    case StratEnum.AB1234:
+                        {
+                            List<string> towers;
+                            towers = new List<string>() { "TowerN", "TowerS", "TowerNW", "TowerNE", "TowerSW", "TowerSE", };
+                            List<IGameObject> _finalPrio = new List<IGameObject>();
+                            _finalPrio.AddRange(_weightgang);
+                            _finalPrio.AddRange(from cx in _chaingang where _weightgang.Contains(cx) == false select cx);
+                            for (int i = 0; i < 6; i++)
                             {
-                                i++;
-                                if (i > 5)
-                                {
-                                    i = 0;
-                                }
+                                ap.Assign(Signs.Roles[towers[i]], _finalPrio[i]);
                             }
                         }
-                        i = 99;
-                    }
+                        break;
                 }
                 ap.Assign(Signs.Roles["Puddle1"], _puddlesGo[0].GameObject);
                 ap.Assign(Signs.Roles["Puddle2"], _puddlesGo[1].GameObject);
@@ -359,7 +469,13 @@ namespace Lemegeton.Content
                 case StatusChains:
                     if (CurrentPhase == PhaseEnum.P2_Shiva)
                     {
-                        _lightRampantAm.FeedStatus(dest, gained);
+                        _lightRampantAm.FeedStatus(statusId, dest, gained);
+                    }
+                    break;
+                case StatusWeightOfLight:
+                    if (CurrentPhase == PhaseEnum.P2_Shiva)
+                    {
+                        _lightRampantAm.FeedStatus(statusId, dest, gained);
                     }
                     break;
             }
