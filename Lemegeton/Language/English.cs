@@ -14,11 +14,18 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.5.7
+            AddEntry("Changelog/1.0.5.7", " Additional fixes to FRU P2 Light Rampant\n Added box strategy for FRU P2 Light Rampant automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Box", "Box");
+            #endregion
+            #region 1.0.5.6
+            AddEntry("Changelog/1.0.5.6", " Fixes to FRU P2 Light Rampant");
+            #endregion
             #region 1.0.5.5
             AddEntry("Changelog/1.0.5.5", " Added AB1234 strategy for FRU P2 Light Rampant automarker");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy", "Solver strategy");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Generic");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234 / JP");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Seal of Orichalchos");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234");
             #endregion
             #region 1.0.5.4
             AddEntry("Changelog/1.0.5.4", " Added automarker for FRU P2 Light Rampant\n Added a new 'Clockspots' priority configuration method, available for all AMs");
@@ -41,12 +48,12 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs", "Marker configuration");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerN", "Tower N");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNE", "Tower NE");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSE", "Tower SE");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerS", "Tower S");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSW", "Tower SW");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNW", "Tower NW");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerN", "Tower ↑");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNE", "Tower ↗");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSE", "Tower ↘");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerS", "Tower ↓");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSW", "Tower ↙");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNW", "Tower ↖");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle1", "Puddle 1");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle2", "Puddle 2");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Prio", "Priority configuration");

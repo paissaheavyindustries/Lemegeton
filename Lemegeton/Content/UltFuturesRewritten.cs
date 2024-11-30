@@ -219,6 +219,7 @@ namespace Lemegeton.Content
             {
                 Generic,
                 AB1234,
+                Box,
             }
 
             [AttributeOrderNumber(1000)]
@@ -253,11 +254,11 @@ namespace Lemegeton.Content
                 Prio.StartingFrom = AutomarkerPrio.PrioDirectionEnum.NW;
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
                 Signs.SetRole("TowerNW", AutomarkerSigns.SignEnum.Attack1, false);
-                Signs.SetRole("TowerN", AutomarkerSigns.SignEnum.Attack2, false);
-                Signs.SetRole("TowerNE", AutomarkerSigns.SignEnum.Attack3, false);
-                Signs.SetRole("TowerSW", AutomarkerSigns.SignEnum.Bind1, false);
-                Signs.SetRole("TowerS", AutomarkerSigns.SignEnum.Bind2, false);
-                Signs.SetRole("TowerSE", AutomarkerSigns.SignEnum.Bind3, false);
+                Signs.SetRole("TowerN", AutomarkerSigns.SignEnum.Triangle, false);
+                Signs.SetRole("TowerNE", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("TowerSW", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("TowerS", AutomarkerSigns.SignEnum.Square, false);
+                Signs.SetRole("TowerSE", AutomarkerSigns.SignEnum.Attack4, false);
                 Signs.SetRole("Puddle1", AutomarkerSigns.SignEnum.Ignore1, false);
                 Signs.SetRole("Puddle2", AutomarkerSigns.SignEnum.Ignore2, false);
                 Test = new System.Action(() => Signs.TestFunctionality(state, Prio, Timing, SelfMarkOnly, AsSoftmarker));
@@ -304,12 +305,12 @@ namespace Lemegeton.Content
                 }
                 if (_strat == StratEnum.AB1234)
                 {
-                    if (_weightgang.Count != 6)
+                    if (_weightgang.Count != 2)
                     {
                         return;
                     }
                 }
-                Log(State.LogLevelEnum.Debug, null, string.Format("Ready for {0} markers", Strategy));
+                Log(State.LogLevelEnum.Debug, null, string.Format("Ready for {0} markers", _strat));
                 Party pty = _state.GetPartyMembers();
                 List<Party.PartyMember> _chainsGo = new List<Party.PartyMember>(
                     from ix in pty.Members where _chaingang.Contains(ix.GameObject) == true select ix
@@ -320,6 +321,7 @@ namespace Lemegeton.Content
                 Prio.SortByPriority(_chainsGo);
                 Log(State.LogLevelEnum.Debug, null, "Chain prio: {0}", String.Join(",", from cx in _chainsGo select cx.Name));
                 Prio.SortByPriority(_puddlesGo);
+                Log(State.LogLevelEnum.Debug, null, "Puddle prio: {0}", String.Join(",", from cx in _puddlesGo select cx.Name));
                 AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                 switch (_strat)
                 {
@@ -387,15 +389,81 @@ namespace Lemegeton.Content
                         break;
                     case StratEnum.AB1234:
                         {
+                            List<Party.PartyMember> _weightsGo = new List<Party.PartyMember>(
+                                from ix in pty.Members where _weightgang.Contains(ix.GameObject) == true select ix
+                            );
+                            Prio.SortByPriority(_weightsGo);
+                            Log(State.LogLevelEnum.Debug, null, "Weight prio: {0}", String.Join(",", from cx in _weightsGo select cx.Name));
                             List<string> towers;
                             towers = new List<string>() { "TowerN", "TowerS", "TowerNW", "TowerNE", "TowerSW", "TowerSE", };
-                            List<IGameObject> _finalPrio = new List<IGameObject>();
-                            _finalPrio.AddRange(_weightgang);
-                            _finalPrio.AddRange(from cx in _chaingang where _weightgang.Contains(cx) == false select cx);
+                            List<Party.PartyMember> _finalPrio = new List<Party.PartyMember>();
+                            _finalPrio.AddRange(_weightsGo);
+                            int iters = 0;
+                            while (_chainsGo.Count > 0)
+                            {
+                                iters++;
+                                if (iters > 100)
+                                {
+                                    Log(State.LogLevelEnum.Debug, null, "Failure with {0} iters", iters);
+                                    break;
+                                }
+                                if (_weightsGo.Count > 0)
+                                {
+                                    if (_weightsGo.Contains(_chainsGo[0]) == true)
+                                    {
+                                        _weightsGo.Remove(_chainsGo[0]);
+                                        _chainsGo.RemoveAt(0);
+                                    }
+                                    else
+                                    {
+                                        Party.PartyMember pm = _chainsGo[0];
+                                        _chainsGo.RemoveAt(0);
+                                        _chainsGo.Add(pm);
+                                    }
+                                    continue;
+                                }
+                                _finalPrio.Add(_chainsGo[0]);
+                                _chainsGo.RemoveAt(0);
+                            }
                             for (int i = 0; i < 6; i++)
                             {
                                 ap.Assign(Signs.Roles[towers[i]], _finalPrio[i]);
                             }
+                            Log(State.LogLevelEnum.Debug, null, "Final prio: {0}", String.Join(",", from cx in _weightsGo select cx.Name));
+                        }
+                        break;
+                    case StratEnum.Box:
+                        {
+                            List<Party.PartyMember> _topGo = new List<Party.PartyMember>(
+                                from ix in pty.Members where AutomarkerPrio.JobToArchetype(ix.Job) == PrioArchetypeEnum.Support select ix
+                            );
+                            Prio.SortByPriority(_topGo);
+                            Log(State.LogLevelEnum.Debug, null, "Top prio: {0}", String.Join(",", from cx in _topGo select cx.Name));
+                            List<Party.PartyMember> _botGo = new List<Party.PartyMember>(
+                                from ix in pty.Members where AutomarkerPrio.JobToArchetype(ix.Job) == PrioArchetypeEnum.DPS select ix
+                            );
+                            Prio.SortByPriority(_botGo);
+                            Log(State.LogLevelEnum.Debug, null, "Bottom prio: {0}", String.Join(",", from cx in _botGo select cx.Name));
+                            if (_botGo.Count == 4)
+                            {
+                                Party.PartyMember pm = _botGo[3];
+                                _botGo.RemoveAt(3);
+                                _topGo.Insert(0, pm);
+                                Log(State.LogLevelEnum.Debug, null, "New top prio: {0}", String.Join(",", from cx in _topGo select cx.Name));
+                            }
+                            if (_topGo.Count == 4)
+                            {
+                                Party.PartyMember pm = _topGo[3];
+                                _topGo.RemoveAt(3);
+                                _botGo.Insert(0, pm);
+                                Log(State.LogLevelEnum.Debug, null, "New bottom prio: {0}", String.Join(",", from cx in _botGo select cx.Name));
+                            }
+                            ap.Assign(Signs.Roles["TowerNW"], _topGo[2]);
+                            ap.Assign(Signs.Roles["TowerN"], _botGo[1]);
+                            ap.Assign(Signs.Roles["TowerNE"], _topGo[0]);
+                            ap.Assign(Signs.Roles["TowerSW"], _botGo[2]);
+                            ap.Assign(Signs.Roles["TowerS"], _topGo[1]);
+                            ap.Assign(Signs.Roles["TowerSE"], _botGo[0]);
                         }
                         break;
                 }

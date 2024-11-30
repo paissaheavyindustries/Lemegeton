@@ -351,7 +351,7 @@ namespace Lemegeton.Core
                             }
                         }
                         int k = (int)StartingFrom;
-                        for (int j = 1; j < 8; j++)
+                        for (int j = 1; j <= 8; j++)
                         {
                             if (diractors[(PrioDirectionEnum)k] != null)
                             {
