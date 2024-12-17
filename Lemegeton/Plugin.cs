@@ -64,7 +64,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.5.7";
+        public string Version = "1.0.6.2";
 
         internal class Downloadable
         {
@@ -104,6 +104,11 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.5.5"), "Changelog/1.0.5.5"),
             new Tuple<Version, string>(new System.Version("1.0.5.6"), "Changelog/1.0.5.6"),
             new Tuple<Version, string>(new System.Version("1.0.5.7"), "Changelog/1.0.5.7"),
+            new Tuple<Version, string>(new System.Version("1.0.5.8"), "Changelog/1.0.5.8"),
+            new Tuple<Version, string>(new System.Version("1.0.5.9"), "Changelog/1.0.5.9"),
+            new Tuple<Version, string>(new System.Version("1.0.6.0"), "Changelog/1.0.6.0"),
+            new Tuple<Version, string>(new System.Version("1.0.6.1"), "Changelog/1.0.6.1"),
+            new Tuple<Version, string>(new System.Version("1.0.6.2"), "Changelog/1.0.6.2"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -1234,7 +1239,6 @@ namespace Lemegeton
             Vector2 maxsize = ImGui.GetContentRegionAvail();
             float radius = Math.Min(300.0f, maxsize.X) / 2.0f;
             ImDrawListPtr dl = ImGui.GetWindowDrawList();
-            //string caption = I18n.Translate("Automarker/PrioType/Clockspots/StartingFrom");
             Vector2 screenpos = ImGui.GetCursorScreenPos();
             float px = screenpos.X + radius;
             float py = screenpos.Y + radius;
@@ -1248,7 +1252,7 @@ namespace Lemegeton
                 if (ma < 0.0f - (Math.PI / 2.0f) - (Math.PI / 4.0f) + (Math.PI / 8.0f))
                 {
                     ma = Math.PI + (Math.PI + ma);
-                }                
+                }
                 foreach (AutomarkerPrio.PrioDirectionEnum p in Enum.GetValues(typeof(AutomarkerPrio.PrioDirectionEnum)))
                 {
                     string caption = I18n.Translate("Automarker/PrioDirection/" + p.ToString());

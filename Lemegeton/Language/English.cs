@@ -14,9 +14,83 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.6.2
+            AddEntry("Changelog/1.0.6.2", " Added automarker for FRU P4 Crystallize Time");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM", "(P4) Crystallize Time automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero1", "Aero 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero2", "Aero 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard1", "Red Blizzard 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard2", "Red Blizzard 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Fire", "Dark Eruption (Fire)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/BlueBlizzard", "Blue Blizzard");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Water", "Dark Water");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Earth", "Unholy Darkness (Earth)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Test", "Test random assignment");
+            #endregion
+            #region 1.0.6.1
+            AddEntry("Changelog/1.0.6.1", " Added Crystallize Time indicators\n Added Ryne & Gaia HP difference indicator");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator", "(P4) Crystallize Time indicators");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Hourglasses", "Highlight exploding hourglasses");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Cleanses", "Highlight cleanses");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Corner", "Highlight knockback corner");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/ExplodingHourglassColor", "Hourglass highlight color");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Test", "Test display");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble", "(P4) Usurper & Oracle HP difference indicator");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Area", "Overlay configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Test", "Test on self and closest enemy");
+            #endregion
+            #region 1.0.6.0
+            AddEntry("Changelog/1.0.6.0", " Added JP box strategy for FRU P2 Light Rampant automarker (old one is EU/NA)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/BoxJP", "Box 4/4 (JP)");
+            #endregion
+            #region 1.0.5.9
+            AddEntry("Changelog/1.0.5.9", " Some quick fixes");
+            #endregion
+            #region 1.0.5.8         
+            AddEntry("Changelog/1.0.5.8", " Added automarker for FRU P3 Ultimate Relativity\n Added automarker for FRU P3 Dark Water");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM", "(P3) Dark Water automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_1", "Short 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_2", "Short 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_1", "Mid 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_2", "Mid 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_1", "Long 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_2", "Long 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_1", "Nothing 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_2", "Nothing 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM", "(P3) Ultimate Relativity automarker");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support10", "Support 10");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support20", "Support 20");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_1", "Support 30 #1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_2", "Support 30 #2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/SupportIce", "Support Ice");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_1", "DPS 10 #1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_2", "DPS 10 #2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps20", "DPS 20");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps30", "DPS 30");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/DpsIce", "DPS Ice");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Test", "Test random assignment");
+            #endregion
             #region 1.0.5.7
             AddEntry("Changelog/1.0.5.7", " Additional fixes to FRU P2 Light Rampant\n Added box strategy for FRU P2 Light Rampant automarker");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Box", "Box");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Box", "Box 4/4 (EU/NA)");
             #endregion
             #region 1.0.5.6
             AddEntry("Changelog/1.0.5.6", " Fixes to FRU P2 Light Rampant");
@@ -24,7 +98,7 @@ namespace Lemegeton.Language
             #region 1.0.5.5
             AddEntry("Changelog/1.0.5.5", " Added AB1234 strategy for FRU P2 Light Rampant automarker");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy", "Solver strategy");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Seal of Orichalchos");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Seal of Orichalcos (Generic)");
             AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234");
             #endregion
             #region 1.0.5.4
