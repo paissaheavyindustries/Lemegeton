@@ -639,9 +639,9 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (gained == false)
+                if (statusId == StatusRewind)
                 {
-                    if (statusId == StatusRewind && _fired == true)
+                    if (gained == false && _fired == true)
                     {
                         _state.ClearAutoMarkers();
                         _fired = false;

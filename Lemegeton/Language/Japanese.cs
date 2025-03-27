@@ -14,6 +14,9 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.6.3
+            //AddEntry("Changelog/1.0.6.3", " Dalamud API 12 + NET 9 update");
+            #endregion
             #region 1.0.6.2
             //AddEntry("Changelog/1.0.6.2", " Added automarker for FRU P4 Crystallize Time");
             //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM", "(P4) Crystallize Time automarker");

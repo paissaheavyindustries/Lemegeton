@@ -1591,7 +1591,7 @@ namespace Lemegeton.Core
             for (int i = 0; i < ah->PartyMemberCount; i++)
             {
                 var pm = ah->PartyMembers[i];
-                string temp = Marshal.PtrToStringUTF8((nint)pm.Name);
+                string temp = pm.Name.ToString();
                 idx[temp] = pm.Index;
             }
             foreach (IPartyMember pm in pl)
