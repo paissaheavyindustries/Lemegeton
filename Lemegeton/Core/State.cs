@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.Sheets;
 using Dalamud.Game.ClientState.Statuses;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
@@ -31,9 +32,7 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Utility;
 using System.Text.RegularExpressions;
-using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using Dalamud.IoC;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System.Xml.Linq;
 
 namespace Lemegeton.Core
@@ -182,7 +181,7 @@ namespace Lemegeton.Core
         [PluginService] public IPartyList pl { get; private set; }
         [PluginService] public ITargetManager tm { get; private set; }
         [PluginService] public IPluginLog lo { get; private set; }
-        [PluginService] public IGameInteropProvider io { get; private set; }
+        [PluginService] public IGameInteropProvider io { get; private set; }        
 
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
@@ -291,12 +290,18 @@ namespace Lemegeton.Core
 
         internal void InvokeZoneChange(ushort newZone)
         {
-            OnZoneChange?.Invoke(newZone);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnZoneChange?.Invoke(newZone);
+            });
         }
 
         internal void InvokeCombatChange(bool inCombat)
         {
-            OnCombatChange?.Invoke(inCombat);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnCombatChange?.Invoke(inCombat);
+            });
         }
 
         internal void InvokeCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
@@ -306,7 +311,10 @@ namespace Lemegeton.Core
             {
                 tl.FeedEventCastBegin(this, GetActorById(src), GetActorById(dest), actionId, castTime);
             }
-            OnCastBegin?.Invoke(src, dest, actionId, castTime, rotation);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnCastBegin?.Invoke(src, dest, actionId, castTime, rotation);
+            });            
         }
 
         internal void InvokeAction(uint src, uint dest, ushort actionId)
@@ -316,67 +324,106 @@ namespace Lemegeton.Core
             {
                 tl.FeedEventCastEnd(this, GetActorById(src), GetActorById(dest), actionId);
             }
-            OnAction?.Invoke(src, dest, actionId);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnAction?.Invoke(src, dest, actionId);
+            });
         }
 
         internal void InvokeMapEffect(byte[] data)
         {
-            OnMapEffect?.Invoke(data);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnMapEffect?.Invoke(data);
+            });
         }
 
         internal void InvokeHeadmarker(uint dest, uint markerId)
         {
-            OnHeadMarker?.Invoke(dest, markerId);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnHeadMarker?.Invoke(dest, markerId);
+            });
         }
 
         internal void InvokeTether(uint src, uint dest, uint tetherId)
         {
-            OnTether?.Invoke(src, dest, tetherId);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnTether?.Invoke(src, dest, tetherId);
+            });
         }
 
         internal void InvokeDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
         {
-            OnDirectorUpdate?.Invoke(param1, param2, param3, param4);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnDirectorUpdate?.Invoke(param1, param2, param3, param4);
+            });
         }
 
         internal void InvokeActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
         {
-            OnActorControl?.Invoke(category, sourceActorId, targetActorId, param1, param2, param3, param4);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnActorControl?.Invoke(category, sourceActorId, targetActorId, param1, param2, param3, param4);
+            });
         }
 
         internal void InvokeStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
-            OnStatusChange?.Invoke(src, dest, statusId, gained, duration, stacks);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnStatusChange?.Invoke(src, dest, statusId, gained, duration, stacks);
+            });
         }
 
         internal void InvokeCombatantAdded(IGameObject go)
         {
-            OnCombatantAdded?.Invoke(go);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnCombatantAdded?.Invoke(go);
+            });
         }
 
         internal void InvokeCombatantRemoved(ulong actorId, nint addr)
         {
-            OnCombatantRemoved?.Invoke(actorId, addr);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnCombatantRemoved?.Invoke(actorId, addr);
+            });
         }
 
         internal void InvokeEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
         {
-            OnEventPlay?.Invoke(actorId, eventId, scene, flags, param1, param2, param3, param4);
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnEventPlay?.Invoke(actorId, eventId, scene, flags, param1, param2, param3, param4);
+            });
         }
 
         internal void InvokeEventPlay64()
         {
-            OnEventPlay64?.Invoke();
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnEventPlay64?.Invoke();
+            });
         }
 
         internal void InvokeTargettable()
         {
-            OnTargettable?.Invoke();
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnTargettable?.Invoke();
+            });
         }
 
         internal void InvokeUntargettable()
         {
-            OnUntargettable?.Invoke();
+            fw.RunOnFrameworkThread(() =>
+            {
+                OnUntargettable?.Invoke();
+            });
         }
 
         public State()
@@ -386,27 +433,30 @@ namespace Lemegeton.Core
 
         internal void AddMarkerHistory(IGameObject source, IGameObject destination, bool soft, AutomarkerSigns.SignEnum sign)
         {
-            if (source == null)
+            fw.RunOnFrameworkThread(() =>
             {
-                source = cs.LocalPlayer;
-            }
-            string location = plug.GetInstanceNameForTerritory(cs.TerritoryType);
-            MarkerApplication ma = new MarkerApplication()
-            {
-                Sign = sign,
-                SoftMarker = soft,
-                Location = location,
-                Source = source.Name.ToString(),
-                Destination = destination != null ? destination.Name.ToString() : I18n.Translate("MainMenu/Settings/AutomarkerHistoryRemoved")
-            };
-            lock (MarkerHistory)
-            {
-                MarkerHistory.Insert(0, ma);
-                if (MarkerHistory.Count > 100)
+                if (source == null)
                 {
-                    MarkerHistory.RemoveAt(100);
+                    source = cs.LocalPlayer;
                 }
-            }
+                string location = plug.GetInstanceNameForTerritory(cs.TerritoryType);
+                MarkerApplication ma = new MarkerApplication()
+                {
+                    Sign = sign,
+                    SoftMarker = soft,
+                    Location = location,
+                    Source = source.Name.ToString(),
+                    Destination = destination != null ? destination.Name.ToString() : I18n.Translate("MainMenu/Settings/AutomarkerHistoryRemoved")
+                };
+                lock (MarkerHistory)
+                {
+                    MarkerHistory.Insert(0, ma);
+                    if (MarkerHistory.Count > 100)
+                    {
+                        MarkerHistory.RemoveAt(100);
+                    }
+                }
+            });
         }
 
         public void PrepareFolder(string path)
@@ -1590,7 +1640,7 @@ namespace Lemegeton.Core
             AgentHUD* ah = AgentHUD.Instance();            
             for (int i = 0; i < ah->PartyMemberCount; i++)
             {
-                var pm = ah->PartyMembers[i];
+                HudPartyMember pm = ah->PartyMembers[i];
                 string temp = pm.Name.ToString();
                 idx[temp] = pm.Index;
             }

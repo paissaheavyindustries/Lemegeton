@@ -14,6 +14,9 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.6.4
+            //AddEntry("Changelog/1.0.6.4", " Fixes for new Dalamud");
+            #endregion
             #region 1.0.6.3
             //AddEntry("Changelog/1.0.6.3", " Dalamud API 12 + NET 9 update");
             #endregion

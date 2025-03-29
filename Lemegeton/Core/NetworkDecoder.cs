@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Formats.Asn1;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -130,7 +131,7 @@ namespace Lemegeton.Core
 
         }
 
-        internal class OpcodeList
+        internal class OpcodeList 
         {
 
             internal ushort StatusEffectList = 0;
@@ -322,7 +323,7 @@ namespace Lemegeton.Core
         {
             //_st.Log(State.LogLevelEnum.Debug, null, "Opcode: {0} (source: {1:X8}, target: {2:X8})", opCode, sourceActorId, targetActorId);
             if (opCode == Opcodes.ActorCast)
-            {
+            {                
                 ActorCast ac = Marshal.PtrToStructure<ActorCast>(dataPtr);
                 _st.InvokeCastBegin(targetActorId, ac.targetId, ac.actionId, ac.castTime, ac.rotation);
             }
@@ -402,12 +403,13 @@ namespace Lemegeton.Core
                 StatusEffectList ac = Marshal.PtrToStructure<StatusEffectList>(dataPtr);
                 StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 20);
                 List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
+                ushort seed = ae[29].statusId;
                 for (int i = 0; i < 30; i++)
                 {
-                    if (ae[i].statusId > 0)
+                    if (ae[i].statusId - seed > 0)
                     {
                         entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = ae[i].statusId, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
+                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
                         );
                     }
                 }
@@ -418,12 +420,13 @@ namespace Lemegeton.Core
                 StatusEffectList2 ac = Marshal.PtrToStructure<StatusEffectList2>(dataPtr);
                 StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 24);
                 List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
+                ushort seed = ae[29].statusId;
                 for (int i = 0; i < 30; i++)
                 {
-                    if (ae[i].statusId > 0)
+                    if (ae[i].statusId - seed > 0)
                     {
                         entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = ae[i].statusId, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
+                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
                         );
                     }
                 }
@@ -434,12 +437,13 @@ namespace Lemegeton.Core
                 StatusEffectList3 ac = Marshal.PtrToStructure<StatusEffectList3>(dataPtr);
                 StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 0);
                 List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
+                ushort seed = ae[29].statusId;
                 for (int i = 0; i < 30; i++)
                 {
-                    if (ae[i].statusId > 0)
+                    if (ae[i].statusId - seed > 0)
                     {
                         entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = ae[i].statusId, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
+                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
                         );
                     }
                 }
