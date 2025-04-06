@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.6.5
+            AddEntry("Changelog/1.0.6.5", " Added automarker for M6s Soul Sugar\n Added indicator for M8s Moonbeam cleaves");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser", "AAC Cruiserweight (7.2)");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/Enabled", "Enabled");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm", "(M6s) Soul Sugar automarker");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Enabled", "Enabled");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set1", "First set");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set2", "Second set");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set3", "Third set");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4", "Fourth set");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set1/Yan", "Yan");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set1/GimmeCat", "Gimme Cat");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set1/Mu1", "Mu #1");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set1/Mu2", "Mu #2");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set2/MantaW", "Feather Ray (W)");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set2/MantaE", "Feather Ray (E)");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set2/Mu1", "Mu #1");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set2/Mu2", "Mu #2");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set3/Yan", "Yan");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set3/Jabberwock", "Jabberwock");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set3/GimmeCat", "Gimme Cat");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/Yan", "Yan");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/Jabberwock", "Jabberwock");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/GimmeCat", "Gimme Cat");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/MantaW", "Feather Ray (W)");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/MantaE", "Feather Ray (E)");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/Mu1", "Mu #1");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Set4/Mu2", "Mu #2");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/SoulSugarAm/Test", "Test random assignment");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/DrawMoonbeam", "(M8s) Moonbeam cleave indicator");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/DrawMoonbeam/Enabled", "Enabled");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/DrawMoonbeam/EarlyHighlightColor", "Early warning color");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/DrawMoonbeam/SoonHighlightColor", "Danger warning color");
+            AddEntry("Content/DawntrailRaids/DTRaidCruiser/DrawMoonbeam/Test", "Test indicator");
+            #endregion
             #region 1.0.6.4
             AddEntry("Changelog/1.0.6.4", " Fixes for 7.2");
             #endregion
