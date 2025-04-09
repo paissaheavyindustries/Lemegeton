@@ -143,6 +143,10 @@ namespace Lemegeton.Content
 
             internal void FeedCombatant(IGameObject go)
             {
+                if (Active == false)
+                {
+                    return;
+                }
                 ICharacter ch = go as ICharacter;
                 uint nameid = ch.NameId;
                 switch (setnum)
