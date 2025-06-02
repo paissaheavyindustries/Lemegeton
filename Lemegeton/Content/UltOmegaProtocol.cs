@@ -1352,7 +1352,9 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
-            private Dictionary<uint, IGameObject> _debuffs = new Dictionary<uint, IGameObject>();
+            private Dictionary<uint, IGameObject> _debuffs = [];
+
+            private HashSet<(uint, uint)> _tethers = [];
 
             public DynamisDeltaAM(State state) : base(state)
             {
@@ -1371,11 +1373,28 @@ namespace Lemegeton.Content
                 pr.Name = "LPDU";
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.None;
                 Signs.AddPreset(pr);
                 pr = new AutomarkerSigns.Preset() { Builtin = true };
                 pr.Name = "ElementalDC";
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.None;
+                Signs.AddPreset(pr);
+                pr = new AutomarkerSigns.Preset() { Builtin = true };
+                pr.Name = "MLM";
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.Attack4;
                 Signs.AddPreset(pr);
             }
 
@@ -1393,16 +1412,38 @@ namespace Lemegeton.Content
                 }
                 Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1:X}", statusId, actorId);
                 _debuffs[statusId] = _state.GetActorById(actorId);
-                if (_debuffs.Count == 2)
+                if (_debuffs.Count == 2 && _tethers.Count == 2)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
-                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                    ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
-                    ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    ReadyForDecision();
                 }
             }
 
+            internal void FeedTether(uint actorId1, uint actorId2)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered tether between {0:X} and {1:X}", actorId1, actorId2);
+                _tethers.Add(actorId1 < actorId2 ? (actorId1, actorId2) : (actorId2, actorId1));
+                if (_debuffs.Count == 2 && _tethers.Count == 2)
+                {
+                    ReadyForDecision();
+                }
+            }
+
+            internal void ReadyForDecision()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                AutomarkerPayload ap = new(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
+                ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
+                ap.Assign(Signs.Roles["ClostTether1"], _state.GetActorById(_tethers.ElementAt(0).Item1));
+                ap.Assign(Signs.Roles["ClostTether2"], _state.GetActorById(_tethers.ElementAt(0).Item2));
+                ap.Assign(Signs.Roles["ClostTether3"], _state.GetActorById(_tethers.ElementAt(1).Item1));
+                ap.Assign(Signs.Roles["ClostTether4"], _state.GetActorById(_tethers.ElementAt(1).Item2));
+                _state.ExecuteAutomarkers(ap, Timing);
+            }
         }
 
         #endregion
@@ -2031,6 +2072,10 @@ namespace Lemegeton.Content
                 _glitchTether.FeedTether(src, dest);
             }
 #endif
+            if (tetherId == 200)
+            {
+                _deltaAm.FeedTether(src, dest);
+            }
         }
 
         private void UnsubscribeFromEvents()

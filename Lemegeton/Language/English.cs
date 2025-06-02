@@ -182,7 +182,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/AsSoftmarker", "Show as client-side soft markers");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs", "Marker configuration");            
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether1", "Tether 1");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether2", "Tether 2");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether3", "Tether 3");
@@ -190,7 +190,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow1", "Overflow 1");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow2", "Overflow 2");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow3", "Overflow 3");
-            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow4", "Overflow 4");            
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow4", "Overflow 4");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Prio", "Priority configuration");
             AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Test", "Test random assignment");
             #endregion
@@ -426,7 +426,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/SelfMarkOnly", "Self-marking only");
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/AsSoftmarker", "Show as client-side soft markers");
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs", "Marker configuration");
-            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/SharedSentence", "Shared Sentence");            
+            AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/SharedSentence", "Shared Sentence");
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/Restraining1", "Restraining Order 1");
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/Restraining2", "Restraining Order 2");
             AddEntry("Content/Ultimate/UltAlexander/InceptionAM/Signs/Aggravated1", "Aggravated Assault 1");
@@ -1104,7 +1104,7 @@ namespace Lemegeton.Language
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/ARankColor", "A-rank highlight color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/BRankColor", "B-rank highlight color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/RareAnimalColor", "Rare animal highlight color");
-            AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNames", "Show name tags");            
+            AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNames", "Show name tags");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/IncludeDistance", "Include distance on the name tag");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/TextColor", "Name tag text color");
             AddEntry("Content/Miscellaneous/Radar/AlertFinder/ShowNameBg", "Show name tag background");
@@ -1402,8 +1402,13 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "Marker configuration");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/MLM", "MLM");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/DistantWorld", "Distant World");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/NearWorld", "Near World");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether1", "Close Tether 1");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether2", "Close Tether 2");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether3", "Close Tether 3");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether4", "Close Tether 4");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Test", "Test random assignment");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaDrawBossMonitor", "(P5) Run: ****mi* (Delta Version) highlight boss monitor");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaDrawBossMonitor/Enabled", "Enabled");

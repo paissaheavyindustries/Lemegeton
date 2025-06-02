@@ -1402,6 +1402,11 @@ namespace Lemegeton.Language
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs", "标记配置");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/LPDU", "LPDU / Sausage");
             //AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/ElementalDC", "Elemental DC");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/Presets/MLM", "莫灵喵");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether1", "近线 1");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether2", "近线 2");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether3", "近线 3");
+            AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/CloseTether4", "近线 4");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/DistantWorld", "远世界");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Signs/NearWorld", "近世界");
             AddEntry("Content/Ultimate/UltOmegaProtocol/DynamisDeltaAM/Test", "测试标记");
