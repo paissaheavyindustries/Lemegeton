@@ -1373,28 +1373,28 @@ namespace Lemegeton.Content
                 pr.Name = "LPDU";
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
-                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.None;
                 Signs.AddPreset(pr);
                 pr = new AutomarkerSigns.Preset() { Builtin = true };
                 pr.Name = "ElementalDC";
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
-                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.None;
-                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.None;
                 Signs.AddPreset(pr);
                 pr = new AutomarkerSigns.Preset() { Builtin = true };
                 pr.Name = "MLM";
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Bind1;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Bind2;
-                pr.Roles["ClostTether1"] = AutomarkerSigns.SignEnum.Attack1;
-                pr.Roles["ClostTether2"] = AutomarkerSigns.SignEnum.Attack2;
-                pr.Roles["ClostTether3"] = AutomarkerSigns.SignEnum.Attack3;
-                pr.Roles["ClostTether4"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.Attack4;
                 Signs.AddPreset(pr);
             }
 
@@ -1438,10 +1438,10 @@ namespace Lemegeton.Content
                 AutomarkerPayload ap = new(_state, SelfMarkOnly, AsSoftmarker);
                 ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
                 ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
-                ap.Assign(Signs.Roles["ClostTether1"], _state.GetActorById(_tethers.ElementAt(0).Item1));
-                ap.Assign(Signs.Roles["ClostTether2"], _state.GetActorById(_tethers.ElementAt(0).Item2));
-                ap.Assign(Signs.Roles["ClostTether3"], _state.GetActorById(_tethers.ElementAt(1).Item1));
-                ap.Assign(Signs.Roles["ClostTether4"], _state.GetActorById(_tethers.ElementAt(1).Item2));
+                ap.Assign(Signs.Roles["CloseTether1"], _state.GetActorById(_tethers.ElementAt(0).Item1));
+                ap.Assign(Signs.Roles["CloseTether2"], _state.GetActorById(_tethers.ElementAt(0).Item2));
+                ap.Assign(Signs.Roles["CloseTether3"], _state.GetActorById(_tethers.ElementAt(1).Item1));
+                ap.Assign(Signs.Roles["CloseTether4"], _state.GetActorById(_tethers.ElementAt(1).Item2));
                 _state.ExecuteAutomarkers(ap, Timing);
             }
         }
