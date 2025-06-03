@@ -1402,6 +1402,7 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
                 _debuffs.Clear();
+                _tethers.Clear();
             }
 
             internal void FeedStatus(uint actorId, uint statusId)
@@ -2072,7 +2073,7 @@ namespace Lemegeton.Content
                 _glitchTether.FeedTether(src, dest);
             }
 #endif
-            if (tetherId == 200)
+            if (CurrentPhase == PhaseEnum.P5_Delta && _deltaAm.Active == true && tetherId == 200)
             {
                 _deltaAm.FeedTether(src, dest);
             }
