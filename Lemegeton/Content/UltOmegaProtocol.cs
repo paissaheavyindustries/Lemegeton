@@ -2088,7 +2088,7 @@ namespace Lemegeton.Content
                 _firstHeadMarker = markerId - 23;
             }
             uint realMarkerId = markerId - _firstHeadMarker;
-            if (CurrentPhase == PhaseEnum.P1_Pantokrator && CurrentPhase == PhaseEnum.P2_Synergy)
+            if (CurrentPhase == PhaseEnum.P1_Pantokrator || CurrentPhase == PhaseEnum.P2_Synergy)
             {
                 _p2synergyAm.FeedHeadmarker(dest, realMarkerId);
                 CurrentPhase = PhaseEnum.P2_Synergy;
