@@ -2106,7 +2106,7 @@ namespace Lemegeton.Content
 #if !SANS_GOETIA
                 _glitchTether.FeedStatus(gained == false ? 0 : statusId);
 #endif
-                if (CurrentPhase == PhaseEnum.P1_Pantokrator && gained == true)
+                if ((CurrentPhase == PhaseEnum.P1_Pantokrator || CurrentPhase == PhaseEnum.P2_Synergy) && gained == true)
                 {
                     _p2synergyAm.FeedStatus(statusId);
                 }
