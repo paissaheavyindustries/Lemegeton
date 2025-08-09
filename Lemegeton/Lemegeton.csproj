@@ -7,7 +7,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+    <DalamudLibPath>$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   
@@ -45,15 +45,15 @@
 
   <ItemGroup>
     <Reference Include="Dalamud">
-      <HintPath>C:\Users\Moskau\AppData\Roaming\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
+      <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
 	  <Private>false</Private>
     </Reference>
     <Reference Include="FFXIVClientStructs">
-      <HintPath>C:\Users\Moskau\AppData\Roaming\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+      <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
 	  <Private>false</Private>
     </Reference>
     <Reference Include="InteropGenerator.Runtime">
-      <HintPath>C:\Users\Moskau\AppData\Roaming\XIVLauncher\addon\Hooks\dev\InteropGenerator.Runtime.dll</HintPath>
+      <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\InteropGenerator.Runtime.dll</HintPath>
 	  <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
