@@ -14,6 +14,15 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.6.9
+            //AddEntry("Changelog/1.0.6.9", " 7.3 fixes");
+            #endregion
+            #region 1.0.6.8
+            //AddEntry("Changelog/1.0.6.8", " Dalamud API 13");
+            #endregion
+            #region 1.0.6.7
+            //AddEntry("Changelog/1.0.6.7", " Quick bugfix");
+            #endregion
             #region 1.0.6.6
             //AddEntry("Changelog/1.0.6.6", " Quick bugfix");
             #endregion

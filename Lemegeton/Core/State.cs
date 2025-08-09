@@ -1,39 +1,42 @@
-﻿using Dalamud.Logging;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.Command;
-using Dalamud.Plugin;
-using ImGuiNET;
-using System.Numerics;
-using System;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects.Types;
+﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Game;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Threading;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Dalamud.Game.ClientState.Party;
-using System.Linq;
-using System.Diagnostics;
-using System.Reflection;
-using System.IO;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Lumina.Excel.Sheets;
-using Dalamud.Game.ClientState.Statuses;
-using Status = Dalamud.Game.ClientState.Statuses.Status;
-using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
-using BattleChara = Dalamud.Game.ClientState.Objects.Types.IBattleChara;
-using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
-using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Plugin.Services;
+using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.ClientState.Statuses;
+using Dalamud.Game.Command;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Interface.Utility;
-using System.Text.RegularExpressions;
 using Dalamud.IoC;
+using Dalamud.Logging;
+using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Network;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Excel.Sheets;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Numerics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using BattleChara = Dalamud.Game.ClientState.Objects.Types.IBattleChara;
+using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
+using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
+using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton.Core
 {
@@ -104,8 +107,8 @@ namespace Lemegeton.Core
             private unsafe void InvokeCommand()
             {
                 IGameGui gg = State.gg;
-                AtkUnitBase* ptr = (AtkUnitBase*)gg.GetAddonByName("ChatLog", 1);
-                if (ptr != null && ptr->IsVisible == true)
+                AtkUnitBasePtr ptr = gg.GetAddonByName("ChatLog", 1);
+                if (ptr.IsNull == false && ptr.IsVisible == true)
                 {
                     IntPtr uiModule = gg.GetUIModule();
                     if (uiModule != IntPtr.Zero)
@@ -167,7 +170,6 @@ namespace Lemegeton.Core
         }
 
         [PluginService] public IDalamudPluginInterface pi { get; private set; }
-        [PluginService] public IGameNetwork gn { get; private set; }
         [PluginService] public IChatGui cg { get; private set; }
         [PluginService] public ICommandManager cm { get; private set; }
         [PluginService] public IObjectTable ot { get; private set; }
@@ -181,8 +183,9 @@ namespace Lemegeton.Core
         [PluginService] public IPartyList pl { get; private set; }
         [PluginService] public ITargetManager tm { get; private set; }
         [PluginService] public IPluginLog lo { get; private set; }
-        [PluginService] public IGameInteropProvider io { get; private set; }        
+        [PluginService] public IGameInteropProvider io { get; private set; }
 
+        internal GameNetwork gn = null;
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
         internal bool StatusPostCommandAvailable { get; set; } = false;
@@ -619,6 +622,10 @@ namespace Lemegeton.Core
         public void Initialize()
         {
             GetGameVersion();
+            if (gn == null)
+            {
+                gn = new GameNetwork(io);
+            }
             _sig = new SigLocator(this);
             _dec = new NetworkDecoder(this);
             fw.Update += FrameworkUpdate;
@@ -671,9 +678,14 @@ namespace Lemegeton.Core
 
         public void Uninitialize()
         {
-            if (_listening == true)
+            if (gn != null)
             {
-                gn.NetworkMessage -= _dec.NetworkMessageReceived;
+                if (_listening == true)
+                {
+                    gn.NetworkMessage -= _dec.NetworkMessageReceived;
+                }
+                gn.Dispose();
+                gn = null;
             }
             cs.TerritoryChanged -= Cs_TerritoryChanged;
             pi.UiBuilder.OpenConfigUi -= UiBuilder_OpenConfigUi;
@@ -985,7 +997,7 @@ namespace Lemegeton.Core
         {
             if (_listening == true)
             {
-                gn.NetworkMessage += _dec.NetworkMessageReceived;
+                gn.NetworkMessage -= _dec.NetworkMessageReceived;
                 _listening = false;
             }
             StatusGotOpcodes = false;
@@ -1972,7 +1984,7 @@ namespace Lemegeton.Core
 
         internal unsafe bool GetCurrentMarker(ulong actorId, out AutomarkerSigns.SignEnum marker)
         {
-            UIModule* ui = (UIModule*)gg.GetUIModule();
+            UIModule* ui = (UIModule*)gg.GetUIModule().Address;
             if (ui == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get UIModule");
@@ -1986,7 +1998,7 @@ namespace Lemegeton.Core
                 marker = AutomarkerSigns.SignEnum.None;
                 return false;
             }
-            AddonNamePlate* np = (AddonNamePlate*)gg.GetAddonByName("NamePlate", 1);
+            AddonNamePlate* np = (AddonNamePlate*)gg.GetAddonByName("NamePlate", 1).Address;
             if (np == null)
             {
                 Log(LogLevelEnum.Warning, null, "Couldn't get AddonNamePlate");

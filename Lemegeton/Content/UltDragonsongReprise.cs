@@ -3,7 +3,7 @@ using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game.ClientState.Objects.Types;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System.Collections;
 using static Lemegeton.Content.UltDragonsongReprise;
 using System.Numerics;
@@ -625,7 +625,7 @@ namespace Lemegeton.Content
                 bws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightCircle);
                 IDalamudTextureWrap bw = bws.GetWrapOrEmpty();
                 draw.AddImage(
-                    bw.ImGuiHandle,
+                    bw.Handle,
                     new Vector2(x + pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
                     new Vector2(x + tw.Width + pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
@@ -633,7 +633,7 @@ namespace Lemegeton.Content
                     ImGui.GetColorU32(hcol)
                 );
                 draw.AddImage(
-                    bw.ImGuiHandle,
+                    bw.Handle,
                     new Vector2(x + w - tw.Width - pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
                     new Vector2(x + w - pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
@@ -641,7 +641,7 @@ namespace Lemegeton.Content
                     ImGui.GetColorU32(ncol)
                 );
                 draw.AddImage(
-                    tw.ImGuiHandle,
+                    tw.Handle,
                     new Vector2(x + pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
                     new Vector2(x + tw.Width + pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(1.0f, 0.0f),
@@ -650,7 +650,7 @@ namespace Lemegeton.Content
                 tws = _state.plug._ui.GetMiscIcon(UserInterface.MiscIconEnum.LightDragon);
                 tw = tws.GetWrapOrEmpty();
                 draw.AddImage(
-                    tw.ImGuiHandle,
+                    tw.Handle,
                     new Vector2(x + w - tw.Width - pad, y + (h / 2.0f) - (tw.Height / 2.0f)),
                     new Vector2(x + w - pad, y + (h / 2.0f) + (tw.Height / 2.0f)),
                     new Vector2(0.0f, 0.0f),

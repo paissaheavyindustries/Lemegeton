@@ -3,7 +3,7 @@ using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Types;
 using System.Numerics;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;

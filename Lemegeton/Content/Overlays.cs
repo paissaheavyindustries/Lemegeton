@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+﻿using Dalamud.Bindings.ImGui;
 using Lemegeton.Core;
 using System;
 using System.Numerics;
@@ -338,7 +338,7 @@ namespace Lemegeton.Content
                 {
                     float iw = icon.Width * (height / icon.Height);
                     float ix = x - (iw + 3.0f);
-                    draw.AddImage(icon.ImGuiHandle, new Vector2(ix, y), new Vector2(ix + iw, y + height));
+                    draw.AddImage(icon.Handle, new Vector2(ix, y), new Vector2(ix + iw, y + height));
                 }
                 if (_visualShowBar == true)
                 {

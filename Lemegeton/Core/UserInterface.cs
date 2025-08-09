@@ -3,7 +3,7 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using ImGuiScene;
 using System;
 using System.Collections.Generic;
@@ -189,11 +189,11 @@ namespace Lemegeton.Core
             IDalamudTextureWrap tw = t.GetWrapOrEmpty();
             if (enabled == true)
             {
-                ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height));
+                ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
             }
             else
             {
-                ImGui.Image(tw.ImGuiHandle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, 0.25f));
+                ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height), new Vector2(0.0f, 0.0f), new Vector2(1.0f, 1.0f), new Vector4(1.0f, 1.0f, 1.0f, 0.25f));
             }
             if (ImGui.IsItemHovered() == true && ImGui.IsItemActive() == false)
             {
@@ -428,7 +428,7 @@ namespace Lemegeton.Core
             if (icon != null)
             {
                 ImGui.SetCursorPos(new Vector2(x + (btnsize.X - icosize.X) - 5.0f, y + (btnsize.Y / 2.0f) - (icosize.Y / 2.0f)));
-                ImGui.Image(icon.ImGuiHandle, icosize);
+                ImGui.Image(icon.Handle, icosize);
                 icospace = icosize.X;
             }
             ImGui.SetCursorPos(new Vector2(x + 5.0f, y + (btnsize.Y / 2.0f) - ImGui.GetFontSize() / 2.0f));
@@ -619,7 +619,7 @@ namespace Lemegeton.Core
             ISharedImmediateTexture t = GetMiscIcon(UserInterface.MiscIconEnum.Exclamation);
             IDalamudTextureWrap tw = t.GetWrapOrEmpty();
             ImGui.Image(
-                tw.ImGuiHandle, new Vector2(tw.Width, tw.Height)
+                tw.Handle, new Vector2(tw.Width, tw.Height)
             );
             Vector2 anp1 = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new Vector2(tenp.X + tw.Width + 10, tenp.Y));

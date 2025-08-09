@@ -6,7 +6,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using ImGuiScene;
 using Lemegeton.ContentCategory;
 using Lemegeton.Core;
@@ -219,7 +219,7 @@ namespace Lemegeton.Content
                             {
                                 bottomy = pt.Y - 5.0f + jobicon.Height;
                                 draw.AddImage(
-                                    jobicon.ImGuiHandle,
+                                    jobicon.Handle,
                                     new Vector2(temp.X - (jobicon.Width / 2.0f), pt.Y - 5.0f),
                                     new Vector2(temp.X + (jobicon.Width / 2.0f), bottomy)
                                 );
@@ -228,7 +228,7 @@ namespace Lemegeton.Content
                             {
                                 bottomy = pt.Y + (sz.Y / 2.0f) + (jobicon.Height / 2.0f);
                                 draw.AddImage(
-                                    jobicon.ImGuiHandle,
+                                    jobicon.Handle,
                                     new Vector2(pt.X - jobicon.Width - 5.0f, pt.Y + (sz.Y / 2.0f) - (jobicon.Height / 2.0f)),
                                     new Vector2(pt.X - 5.0f, bottomy)
                                 );

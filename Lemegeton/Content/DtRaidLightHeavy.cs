@@ -6,7 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 using Dalamud.Game.ClientState.Objects.Types;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lemegeton.Core;
 using Lumina.Excel.Sheets;
 using static Lemegeton.Core.State;

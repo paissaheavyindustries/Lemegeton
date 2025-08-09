@@ -1,5 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lemegeton.Core;
 using System;
 using System.Numerics;

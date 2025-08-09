@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Lemegeton.Core;
 using Lumina.Excel.Sheets;
 using static Lemegeton.Core.State;
@@ -522,7 +522,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");
+                Log(LogLevelEnum.Debug, null, "Unsubscribing from events");                
                 _state.OnCombatantAdded -=  _state_OnCombatantAdded;
                 _state.OnCastBegin -= _state_OnCastBegin;
                 _subbed = false;

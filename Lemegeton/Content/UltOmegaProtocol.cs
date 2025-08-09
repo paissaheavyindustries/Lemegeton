@@ -4,7 +4,7 @@ using Lemegeton.Core;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObjectStruct = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;

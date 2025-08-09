@@ -7,6 +7,7 @@ using Lemegeton.PacketHeaders;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -137,6 +138,7 @@ namespace Lemegeton.Core
             internal ushort StatusEffectList = 0;
             internal ushort StatusEffectList2 = 0;
             internal ushort StatusEffectList3 = 0;
+            internal ushort BossStatusEffectList = 0;
             internal ushort Ability1 = 0;
             internal ushort Ability8 = 0;
             internal ushort Ability16 = 0;
@@ -210,6 +212,7 @@ namespace Lemegeton.Core
             Opcodes.StatusEffectList = GetOpcodeForRegion(region, "StatusEffectList");
             Opcodes.StatusEffectList2 = GetOpcodeForRegion(region, "StatusEffectList2");
             Opcodes.StatusEffectList3 = GetOpcodeForRegion(region, "StatusEffectList3");
+            Opcodes.BossStatusEffectList = GetOpcodeForRegion(region, "BossStatusEffectList");
             Opcodes.Ability1 = GetOpcodeForRegion(region, "Ability1");
             Opcodes.Ability8 = GetOpcodeForRegion(region, "Ability8");
             Opcodes.Ability16 = GetOpcodeForRegion(region, "Ability16");
@@ -223,8 +226,8 @@ namespace Lemegeton.Core
             Opcodes.ActorControl = GetOpcodeForRegion(region, "ActorControl");
             Opcodes.ActorControlSelf = GetOpcodeForRegion(region, "ActorControlSelf");
             Opcodes.ActorControlTarget = GetOpcodeForRegion(region, "ActorControlTarget");
-            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
-                Opcodes.StatusEffectList, Opcodes.StatusEffectList2, Opcodes.StatusEffectList3,
+            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16}",
+                Opcodes.StatusEffectList, Opcodes.StatusEffectList2, Opcodes.StatusEffectList3, Opcodes.BossStatusEffectList,
                 Opcodes.Ability1, Opcodes.Ability8, Opcodes.Ability16, Opcodes.Ability24, Opcodes.Ability32,
                 Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect, Opcodes.EventPlay, Opcodes.EventPlay64,
                 Opcodes.ActorControl, Opcodes.ActorControlSelf, Opcodes.ActorControlTarget
@@ -407,7 +410,7 @@ namespace Lemegeton.Core
                 for (int i = 0; i < 30; i++)
                 {
                     if (ae[i].statusId - seed > 0)
-                    {
+                    {                        
                         entries.Add(
                             new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
                         );
@@ -435,6 +438,23 @@ namespace Lemegeton.Core
             else if (opCode == Opcodes.StatusEffectList3)
             {
                 StatusEffectList3 ac = Marshal.PtrToStructure<StatusEffectList3>(dataPtr);
+                StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 0);
+                List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
+                ushort seed = ae[29].statusId;
+                for (int i = 0; i < 30; i++)
+                {
+                    if (ae[i].statusId - seed > 0)
+                    {
+                        entries.Add(
+                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
+                        );
+                    }
+                }
+                _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+            }
+            else if (opCode == Opcodes.BossStatusEffectList)
+            {
+                StatusEffectList ac = Marshal.PtrToStructure<StatusEffectList>(dataPtr);
                 StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 0);
                 List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
                 ushort seed = ae[29].statusId;

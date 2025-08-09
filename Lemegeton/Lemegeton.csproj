@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Dalamud.NET.Sdk/13.0.0">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -38,6 +38,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Mini)|x64'">
     <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="DalamudPackager" Version="13.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Dalamud">
