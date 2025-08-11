@@ -33,7 +33,9 @@ namespace Lemegeton.Content
         private const int AbilityWormholeFormation = 18542;
         private const int AbilityFinalWord = 18557;
         private const int AbilityFateProjectionAlpha = 18555;
+        private const int AbilityFateCalibrationAlpha = 18556;
         private const int AbilityFateProjectionBeta = 19219;
+        private const int AbilityFateCalibrationBeta = 19220;
         private const int AbilitySacrament = 18569;
         private const int AbilityRadiantSacrament = 18566;
 
@@ -44,10 +46,10 @@ namespace Lemegeton.Content
         private const int StatusAggravatedAssault = 1121;
         private const int StatusHouseArrest = 1123;
 
-        private const int StatusFinalWordContactRegulation = 1;
-        private const int StatusFinalWordContactProhibition = 2;
-        private const int StatusFinalWordEscapeDetection = 3;
-        private const int StatusFinalWordEscapeProhibition = 4;
+        private const int StatusFinalWordContactRegulation = 2153;
+        private const int StatusFinalWordContactProhibition = 2152;
+        private const int StatusFinalWordEscapeDetection = 2155;
+        private const int StatusFinalWordEscapeProhibition = 2154;
 
         private const int Headmarker1 = 79;
         private const int Headmarker2 = 80;
@@ -225,6 +227,8 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
+            private bool _fired = false;
+
             public WaterLightningAM(State state) : base(state)
             {
                 Enabled = false;
@@ -238,6 +242,7 @@ namespace Lemegeton.Content
             public override void Reset()
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
             }
 
             internal void FeedAbility(uint abilityId)
@@ -247,38 +252,50 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Registered action {0}", abilityId);
-                if (abilityId == AbilityGavel)
+                if (abilityId == AbilityGavel && _fired == true)
                 {
                     Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
+                    _fired = false;
                     _state.ClearAutoMarkers();
                 }
             }
 
-            internal void FeedStatus(uint actorId, uint statusId)
+            internal void FeedStatus(uint actorId, uint statusId, bool gained)
             {
                 if (Active == false)
                 {
                     return;
                 }
-                Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1:X}", statusId, actorId);
-                switch (statusId)
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, actorId);
+                if (gained == true)
                 {
-                    case StatusCompressedWater:
-                        {
-                            IGameObject go = _state.GetActorById(actorId);
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                            ap.Assign(Signs.Roles["Water"], go);
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
-                        break;
-                    case StatusCompressedLightning:
-                        {
-                            IGameObject go = _state.GetActorById(actorId);
-                            AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                            ap.Assign(Signs.Roles["Lightning"], go);
-                            _state.ExecuteAutomarkers(ap, Timing);
-                        }
-                        break;
+                    switch (statusId)
+                    {
+                        case StatusCompressedWater:
+                            {
+                                IGameObject go = _state.GetActorById(actorId);
+                                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                                ap.Assign(Signs.Roles["Water"], go);
+                                _state.ExecuteAutomarkers(ap, Timing);
+                                _fired = true;
+                            }
+                            break;
+                        case StatusCompressedLightning:
+                            {
+                                IGameObject go = _state.GetActorById(actorId);
+                                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                                ap.Assign(Signs.Roles["Lightning"], go);
+                                _state.ExecuteAutomarkers(ap, Timing);
+                                _fired = true;
+                            }
+                            break;
+                    }
+                }
+                else if (SelfMarkOnly == true && _fired == true)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Selfmark on, clearing automarkers early");
+                    _fired = false;
+                    _state.ClearAutoMarkers();
                 }
             }
 
@@ -801,23 +818,28 @@ namespace Lemegeton.Content
                 _clones.Clear();                
             }
 
+            private uint GetCloneByIndex(Party pty, int index)
+            {
+                return _clones.Count > index ? _clones[index] : 0;
+            }
+
             private void PerformMarking()
             {
                 Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
                 Party pty = _state.GetPartyMembers();
-                Party.PartyMember _sharedGo = pty.GetByActorId(_clones[7]);
-                Party.PartyMember _defamGo = pty.GetByActorId(_clones[6]);
-                List<Party.PartyMember> _aggroGo = pty.GetByActorIds(new uint[] { _clones[3], _clones[4], _clones[5] });
-                List<Party.PartyMember> _nothingGo = pty.GetByActorIds(new uint[] { _clones[0], _clones[1], _clones[2] });
+                Party.PartyMember _sharedGo = pty.GetByActorId(GetCloneByIndex(pty, 7));
+                Party.PartyMember _defamGo =  pty.GetByActorId(GetCloneByIndex(pty, 6));
+                List<Party.PartyMember> _aggroGo = pty.GetByActorIds(new uint[] { GetCloneByIndex(pty, 3), GetCloneByIndex(pty, 4), GetCloneByIndex(pty, 5) });
+                List<Party.PartyMember> _nothingGo = pty.GetByActorIds(new uint[] { GetCloneByIndex(pty, 0), GetCloneByIndex(pty, 1), GetCloneByIndex(pty, 2) });
                 AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                ap.Assign(Signs.Roles["SharedSentence"], _sharedGo.GameObject);
-                ap.Assign(Signs.Roles["Defamation"], _defamGo.GameObject);
-                ap.Assign(Signs.Roles["Aggravated1"], _aggroGo[0].GameObject);
-                ap.Assign(Signs.Roles["Aggravated2"], _aggroGo[1].GameObject);
-                ap.Assign(Signs.Roles["Aggravated3"], _aggroGo[2].GameObject);
-                ap.Assign(Signs.Roles["Nothing1"], _nothingGo[0].GameObject);
-                ap.Assign(Signs.Roles["Nothing2"], _nothingGo[1].GameObject);
-                ap.Assign(Signs.Roles["Nothing3"], _nothingGo[2].GameObject);
+                if (_sharedGo != null) ap.Assign(Signs.Roles["SharedSentence"], _sharedGo.GameObject);
+                if (_defamGo != null) ap.Assign(Signs.Roles["Defamation"], _defamGo.GameObject);
+                if (_aggroGo.Count > 0) ap.Assign(Signs.Roles["Aggravated1"], _aggroGo[0].GameObject);
+                if (_aggroGo.Count > 1) ap.Assign(Signs.Roles["Aggravated2"], _aggroGo[1].GameObject);
+                if (_aggroGo.Count > 2) ap.Assign(Signs.Roles["Aggravated3"], _aggroGo[2].GameObject);
+                if (_nothingGo.Count > 0) ap.Assign(Signs.Roles["Nothing1"], _nothingGo[0].GameObject);
+                if (_nothingGo.Count > 1) ap.Assign(Signs.Roles["Nothing2"], _nothingGo[1].GameObject);
+                if (_nothingGo.Count > 2) ap.Assign(Signs.Roles["Nothing3"], _nothingGo[2].GameObject);
                 _state.ExecuteAutomarkers(ap, Timing);
                 _fired = true;
             }
@@ -848,6 +870,11 @@ namespace Lemegeton.Content
                     Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
                     _state.ClearAutoMarkers();
                     _fired = false;
+                }
+                if (abilityId == AbilityFateCalibrationAlpha && _fired == false)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Haven't seen all clones, players probably dead, going to guess as far as possible");
+                    PerformMarking();
                 }
             }
 
@@ -897,19 +924,24 @@ namespace Lemegeton.Content
                 _clones.Clear();
             }
 
+            private uint GetCloneByIndex(Party pty, int index)
+            {
+                return _clones.Count > index ? _clones[index] : 0;
+            }
+
             private void PerformMarking()
             {
                 Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
                 Party pty = _state.GetPartyMembers();
                 AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                ap.Assign(Signs.Roles["LightRestraining"], pty.GetByActorId(_clones[0]).GameObject);
-                ap.Assign(Signs.Roles["DarkRestraining"], pty.GetByActorId(_clones[1]).GameObject);
-                ap.Assign(Signs.Roles["LightHouseArrest"], pty.GetByActorId(_clones[2]).GameObject);
-                ap.Assign(Signs.Roles["DarkHouseArrest"], pty.GetByActorId(_clones[3]).GameObject);
-                ap.Assign(Signs.Roles["LightShared"], pty.GetByActorId(_clones[4]).GameObject);
-                ap.Assign(Signs.Roles["DarkNothing"], pty.GetByActorId(_clones[5]).GameObject);
-                ap.Assign(Signs.Roles["LightBeacon"], pty.GetByActorId(_clones[6]).GameObject);
-                ap.Assign(Signs.Roles["DarkBeacon"], pty.GetByActorId(_clones[7]).GameObject);
+                if (_clones.Count > 0) ap.Assign(Signs.Roles["LightRestraining"], pty.GetByActorId(GetCloneByIndex(pty, 0)).GameObject);
+                if (_clones.Count > 1) ap.Assign(Signs.Roles["DarkRestraining"], pty.GetByActorId(GetCloneByIndex(pty, 1)).GameObject);
+                if (_clones.Count > 2) ap.Assign(Signs.Roles["LightHouseArrest"], pty.GetByActorId(GetCloneByIndex(pty, 2)).GameObject);
+                if (_clones.Count > 3) ap.Assign(Signs.Roles["DarkHouseArrest"], pty.GetByActorId(GetCloneByIndex(pty, 3)).GameObject);
+                if (_clones.Count > 4) ap.Assign(Signs.Roles["LightShared"], pty.GetByActorId(GetCloneByIndex(pty, 4)).GameObject);
+                if (_clones.Count > 5) ap.Assign(Signs.Roles["DarkNothing"], pty.GetByActorId(GetCloneByIndex(pty, 5)).GameObject);
+                if (_clones.Count > 6) ap.Assign(Signs.Roles["LightBeacon"], pty.GetByActorId(GetCloneByIndex(pty, 6)).GameObject);
+                if (_clones.Count > 7) ap.Assign(Signs.Roles["DarkBeacon"], pty.GetByActorId(GetCloneByIndex(pty, 7)).GameObject);
                 _state.ExecuteAutomarkers(ap, Timing);
                 _fired = true;
             }
@@ -940,6 +972,11 @@ namespace Lemegeton.Content
                     Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
                     _state.ClearAutoMarkers();
                     _fired = false;
+                }
+                if (abilityId == AbilityFateCalibrationBeta && _fired == false)
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Haven't seen all clones, players probably dead, going to guess as far as possible");
+                    PerformMarking();
                 }
             }
 
@@ -1007,9 +1044,9 @@ namespace Lemegeton.Content
             {
                 case StatusCompressedWater:
                 case StatusCompressedLightning:
-                    if (CurrentPhase == PhaseEnum.BJCC && gained == true)
+                    if (CurrentPhase == PhaseEnum.BJCC)
                     {
-                        _waterningAm.FeedStatus(dest, statusId);
+                        _waterningAm.FeedStatus(dest, statusId, gained);
                     }
                     break;
                 case StatusRestrainingOrder:
@@ -1050,6 +1087,14 @@ namespace Lemegeton.Content
             if (actionId == AbilityFateProjectionBeta)
             {
                 CurrentPhase = PhaseEnum.FateBeta;
+            }
+            if (actionId == AbilityFateCalibrationAlpha)
+            {
+                _fateAlphaAm.FeedAbility(actionId);
+            }
+            if (actionId == AbilityFateCalibrationBeta)
+            {
+                _fateBetaAm.FeedAbility(actionId);
             }
         }
 

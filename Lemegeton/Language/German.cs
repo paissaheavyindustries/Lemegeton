@@ -14,6 +14,20 @@ namespace Lemegeton.Language
 
         public German(State st) : base(st)
         {
+            #region 1.0.7.4
+            //AddEntry("Changelog/1.0.7.4", " New troubleshooting feature to help with problems\n Adjustments to TEA automarkers");
+            //AddEntry("Status/Troubleshooting", "Troubleshooting");
+            //AddEntry("Troubleshooting/Title", "Lemegeton Troubleshooting");
+            //AddEntry("Troubleshooting/Intro", "If you have encountered a problem with Lemegeton and something is not working as it should, please follow these instructions to collect some information and report the issue. This is most valuable when done within 30 minutes of the problem occurring, as details of the issue is still stored within memory.");
+            //AddEntry("Troubleshooting/Step1", "Press this button to generate a zip archive that contains your dalamud.log, your Lemegeton configuration, and some Lemegeton internal information from the last 30 minutes. This information will help greatly when trying to sort out the issue.");
+            //AddEntry("Troubleshooting/Step1Button", "Generate package");
+            //AddEntry("Troubleshooting/Step1Working", "Generating package...");
+            //AddEntry("Troubleshooting/Step1Done", "Your package has been generated and can be found at:");
+            //AddEntry("Troubleshooting/Step1Error", "An error occurred while trying to generate your package.");
+            //AddEntry("Troubleshooting/CopyToClipboard", "Copy filename to clipboard");
+            //AddEntry("Troubleshooting/Step2", "To use that package, make note of the filename as you'll need it soon, and join the Lemegeton Discord server by hitting the Discord button below, and follow the instructions pinned in channel #lemmy_questions.");
+            //AddEntry("Troubleshooting/Outro", "Your reports and logs help locate and fix issues rapidly - thank you for helping out!");
+            #endregion
             #region 1.0.6.9
             //AddEntry("Changelog/1.0.6.9", " 7.3 fixes");
             #endregion

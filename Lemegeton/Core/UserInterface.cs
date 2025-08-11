@@ -61,6 +61,8 @@ namespace Lemegeton.Core
             LightCircle = 24,
             Ryne = 25,
             Gaia = 26,
+            Operator = 27,
+            Thanks = 28,
         }
 
         internal void LoadTextures()
@@ -90,6 +92,8 @@ namespace Lemegeton.Core
             _misc[MiscIconEnum.LightCircle] = GetTexture(60496);
             _misc[MiscIconEnum.Ryne] = GetTexture(91043);
             _misc[MiscIconEnum.Gaia] = GetTexture(91543);
+            _misc[MiscIconEnum.Operator] = GetTexture(61563);
+            _misc[MiscIconEnum.Thanks] = GetTexture(64334);
             _signs[AutomarkerSigns.SignEnum.Attack1] = GetTexture(61201);
             _signs[AutomarkerSigns.SignEnum.Attack2] = GetTexture(61202);
             _signs[AutomarkerSigns.SignEnum.Attack3] = GetTexture(61203);

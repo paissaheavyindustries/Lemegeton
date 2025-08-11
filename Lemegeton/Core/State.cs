@@ -14,11 +14,16 @@ using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Network;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using Lumina.Data;
 using Lumina.Excel.Sheets;
+using Lumina.Excel.Sheets.Experimental;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,10 +37,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static FFXIVClientStructs.FFXIV.Client.Game.Character.VfxContainer;
 using BattleChara = Dalamud.Game.ClientState.Objects.Types.IBattleChara;
 using Character = Dalamud.Game.ClientState.Objects.Types.ICharacter;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
+using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
+using Item = Lumina.Excel.Sheets.Item;
 using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton.Core
@@ -217,6 +225,7 @@ namespace Lemegeton.Core
         public Dictionary<AutomarkerSigns.SignEnum, ulong> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, ulong>();
         internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
         internal Dictionary<ushort, string> TimelineOverrides = new Dictionary<ushort, string>();
+        internal List<Tuple<DateTime, string>> internalDebug = new List<Tuple<DateTime, string>>();
 
         internal List<MarkerApplication> MarkerHistory = new List<MarkerApplication>();
 
@@ -291,20 +300,42 @@ namespace Lemegeton.Core
         internal unsafe delegate StatusFlags StatusFlagGetterDelegate(BattleChara bc);
         internal StatusFlagGetterDelegate GetStatusFlags;
 
+        internal string FormatZoneChange(ushort newZone)
+        {
+            string fmt = "InvokeZoneChange {0}";
+            return String.Format(fmt, newZone);
+        }
+
         internal void InvokeZoneChange(ushort newZone)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatZoneChange(newZone));
                 OnZoneChange?.Invoke(newZone);
             });
+        }
+
+        internal string FormatCombatChange(bool inCombat)
+        {
+            string fmt = "InvokeCombatChange {0}";
+            return String.Format(fmt, inCombat);
         }
 
         internal void InvokeCombatChange(bool inCombat)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatCombatChange(inCombat));
                 OnCombatChange?.Invoke(inCombat);
             });
+        }
+
+        internal string FormatCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
+        {
+            string fmt = "InvokeCastBegin {0} -> {1}: {2} in {3} s";
+            DalamudGameObject srcgo = GetActorById(src);
+            DalamudGameObject dstgo = GetActorById(dest);
+            return String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId), castTime);
         }
 
         internal void InvokeCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
@@ -316,8 +347,17 @@ namespace Lemegeton.Core
             }
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatCastBegin(src, dest, actionId, castTime, rotation));
                 OnCastBegin?.Invoke(src, dest, actionId, castTime, rotation);
             });            
+        }
+
+        internal string FormatAction(uint src, uint dest, ushort actionId)
+        {
+            string fmt = "InvokeAction {0} -> {1}: {2}";
+            DalamudGameObject srcgo = GetActorById(src);
+            DalamudGameObject dstgo = GetActorById(dest);
+            return String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId));
         }
 
         internal void InvokeAction(uint src, uint dest, ushort actionId)
@@ -329,102 +369,200 @@ namespace Lemegeton.Core
             }
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatAction(src, dest, actionId));
                 OnAction?.Invoke(src, dest, actionId);
             });
+        }
+
+        internal string FormatMapEffect(byte[] data)
+        {
+            string fmt = "InvokeMapEffect: {0}";
+            List<string> bytes = new List<string>();
+            foreach (byte b in data)
+            {
+                bytes.Add(b.ToString("X2"));
+            }
+            return String.Format(fmt, String.Join(" ", bytes));
         }
 
         internal void InvokeMapEffect(byte[] data)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatMapEffect(data));
                 OnMapEffect?.Invoke(data);
             });
+        }
+
+        internal string FormatHeadmarker(uint dest, uint markerId)
+        {
+            string fmt = "InvokeHeadmarker {0}: {1}";
+            DalamudGameObject dstgo = GetActorById(dest);
+            return String.Format(fmt, FormatGameObject(dstgo), markerId);
         }
 
         internal void InvokeHeadmarker(uint dest, uint markerId)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatHeadmarker(dest, markerId));
                 OnHeadMarker?.Invoke(dest, markerId);
             });
+        }
+
+        internal string FormatTether(uint src, uint dest, uint tetherId)
+        {
+            string fmt = "InvokeTether {0} -> {1}: {2}";
+            DalamudGameObject srcgo = GetActorById(src);
+            DalamudGameObject dstgo = GetActorById(dest);
+            return String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), tetherId);
         }
 
         internal void InvokeTether(uint src, uint dest, uint tetherId)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatTether(src, dest, tetherId));
                 OnTether?.Invoke(src, dest, tetherId);
             });
+        }
+
+        internal string FormatDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
+        {            
+            string fmt = "InvokeDirectorUpdate: {0:X8} {1:X8} {2:X8} {3:X8}";
+            return String.Format(fmt, param1, param2, param3, param4);
         }
 
         internal void InvokeDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatDirectorUpdate(param1, param2, param3, param4));
                 OnDirectorUpdate?.Invoke(param1, param2, param3, param4);
             });
+        }
+
+        internal string FormatActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
+        {
+            string fmt = "InvokeActorControl: {0} {1} -> {2} {3:X8} {4:X8} {5:X8} {6:X8}";
+            DalamudGameObject src = GetActorById(sourceActorId);
+            DalamudGameObject dst = GetActorById(targetActorId);
+            return String.Format(fmt, category, FormatGameObject(src), FormatGameObject(dst), param1, param2, param3, param4);
         }
 
         internal void InvokeActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatActorControl(category, sourceActorId, targetActorId, param1, param2, param3, param4));
                 OnActorControl?.Invoke(category, sourceActorId, targetActorId, param1, param2, param3, param4);
             });
+        }
+
+        internal string FormatStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
+        {
+            string fmt = "InvokeStatusChange {0} -> {1}: {2} {3} for {4} s with {5} stacks";
+            DalamudGameObject srcgo = GetActorById(src);
+            DalamudGameObject dstgo = GetActorById(dest);
+            return String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", FormatStatusId(statusId), duration, stacks);
         }
 
         internal void InvokeStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatStatusChange(src, dest, statusId, gained, duration, stacks));
                 OnStatusChange?.Invoke(src, dest, statusId, gained, duration, stacks);
             });
+        }
+
+        internal string FormatCombatantAdded(IGameObject go)
+        {
+            string fmt = "CombatantAdded {0}";
+            return String.Format(fmt, FormatGameObject(go));
         }
 
         internal void InvokeCombatantAdded(IGameObject go)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatCombatantAdded(go));
                 OnCombatantAdded?.Invoke(go);
             });
+        }
+
+        internal string FormatCombatantRemoved(ulong actorId, nint addr)
+        {
+            string fmt = "CombatantRemoved {0:X8} at {1}";
+            return String.Format(fmt, actorId, addr);
         }
 
         internal void InvokeCombatantRemoved(ulong actorId, nint addr)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatCombatantRemoved(actorId, addr));
                 OnCombatantRemoved?.Invoke(actorId, addr);
             });
+        }
+
+        internal string FormatEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
+        {
+            DalamudGameObject actor = GetActorById(actorId);
+            string fmt = "InvokeEventPlay: {0:X8} {1} {2} {3} {4} {5} {6} {7}";
+            return String.Format(fmt, FormatGameObject(actor), eventId, scene, flags, param1, param2, param3, param4);
         }
 
         internal void InvokeEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatEventPlay(actorId, eventId, scene, flags, param1, param2, param3, param4));
                 OnEventPlay?.Invoke(actorId, eventId, scene, flags, param1, param2, param3, param4);
             });
+        }
+
+        internal string FormatEventPlay64()
+        {
+            string fmt = "InvokeEventPlay64";
+            return String.Format(fmt);
         }
 
         internal void InvokeEventPlay64()
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatEventPlay64());
                 OnEventPlay64?.Invoke();
             });
+        }
+
+        internal string FormatTargettable()
+        {
+            string fmt = "Targettable";
+            return String.Format(fmt);
         }
 
         internal void InvokeTargettable()
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatTargettable());
                 OnTargettable?.Invoke();
             });
+        }
+
+        internal string FormatUntargettable()
+        {
+            string fmt = "Untargettable";
+            return String.Format(fmt);
         }
 
         internal void InvokeUntargettable()
         {
             fw.RunOnFrameworkThread(() =>
             {
+                InternalLog(FormatUntargettable());
                 OnUntargettable?.Invoke();
             });
         }
@@ -1141,8 +1279,37 @@ namespace Lemegeton.Core
             return _drawListPtr;
         }
 
+        internal string FormatGameObject(DalamudGameObject go)
+        {
+            return go == null ? "null" : String.Format("{0}({1} - {2}) at {3} pos {4},{5},{6} rot {7}", go.GameObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"),
+                go.Position.X, go.Position.Y, go.Position.Z, go.Rotation
+            );
+        }
+
+        internal string FormatStatusId(uint statusId)
+        {
+            string name = plug.GetStatusName(statusId).Trim();
+            return String.Format("{0} ({1})", statusId, name.Length > 0 ? name : "(null)");
+        }
+
+        internal string FormatActionId(uint actionId)
+        {
+            string name = plug.GetActionName(actionId).Trim();
+            return String.Format("{0} ({1})", actionId, name.Length > 0 ? name : "(null)");
+        }
+
+        internal void InternalLog(string msg)
+        {
+            lock (internalDebug)
+            {
+                internalDebug.Add(new Tuple<DateTime, string>(DateTime.Now, msg));
+                internalDebug.RemoveAll(x => x.Item1 < DateTime.Now.AddMinutes(-30));
+            }
+        }
+
         internal void Log(LogLevelEnum level, Exception ex, string message, params object[] args)
         {
+            InternalLog(string.Format(message, args));
             switch (level)
             {
                 case LogLevelEnum.Error:

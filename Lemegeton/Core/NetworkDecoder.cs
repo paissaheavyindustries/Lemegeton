@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using static FFXIVClientStructs.FFXIV.Client.UI.Agent.AgentMJIFarmManagement;
 using static Lemegeton.Content.UltOmegaProtocol;
 using static Lemegeton.Core.State;
 using static Lumina.Data.Parsing.Uld.UldRoot;
@@ -168,7 +169,7 @@ namespace Lemegeton.Core
 
         private List<string> _opcodeRegions = null;
         private Blueprint.Region _nextOpcodeRegion = null;
-        private Blueprint.Region _currentOpcodeRegion = null;
+        internal Blueprint.Region _currentOpcodeRegion = null;
         private Blueprint _blueprint = null;
 
         public NetworkDecoder(State st)
@@ -226,11 +227,12 @@ namespace Lemegeton.Core
             Opcodes.ActorControl = GetOpcodeForRegion(region, "ActorControl");
             Opcodes.ActorControlSelf = GetOpcodeForRegion(region, "ActorControlSelf");
             Opcodes.ActorControlTarget = GetOpcodeForRegion(region, "ActorControlTarget");
-            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16}",
+            _st.Log(State.LogLevelEnum.Debug, null, "Opcodes set to: {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16} DebugFlags: {17} DebugInstances: {18}",
                 Opcodes.StatusEffectList, Opcodes.StatusEffectList2, Opcodes.StatusEffectList3, Opcodes.BossStatusEffectList,
                 Opcodes.Ability1, Opcodes.Ability8, Opcodes.Ability16, Opcodes.Ability24, Opcodes.Ability32,
                 Opcodes.ActorCast, Opcodes.EffectResult, Opcodes.MapEffect, Opcodes.EventPlay, Opcodes.EventPlay64,
-                Opcodes.ActorControl, Opcodes.ActorControlSelf, Opcodes.ActorControlTarget
+                Opcodes.ActorControl, Opcodes.ActorControlSelf, Opcodes.ActorControlTarget,
+                region.DebugFlags, region.DebugInstanceData
             );
         }
 
@@ -322,9 +324,48 @@ namespace Lemegeton.Core
             }
         }
 
+        internal unsafe void HandleStatusEffectList(StatusEffectListEntry* ae1, StatusEffectListEntry* ae2, uint targetActorId)
+        {            
+            List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
+            List<string> temp = new List<string>();
+            ushort seed = ae1[29].statusId;
+            temp.Add(string.Format("[{0}/{1:X}]", seed, targetActorId));
+            for (int i = 0; i < 30; i++)
+            {
+                temp.Add(string.Format("{0}={1}", i, ae1[i].statusId - seed));
+                if (ae1[i].statusId - seed > 0)
+                {
+                    entries.Add(
+                        new StatusTracker.Entry() { srcActorId = ae1[i].srcActorId, actorId = targetActorId, statusId = (uint)ae1[i].statusId - seed, duration = Math.Abs(ae1[i].duration), stacks = ae1[i].stacks }
+                    );
+                }
+            }
+            if (ae2 != null)
+            {
+                for (int i = 0; i < 30; i++)
+                {
+                    temp.Add(string.Format("{0}={1}", i, ae2[i].statusId - seed));
+                    if (ae2[i].statusId - seed > 0)
+                    {
+                        entries.Add(
+                            new StatusTracker.Entry() { srcActorId = ae2[i].srcActorId, actorId = targetActorId, statusId = (uint)ae2[i].statusId - seed, duration = Math.Abs(ae2[i].duration), stacks = ae2[i].stacks }
+                        );
+                    }
+                }
+            }
+            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+            {
+                _st.Log(State.LogLevelEnum.Debug, null, "SEL: {0}", string.Join(", ", temp));
+            }
+            _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+        }
+
         internal unsafe void Decode(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId)
         {
-            //_st.Log(State.LogLevelEnum.Debug, null, "Opcode: {0} (source: {1:X8}, target: {2:X8})", opCode, sourceActorId, targetActorId);
+            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.Opcodes) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+            {
+                _st.Log(State.LogLevelEnum.Debug, null, "Opcode: {0} / {1:X} (source: {2:X8}, target: {3:X8})", opCode, opCode, sourceActorId, targetActorId);
+            }
             if (opCode == Opcodes.ActorCast)
             {                
                 ActorCast ac = Marshal.PtrToStructure<ActorCast>(dataPtr);
@@ -385,16 +426,23 @@ namespace Lemegeton.Core
             else if (opCode == Opcodes.EffectResult)
             {
                 EffectResult ac = Marshal.PtrToStructure<EffectResult>(dataPtr);
+                List<string> temp = new List<string>();
                 EffectResultEntry* ae = (EffectResultEntry * )(dataPtr + 28);
+                temp.Add(string.Format("[{0:X}]", targetActorId));
                 List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
                 for (int i = 0; i < ac.entryCount; i++)
                 {
                     if (ae[i].statusId > 0)
                     {
+                        temp.Add(string.Format("{0}={1}", i, ae[i].statusId));
                         entries.Add(
                             new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = ae[i].statusId, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
                         );
                     }
+                }
+                if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+                {
+                    _st.Log(State.LogLevelEnum.Debug, null, "ER: {0}", string.Join(", ", temp));
                 }
                 if (entries.Count > 0)
                 {
@@ -404,70 +452,22 @@ namespace Lemegeton.Core
             else if (opCode == Opcodes.StatusEffectList)
             {
                 StatusEffectList ac = Marshal.PtrToStructure<StatusEffectList>(dataPtr);
-                StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 20);
-                List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
-                ushort seed = ae[29].statusId;
-                for (int i = 0; i < 30; i++)
-                {
-                    if (ae[i].statusId - seed > 0)
-                    {                        
-                        entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
-                        );
-                    }
-                }
-                _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+                HandleStatusEffectList((StatusEffectListEntry*)(dataPtr + 20), null, targetActorId);
             }
             else if (opCode == Opcodes.StatusEffectList2)
             {
                 StatusEffectList2 ac = Marshal.PtrToStructure<StatusEffectList2>(dataPtr);
-                StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 24);
-                List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
-                ushort seed = ae[29].statusId;
-                for (int i = 0; i < 30; i++)
-                {
-                    if (ae[i].statusId - seed > 0)
-                    {
-                        entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
-                        );
-                    }
-                }
-                _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+                HandleStatusEffectList((StatusEffectListEntry*)(dataPtr + 24), null, targetActorId);
             }
             else if (opCode == Opcodes.StatusEffectList3)
             {
                 StatusEffectList3 ac = Marshal.PtrToStructure<StatusEffectList3>(dataPtr);
-                StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 0);
-                List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
-                ushort seed = ae[29].statusId;
-                for (int i = 0; i < 30; i++)
-                {
-                    if (ae[i].statusId - seed > 0)
-                    {
-                        entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
-                        );
-                    }
-                }
-                _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+                HandleStatusEffectList((StatusEffectListEntry*)(dataPtr + 0), null, targetActorId);
             }
             else if (opCode == Opcodes.BossStatusEffectList)
             {
                 StatusEffectList ac = Marshal.PtrToStructure<StatusEffectList>(dataPtr);
-                StatusEffectListEntry* ae = (StatusEffectListEntry*)(dataPtr + 0);
-                List<StatusTracker.Entry> entries = new List<StatusTracker.Entry>();
-                ushort seed = ae[29].statusId;
-                for (int i = 0; i < 30; i++)
-                {
-                    if (ae[i].statusId - seed > 0)
-                    {
-                        entries.Add(
-                            new StatusTracker.Entry() { srcActorId = ae[i].srcActorId, actorId = targetActorId, statusId = (uint)ae[i].statusId - seed, duration = Math.Abs(ae[i].duration), stacks = ae[i].stacks }
-                        );
-                    }
-                }
-                _tracker.ReplaceStatusForActor(targetActorId, entries.Count > 0 ? entries : null);
+                HandleStatusEffectList((StatusEffectListEntry*)(dataPtr + 0), (StatusEffectListEntry*)(dataPtr + 380), targetActorId);                
             }
             else if (opCode == Opcodes.MapEffect)
             {
@@ -633,7 +633,7 @@ namespace Lemegeton.Core
         }
 
         private void _tracker_OnStatusGain(uint srcActorId, uint actorId, uint statusId, float duration, int stacks)
-        {
+        {            
             _st.InvokeStatusChange(srcActorId, actorId, statusId, true, duration, stacks);
         }
 

@@ -7,6 +7,14 @@ namespace Lemegeton.Core
     public class Blueprint
     {
 
+        public enum DebugFlags
+        {
+            None = 0,
+            StatusEffects = 0x01,
+            Opcodes = 0x02,
+            All = StatusEffects | Opcodes,
+        }
+
         public class Region
         {
 
@@ -23,8 +31,17 @@ namespace Lemegeton.Core
             public class Warning
             {
 
+                public enum TypeEnum
+                {
+                    Warning,
+                    Information
+                }
+
                 [XmlAttribute]
                 public string Text { get; set; }
+
+                [XmlAttribute]
+                public TypeEnum Type { get; set; } = TypeEnum.Warning;
 
             }
 
@@ -32,9 +49,40 @@ namespace Lemegeton.Core
             public string Name { get; set; }
             [XmlAttribute]
             public string Version { get; set; }
+            [XmlAttribute]
+            public DebugFlags DebugFlags { get; set; }
+            private string _DebugInstanceData = "";
+            [XmlAttribute(AttributeName = "DebugInstances")]
+            public string DebugInstanceData
+            {
+                get
+                {
+                    return _DebugInstanceData;
+                }
+                set
+                {
+                    if (_DebugInstanceData != value)
+                    {
+                        DebugInstances.Clear();
+                        _DebugInstanceData = value;
+                        if (_DebugInstanceData != null)
+                        {
+                            string[] insts = _DebugInstanceData.Split(",");                            
+                            foreach (string inst in insts)
+                            {
+                                if (int.TryParse(inst, out int ii) == true)
+                                {
+                                    DebugInstances.Add(ii);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
+            internal List<int> DebugInstances = new List<int>();
             public List<Warning> Warnings { get; set; } = new List<Warning>();
-            public List<Opcode> Opcodes { get; set; } = new List<Opcode>();
+            public List<Opcode> Opcodes { get; set; } = new List<Opcode>();            
             internal Dictionary<string, Opcode> OpcodeLookup = new Dictionary<string, Opcode>();
 
         }

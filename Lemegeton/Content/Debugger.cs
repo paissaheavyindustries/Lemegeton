@@ -1,16 +1,17 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Bindings.ImGui;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Game.ClientState.Objects.Types;
 using Lemegeton.Core;
 using System;
-using System.Numerics;
-using System.Text;
+using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 using static Lemegeton.Core.State;
+using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using GameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
-using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 using Vector3 = System.Numerics.Vector3;
-using System.Collections.Generic;
 
 namespace Lemegeton.Content
 {
@@ -641,46 +642,6 @@ namespace Lemegeton.Content
                 return true;
             }
 
-            private string FormatGameObject(GameObject go)
-            {
-                if (IncludeLocation == true)
-                {
-                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3} pos {4},{5},{6} rot {7}", go.GameObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"),
-                        go.Position.X, go.Position.Y, go.Position.Z, go.Rotation
-                    );
-                }
-                else
-                {
-                    return go == null ? "null" : String.Format("{0}({1} - {2}) at {3}", go.GameObjectId.ToString("X"), go.Name.ToString(), go.ObjectKind, go.Address.ToString("X"));
-                }
-            }
-
-            private string FormatStatusId(uint statusId)
-            {
-                if (ResolveNames == true)
-                {
-                    string name = _state.plug.GetStatusName(statusId).Trim();
-                    return String.Format("{0} ({1})", statusId, name.Length > 0 ? name : "(null)");
-                }
-                else
-                {
-                    return String.Format("{0}", statusId);
-                }
-            }
-
-            private string FormatActionId(uint actionId)
-            {
-                if (ResolveNames == true)
-                {
-                    string name = _state.plug.GetActionName(actionId).Trim();
-                    return String.Format("{0} ({1})", actionId, name.Length > 0 ? name : "(null)");
-                }
-                else
-                {
-                    return String.Format("{0}", actionId);
-                }
-            }
-
             private void LogEventToFile(string msg)
             {
                 try
@@ -744,11 +705,11 @@ namespace Lemegeton.Content
                                     string fmt = "OmenTracking: {0} Changed {1:X} -> {2:X}";
                                     if (LogToDalamudLog == true)
                                     {
-                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my, omen);
+                                        Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), my, omen);
                                     }
                                     if (LogToFile == true)
                                     {
-                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my, omen));
+                                        LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), my, omen));
                                     }
                                     if (omen == IntPtr.Zero)
                                     {
@@ -766,11 +727,11 @@ namespace Lemegeton.Content
                                 string fmt = "OmenTracking: {0} Started {1:X}";
                                 if (LogToDalamudLog == true)
                                 {
-                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), omen);
+                                    Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), omen);
                                 }
                                 if (LogToFile == true)
                                 {
-                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), omen));
+                                    LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), omen));
                                 }
                             }
                         }
@@ -806,11 +767,11 @@ namespace Lemegeton.Content
                                     string fmt = "VFXTracking: {0} Changed VFX1 {1:X} -> {2:X}";
                                     if (LogToDalamudLog == true)
                                     {
-                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my1, vfx1);
+                                        Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), my1, vfx1);
                                     }
                                     if (LogToFile == true)
                                     {
-                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my1, vfx1));
+                                        LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), my1, vfx1));
                                     }
                                     if (vfx1 == IntPtr.Zero)
                                     {
@@ -828,11 +789,11 @@ namespace Lemegeton.Content
                                 string fmt = "VFXTracking: {0} Started VFX1 {1:X}";
                                 if (LogToDalamudLog == true)
                                 {
-                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), vfx1);
+                                    Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), vfx1);
                                 }
                                 if (LogToFile == true)
                                 {
-                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), vfx1));
+                                    LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), vfx1));
                                 }
                             }
                             if (_vfx2Tracking.TryGetValue(go.Address, out my2) == true)
@@ -842,11 +803,11 @@ namespace Lemegeton.Content
                                     string fmt = "VFXTracking: {0} Changed VFX2 {1:X} -> {2:X}";
                                     if (LogToDalamudLog == true)
                                     {
-                                        Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), my2, vfx2);
+                                        Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), my2, vfx2);
                                     }
                                     if (LogToFile == true)
                                     {
-                                        LogEventToFile(String.Format(fmt, FormatGameObject(go), my2, vfx2));
+                                        LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), my2, vfx2));
                                     }
                                     if (vfx2 == IntPtr.Zero)
                                     {
@@ -864,11 +825,11 @@ namespace Lemegeton.Content
                                 string fmt = "VFXTracking: {0} Started VFX2 {1:X}";
                                 if (LogToDalamudLog == true)
                                 {
-                                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go), vfx2);
+                                    Log(LogLevelEnum.Debug, null, fmt, _state.FormatGameObject(go), vfx2);
                                 }
                                 if (LogToFile == true)
                                 {
-                                    LogEventToFile(String.Format(fmt, FormatGameObject(go), vfx2));
+                                    LogEventToFile(String.Format(fmt, _state.FormatGameObject(go), vfx2));
                                 }
                             }
                         }
@@ -882,15 +843,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeEventPlay64";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt));
-                }
+                Log(_state.FormatEventPlay64());
             }
 
             private void OnEventPlay(uint actorId, uint eventId, ushort scene, uint flags, uint param1, ushort param2, byte param3, uint param4)
@@ -899,16 +852,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                GameObject actor = _state.GetActorById(actorId);
-                string fmt = "InvokeEventPlay: {0:X8} {1} {2} {3} {4} {5} {6} {7}";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(actor), eventId, scene, flags, param1, param2, param3, param4);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(actor), eventId, scene, flags, param1, param2, param3, param4));
-                }
+                Log(_state.FormatEventPlay(actorId, eventId, scene, flags, param1, param2, param3, param4));
             }
 
             private void OnDirectorUpdate(uint param1, uint param2, uint param3, uint param4)
@@ -917,15 +861,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeDirectorUpdate: {0:X8} {1:X8} {2:X8} {3:X8}";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, param1, param2, param3, param4);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, param1, param2, param3, param4));
-                }
+                Log(_state.FormatDirectorUpdate(param1, param2, param3, param4));
             }
 
             private void OnActorControl(ushort category, uint sourceActorId, uint targetActorId, uint param1, uint param2, uint param3, uint param4)
@@ -934,17 +870,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeActorControl: {0} {1} -> {2} {3:X8} {4:X8} {5:X8} {6:X8}";
-                GameObject src = _state.GetActorById(sourceActorId);
-                GameObject dst = _state.GetActorById(targetActorId);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, category, FormatGameObject(src), FormatGameObject(dst), param1, param2, param3, param4);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, category, FormatGameObject(src), FormatGameObject(dst), param1, param2, param3, param4));
-                }
+                Log(_state.FormatActorControl(category, sourceActorId, targetActorId, param1, param2, param3, param4));
             }
 
             private void OnMapEffect(byte[] data)
@@ -953,20 +879,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeMapEffect: {0}";
-                List<string> bytes = new List<string>();
-                foreach (byte b in data)
-                {
-                    bytes.Add(b.ToString("X2"));
-                }
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, String.Join(" ", bytes));
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, String.Join(" ", bytes)));
-                }
+                Log(_state.FormatMapEffect(data));
             }
 
             private void OnTether(uint src, uint dest, uint tetherId)
@@ -975,17 +888,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeTether {0} -> {1}: {2}";
-                GameObject srcgo = _state.GetActorById(src);
-                GameObject dstgo = _state.GetActorById(dest);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), tetherId);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), tetherId));
-                }
+                Log(_state.FormatTether(src, dest, tetherId));
             }
 
             private void OnZoneChange(ushort newZone)
@@ -994,15 +897,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeZoneChange {0}";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, newZone);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, newZone));
-                }
+                Log(_state.FormatZoneChange(newZone));
             }
 
             private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
@@ -1011,17 +906,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeStatusChange {0} -> {1}: {2} {3} for {4} s with {5} stacks";
-                GameObject srcgo = _state.GetActorById(src);
-                GameObject dstgo = _state.GetActorById(dest);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", FormatStatusId(statusId), duration, stacks);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), gained == true ? "Gained" : "Lost", FormatStatusId(statusId), duration, stacks));
-                }
+                Log(_state.FormatStatusChange(src, dest, statusId, gained, duration, stacks));
             }
 
             private void OnHeadMarker(uint dest, uint markerId)
@@ -1030,16 +915,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeHeadmarker {0}: {1}";
-                GameObject dstgo = _state.GetActorById(dest);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(dstgo), markerId);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(dstgo), markerId));
-                }
+                Log(_state.FormatHeadmarker(dest, markerId));
             }
 
             private void OnCombatChange(bool inCombat)
@@ -1048,15 +924,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeCombatChange {0}";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, inCombat);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, inCombat));
-                }
+                Log(_state.FormatCombatChange(inCombat));
             }
 
             private void OnCastBegin(uint src, uint dest, ushort actionId, float castTime, float rotation)
@@ -1065,17 +933,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeCastBegin {0} -> {1}: {2} in {3} s";
-                GameObject srcgo = _state.GetActorById(src);
-                GameObject dstgo = _state.GetActorById(dest);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId), castTime);
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId), castTime));
-                }
+                Log(_state.FormatCastBegin(src, dest, actionId, castTime, rotation));
             }
 
             private void OnAction(uint src, uint dest, ushort actionId)
@@ -1084,17 +942,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "InvokeAction {0} -> {1}: {2}";
-                GameObject srcgo = _state.GetActorById(src);
-                GameObject dstgo = _state.GetActorById(dest);
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId));
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(srcgo), FormatGameObject(dstgo), FormatActionId(actionId)));
-                }
+                Log(_state.FormatAction(src, dest, actionId));
             }
 
             private void OnCombatantAdded(GameObject go)
@@ -1103,15 +951,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "CombatantAdded {0}";
-                if (LogToDalamudLog == true)
-                {
-                    Log(LogLevelEnum.Debug, null, fmt, FormatGameObject(go));
-                }
-                if (LogToFile == true)
-                {
-                    LogEventToFile(String.Format(fmt, FormatGameObject(go)));
-                }
+                Log(_state.FormatCombatantAdded(go));
             }
 
             private void OnCombatantRemoved(ulong actorId, nint addr)
@@ -1120,14 +960,18 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                string fmt = "CombatantRemoved {0:X8} at {1}";
+                Log(_state.FormatCombatantRemoved(actorId, addr));
+            }
+
+            private void Log(string message)
+            {
                 if (LogToDalamudLog == true)
                 {
-                    Log(LogLevelEnum.Debug, null, fmt, actorId, addr);
+                    Log(LogLevelEnum.Debug, null, message);
                 }
                 if (LogToFile == true)
                 {
-                    LogEventToFile(String.Format(fmt, actorId, addr));
+                    LogEventToFile(message);
                 }
             }
 

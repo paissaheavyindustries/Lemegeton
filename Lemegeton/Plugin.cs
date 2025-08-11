@@ -1,49 +1,52 @@
-﻿using Dalamud.IoC;
-using Dalamud.Plugin;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.Gui;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.Network;
-using System.Threading;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dalamud.Bindings.ImGui;
-using Dalamud.Game.Command;
-using Lemegeton.Core;
-using System.Reflection;
-using Dalamud.Data;
-using ImGuiScene;
-using Dalamud.Game.ClientState.Objects.Types;
-using System.Xml;
-using Vector2 = System.Numerics.Vector2;
-using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
-using Dalamud.Game;
-using static Lemegeton.Core.State;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Dalamud.Game.ClientState.Party;
-using FFXIVClientStructs.FFXIV.Common.Math;
-using System.Text;
-using System.ComponentModel;
-using System.Globalization;
-using Dalamud.Interface;
-using System.IO;
-using System.Xml.Serialization;
+﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Configuration;
-using Newtonsoft.Json;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using static Lemegeton.Core.AutomarkerPrio;
-using System.Net.Http;
-using Lumina.Excel.Sheets;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using Dalamud.Plugin.Services;
+using Dalamud.Data;
+using Dalamud.Game;
+using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
+using Dalamud.Game.Network;
+using Dalamud.Interface;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
+using Dalamud.IoC;
+using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Common.Math;
+using ImGuiScene;
+using Lemegeton.Core;
+using Lumina.Excel.Sheets;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
+using static Dalamud.Interface.Utility.Raii.ImRaii;
+using static Lemegeton.Core.AutomarkerPrio;
+using static Lemegeton.Core.State;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace Lemegeton
 {
@@ -56,7 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.6.9";
+        public string Version = "1.0.7.4";
 
         internal class Downloadable
         {
@@ -140,7 +143,10 @@ namespace Lemegeton
         private string _timelineSelectorZoneFilter = "";
         private string _timelineSelectorFileFilter = "";
         private bool _newNotifications = false;
+        private bool troubleShootingOpen = false;
         private int _ttsCounter = 1;
+        private int _packageGenState = 0;
+        private string _packageGenFilename = "";
 
         private List<Timeline> _lastEncounters = new List<Timeline>();
 
@@ -4882,6 +4888,71 @@ namespace Lemegeton
             }
         }
 
+        private void GeneratePackage()
+        {
+            _packageGenState = 0;
+            Task tx = new Task(() =>
+            {
+                try
+                {
+                    _packageGenState = 1;
+                    string guid = Guid.NewGuid().ToString();
+                    string temp = Path.Combine(Path.GetTempPath(), string.Format("LemegetonPackage_{0}_{1}.zip", DateTime.Now.ToString("yyyyMMdd_HHmmss"), guid));
+                    string temp2 = Path.Combine(Path.GetTempPath(), string.Format("dalamud_{0}.log", guid));
+                    string temp3 = Path.Combine(Path.GetTempPath(), string.Format("Lemegeton_{0}.log", guid));
+                    string xlpath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher");
+                    string dalalog = Path.Combine(xlpath, "dalamud.log");
+                    string dalacfg = Path.Combine(xlpath, Path.Combine("pluginConfigs", "Lemegeton.json"));
+                    _state.Log(LogLevelEnum.Info, null, "Creating debug package to {0}", temp);
+                    DateTime dt = DateTime.Now;
+                    List<FileInfo> files = new List<FileInfo>();
+                    _state.Log(LogLevelEnum.Info, null, "Creating temp copy of {0} to {1}", dalalog, temp2);
+                    File.Copy(dalalog, temp2);
+                    _state.Log(LogLevelEnum.Info, null, "Writing debug data to {0}", temp3);                    
+                    lock (_state.internalDebug)
+                    {
+                        using (StreamWriter sw = new StreamWriter(temp3, false))
+                        {
+                            foreach (var tp in _state.internalDebug)
+                            {
+                                sw.WriteLine(string.Format("[{0}] {1}", tp.Item1, tp.Item2));
+                            }
+                        }
+                    }
+                    files.Add(new FileInfo(temp2));
+                    files.Add(new FileInfo(dalacfg));
+                    files.Add(new FileInfo(temp3));
+                    using (FileStream fs = new FileStream(temp, FileMode.CreateNew))
+                    {
+                        using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Create))
+                        {
+                            foreach (FileInfo file in files)
+                            {
+                                _state.Log(LogLevelEnum.Info, null, "Adding file {0}", file.FullName);
+                                zip.CreateEntryFromFile(file.FullName, file.Name, CompressionLevel.Optimal);
+                            }
+                        }
+                    }
+                    _state.Log(LogLevelEnum.Info, null, "Removing temp file {0}", temp3);
+                    File.Delete(temp3);
+                    _state.Log(LogLevelEnum.Info, null, "Removing temp file {0}", temp2);
+                    File.Delete(temp2);
+                    _state.Log(LogLevelEnum.Info, null, "Debug package created in {0} ms", (DateTime.Now - dt).TotalMilliseconds);
+                    _packageGenState = 2;
+                    lock (_packageGenFilename)
+                    {
+                        _packageGenFilename = temp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _state.Log(LogLevelEnum.Error, ex, "Exception while creating debug package");
+                    _packageGenState = 3;
+                }
+            });
+            tx.Start();
+        }
+
         private void RenderFooter()
         {
             ImGui.Separator();
@@ -4891,9 +4962,113 @@ namespace Lemegeton
             ImGui.Text("v" + Version + " - " + _state.GameVersion);
             ImGui.PopStyleColor();
             ImGui.SetCursorPos(new Vector2(_adjusterX, fp.Y));
+            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.623f, 0.258f, 0.258f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.723f, 0.358f, 0.358f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
+            if (ImGui.Button(I18n.Translate("Status/Troubleshooting")) == true)
+            {
+                troubleShootingOpen = true;
+            }
+            ImGui.PopStyleColor(3);
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
             ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.496f, 0.058f, 0.323f, 1.0f));
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.4f, 0.4f, 0.4f, 1.0f));
+            if (troubleShootingOpen == true)
+            {
+                ImGui.SetNextWindowSize(new Vector2(
+                    400,
+                    400),
+                    ImGuiCond.FirstUseEver
+                );
+                ImGuiWindowFlags flax = ImGuiWindowFlags.Modal | ImGuiWindowFlags.NoCollapse;
+                if (ImGui.Begin(I18n.Translate("Troubleshooting/Title") + "##LemegetonTroubleshooting", ref troubleShootingOpen, flax) == true)
+                {
+                    UserInterface.KeepWindowInSight();
+                    ImGui.TextWrapped(I18n.Translate("Troubleshooting/Intro"));
+                    ImGui.Text("");
+                    ImGui.Separator();
+                    ImGui.Text("");
+                    IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Number1).GetWrapOrEmpty();
+                    ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
+                    ImGui.SameLine();
+                    ImGuiStylePtr style = ImGui.GetStyle();
+                    float textofsx = (style.ItemSpacing.X / 2.0f);
+                    float textofsy = 0.0f;
+                    float xpos = ImGui.GetCursorPosX() - textofsx;
+                    ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY() + textofsy));
+                    ImGui.TextWrapped(I18n.Translate("Troubleshooting/Step1") + Environment.NewLine + Environment.NewLine);
+                    ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY()));
+                    switch (_packageGenState)
+                    {
+                        case 0:
+                            if (ImGui.Button(I18n.Translate("Troubleshooting/Step1Button")) == true)
+                            {
+                                GeneratePackage();
+                            }
+                            break;
+                        case 1:
+                            ImGui.TextWrapped(I18n.Translate("Troubleshooting/Step1Working"));
+                            break;
+                        case 2:
+                            ImGui.TextWrapped(I18n.Translate("Troubleshooting/Step1Done") + Environment.NewLine);
+                            ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY()));
+                            float itemsp = style.ItemSpacing.X;
+                            Vector2 avail1 = ImGui.GetContentRegionAvail();
+                            ImGui.PushItemWidth(avail1.X - itemsp);
+                            lock (_packageGenFilename)
+                            {                                
+                                ImGui.InputText("##PackageFn", ref _packageGenFilename, 512, ImGuiInputTextFlags.ReadOnly);
+                            }
+                            ImGui.Text("");
+                            ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY()));
+                            if (ImGui.Button(I18n.Translate("Troubleshooting/CopyToClipboard")) == true)
+                            {
+                                lock (_packageGenFilename)
+                                {
+                                    ImGui.SetClipboardText(_packageGenFilename);
+                                }
+                            }
+                            break;
+                        case 3:
+                            ImGui.TextWrapped(I18n.Translate("Troubleshooting/Step1Error"));
+                            break;
+                    }
+                    ImGui.Text("");
+                    ImGui.Separator();
+                    ImGui.Text("");
+                    tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Number2).GetWrapOrEmpty();
+                    ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
+                    ImGui.SameLine();
+                    ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY() + textofsy));
+                    ImGui.TextWrapped(I18n.Translate("Troubleshooting/Step2") + Environment.NewLine + Environment.NewLine);
+                    ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY()));
+                    if (ImGui.Button("Discord") == true)
+                    {
+                        Task tx = new Task(() =>
+                        {
+                            Process p = new Process();
+                            p.StartInfo.UseShellExecute = true;
+                            p.StartInfo.FileName = @"https://discord.gg/6f9MY55";
+                            p.Start();
+                        });
+                        tx.Start();
+                    }
+                    ImGui.Text("");
+                    ImGui.Separator();
+                    ImGui.Text("");
+                    tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Thanks).GetWrapOrEmpty();
+                    ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
+                    ImGui.SameLine();
+                    ImGui.SetCursorPos(new Vector2(xpos, ImGui.GetCursorPosY() + textofsy));
+                    ImGui.TextWrapped(I18n.Translate("Troubleshooting/Outro"));
+                    ImGui.End();
+                }
+            }
+            else
+            {
+                _packageGenState = 0;
+            }
+            ImGui.SameLine();
             if (ImGui.Button("Discord") == true)
             {
                 Task tx = new Task(() =>
@@ -5497,6 +5672,7 @@ namespace Lemegeton
             ImGuiStylePtr style = ImGui.GetStyle();
             float textofsx = (style.ItemSpacing.X / 2.0f);
             float textofsy = 0.0f;
+            List<string> infos = new List<string>();
             List<string> complaints = new List<string>();
             if (ImGui.BeginTable("Table" + I18n.Translate("Status/AtAGlance"), 2) == true)
             {
@@ -5614,7 +5790,14 @@ namespace Lemegeton
             {
                 foreach (Blueprint.Region.Warning w in warns)
                 {
-                    complaints.Add(w.Text);
+                    if (w.Type == Blueprint.Region.Warning.TypeEnum.Information)
+                    {
+                        infos.Add(w.Text);
+                    }
+                    else
+                    {
+                        complaints.Add(w.Text);
+                    }
                 }
             }
 #if !SANS_GOETIA
@@ -5666,6 +5849,22 @@ namespace Lemegeton
                 tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.RedCross).GetWrapOrEmpty();
                 int i = 0;
                 foreach (string c in complaints)
+                {
+                    ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
+                    ImGui.SameLine();
+                    ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() - textofsx, ImGui.GetCursorPosY() + textofsy));
+                    ImGui.TextWrapped(c);
+                    if (++i < complaints.Count())
+                    {
+                        ImGui.Separator();
+                    }
+                }
+            }
+            if (infos.Count > 0)
+            {
+                tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Operator).GetWrapOrEmpty();
+                int i = 0;
+                foreach (string c in infos)
                 {
                     ImGui.Image(tw.Handle, new Vector2(tw.Width, tw.Height));
                     ImGui.SameLine();
