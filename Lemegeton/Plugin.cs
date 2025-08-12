@@ -59,7 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.7.4";
+        public string Version = "1.0.7.5";
 
         internal class Downloadable
         {
@@ -111,6 +111,8 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.6.7"), "Changelog/1.0.6.7"),
             new Tuple<Version, string>(new System.Version("1.0.6.8"), "Changelog/1.0.6.8"),
             new Tuple<Version, string>(new System.Version("1.0.6.9"), "Changelog/1.0.6.9"),
+            new Tuple<Version, string>(new System.Version("1.0.7.4"), "Changelog/1.0.7.4"),
+            new Tuple<Version, string>(new System.Version("1.0.7.5"), "Changelog/1.0.7.5"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
@@ -4906,17 +4908,25 @@ namespace Lemegeton
                     _state.Log(LogLevelEnum.Info, null, "Creating debug package to {0}", temp);
                     DateTime dt = DateTime.Now;
                     List<FileInfo> files = new List<FileInfo>();
-                    _state.Log(LogLevelEnum.Info, null, "Creating temp copy of {0} to {1}", dalalog, temp2);
+                    _state.Log(LogLevelEnum.Debug, null, "Creating temp copy of {0} to {1}", dalalog, temp2);
                     File.Copy(dalalog, temp2);
-                    _state.Log(LogLevelEnum.Info, null, "Writing debug data to {0}", temp3);                    
-                    lock (_state.internalDebug)
+                    _state.Log(LogLevelEnum.Debug, null, "Writing debug data to {0}", temp3);
+                    int dc = DateTime.Now.Minute - 30;
+                    dc = dc < 0 ? dc + 60 : dc;
+                    int ci = 0;                    
+                    using (StreamWriter sw = new StreamWriter(temp3, false))
                     {
-                        using (StreamWriter sw = new StreamWriter(temp3, false))
+                        while (ci <= 30)
                         {
-                            foreach (var tp in _state.internalDebug)
+                            lock (_state.internalDebug[dc])
                             {
-                                sw.WriteLine(string.Format("[{0}] {1}", tp.Item1, tp.Item2));
+                                foreach (var tp in _state.internalDebug[dc])
+                                {
+                                    sw.WriteLine(string.Format("[{0}] {1}", tp.Item1, tp.Item2));
+                                }
                             }
+                            dc = (dc + 1) % 60;
+                            ci++;
                         }
                     }
                     files.Add(new FileInfo(temp2));
@@ -4928,14 +4938,14 @@ namespace Lemegeton
                         {
                             foreach (FileInfo file in files)
                             {
-                                _state.Log(LogLevelEnum.Info, null, "Adding file {0}", file.FullName);
+                                _state.Log(LogLevelEnum.Debug, null, "Adding file {0}", file.FullName);
                                 zip.CreateEntryFromFile(file.FullName, file.Name, CompressionLevel.Optimal);
                             }
                         }
                     }
-                    _state.Log(LogLevelEnum.Info, null, "Removing temp file {0}", temp3);
+                    _state.Log(LogLevelEnum.Debug, null, "Removing temp file {0}", temp3);
                     File.Delete(temp3);
-                    _state.Log(LogLevelEnum.Info, null, "Removing temp file {0}", temp2);
+                    _state.Log(LogLevelEnum.Debug, null, "Removing temp file {0}", temp2);
                     File.Delete(temp2);
                     _state.Log(LogLevelEnum.Info, null, "Debug package created in {0} ms", (DateTime.Now - dt).TotalMilliseconds);
                     _packageGenState = 2;

@@ -225,7 +225,8 @@ namespace Lemegeton.Core
         public Dictionary<AutomarkerSigns.SignEnum, ulong> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, ulong>();
         internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
         internal Dictionary<ushort, string> TimelineOverrides = new Dictionary<ushort, string>();
-        internal List<Tuple<DateTime, string>> internalDebug = new List<Tuple<DateTime, string>>();
+        internal List<Tuple<DateTime, string>>[] internalDebug;
+        internal int internalDebugCursor = -1;
 
         internal List<MarkerApplication> MarkerHistory = new List<MarkerApplication>();
 
@@ -569,6 +570,11 @@ namespace Lemegeton.Core
 
         public State()
         {
+            internalDebug = new List<Tuple<DateTime, string>>[60];
+            for (int i = 0; i < 60; i++)
+            {
+                internalDebug[i] = new List<Tuple<DateTime, string>>();
+            }
             GetStatusFlags = GetStatusFlags1;
         }
 
@@ -1300,10 +1306,16 @@ namespace Lemegeton.Core
 
         internal void InternalLog(string msg)
         {
-            lock (internalDebug)
+            DateTime dt = DateTime.Now;
+            int cm = dt.Minute;
+            if (internalDebugCursor != cm)
             {
-                internalDebug.Add(new Tuple<DateTime, string>(DateTime.Now, msg));
-                internalDebug.RemoveAll(x => x.Item1 < DateTime.Now.AddMinutes(-30));
+                internalDebugCursor = cm;
+                internalDebug[(cm + 1) % 60].Clear();
+            }
+            lock (internalDebug[cm])
+            {
+                internalDebug[cm].Add(new Tuple<DateTime, string>(dt, msg));
             }
         }
 

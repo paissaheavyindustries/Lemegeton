@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Threading;
 using static Lemegeton.Content.UltAlexander;
 using static Lemegeton.Core.State;
+using FFXIVClientStructs.FFXIV.Component.SteamApi.Callbacks;
 
 namespace Lemegeton.Content
 {
@@ -274,19 +275,25 @@ namespace Lemegeton.Content
                         case StatusCompressedWater:
                             {
                                 IGameObject go = _state.GetActorById(actorId);
-                                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                                ap.Assign(Signs.Roles["Water"], go);
-                                _state.ExecuteAutomarkers(ap, Timing);
-                                _fired = true;
+                                if (SelfMarkOnly == false || _state.cs.LocalPlayer.GameObjectId == go.GameObjectId)
+                                {
+                                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                                    ap.Assign(Signs.Roles["Water"], go);
+                                    _state.ExecuteAutomarkers(ap, Timing);
+                                    _fired = true;
+                                }
                             }
                             break;
                         case StatusCompressedLightning:
                             {
                                 IGameObject go = _state.GetActorById(actorId);
-                                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                                ap.Assign(Signs.Roles["Lightning"], go);
-                                _state.ExecuteAutomarkers(ap, Timing);
-                                _fired = true;
+                                if (SelfMarkOnly == false || _state.cs.LocalPlayer.GameObjectId == go.GameObjectId)
+                                {
+                                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                                    ap.Assign(Signs.Roles["Lightning"], go);
+                                    _state.ExecuteAutomarkers(ap, Timing);
+                                    _fired = true;
+                                }
                             }
                             break;
                     }
@@ -1145,15 +1152,15 @@ namespace Lemegeton.Content
         {
             if (CurrentPhase == PhaseEnum.Inception)
             {
-                _crystalAm.FeedTether(dest);
+                _crystalAm.FeedTether(src);
             }
             if (CurrentPhase == PhaseEnum.FateAlpha)
             {
-                _fateAlphaAm.FeedTether(dest);
+                _fateAlphaAm.FeedTether(src);
             }
             if (CurrentPhase == PhaseEnum.FateBeta)
             {
-                _fateBetaAm.FeedTether(dest);
+                _fateBetaAm.FeedTether(src);
             }
         }
 
