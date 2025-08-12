@@ -14,8 +14,8 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
-            #region 1.0.7.5
-            AddEntry("Changelog/1.0.7.5", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
+            #region 1.0.7.6
+            AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion
             #region 1.0.7.4
             AddEntry("Changelog/1.0.7.4", " New troubleshooting feature to help with problems\n Adjustments to TEA automarkers");
