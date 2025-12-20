@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public Chinese(State st) : base(st)
         {
+            #region 1.0.7.8
+            //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
+            #endregion
+            #region 1.0.7.7
+            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse", "Pilgrim's Traverse");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "启用");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "绘制敌人");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "启用");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "敌人显示颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "与附近的敌人连线");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "显示名牌");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "在名牌上显示距离");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "名牌文本颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "显示名牌背景");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "名牌背景颜色");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "绘制pylons");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "启用");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "Pylon显示颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "显示名牌");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "在名牌上显示距离");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "名牌文本颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "显示名牌背景");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "名牌背景颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "绘制宝箱和埋藏的宝藏");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "启用");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "金宝箱颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "银宝箱颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "铜宝箱颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "木宝箱颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "埋藏的宝藏颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "显示名牌");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "在名牌上显示距离");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "名牌文本颜色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "显示名牌背景");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "名牌背景颜色");
+            #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion

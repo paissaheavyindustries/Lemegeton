@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public Danish(State st) : base(st)
         {
+            #region 1.0.7.8
+            //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
+            #endregion
+            #region 1.0.7.7
+            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse", "Pilgrim's Traverse");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "Aktiveret");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "Tegn fjender");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "Aktiveret");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "Farve på fjendehøjdepunkt");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "Tegn linje til nærliggende fjender");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "Vis navnetiketter");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "Inkluder afstand på navnetiketten");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "Farve på navnetekst");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "Vis baggrund for navnetiket");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "Farve på baggrund for navnetiket");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "Tegn pyloner");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "Aktiveret");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "Farve på pylonhøjdepunkt");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "Vis navnetiketter");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "Inkluder afstand på navnetiketten");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "Farve på navnetekst");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "Vis baggrund for navnetiket");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "Farve på baggrund for navnetiket");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "Tegn kister og forbandet skat");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "Aktiveret");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "Farve på guldkiste");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "Farve på sølvkiste");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "Farve på bronzekiste");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "Farve på båndkiste");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "Farve på forbandet skat");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "Vis navnetiketter");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "Inkluder afstand på navnetiketten");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "Farve på navnetekst");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "Vis baggrund for navnetiket");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "Farve på baggrund for navnetiket");
+            #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion

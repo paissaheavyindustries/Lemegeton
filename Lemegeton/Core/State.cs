@@ -44,7 +44,6 @@ using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character
 using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using Item = Lumina.Excel.Sheets.Item;
-using Status = Dalamud.Game.ClientState.Statuses.Status;
 
 namespace Lemegeton.Core
 {
@@ -1449,8 +1448,8 @@ namespace Lemegeton.Core
         {
             StatusList sl = cs.LocalPlayer.StatusList;
             for (int i = 0; i < sl.Length; i++)
-            {
-                Status st = sl[i];
+            {                
+                IStatus st = sl[i];
                 if (st.StatusId == 48)
                 {
                     return (st.RemainingTime >= forAtLeast);

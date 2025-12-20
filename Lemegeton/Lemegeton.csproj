@@ -1,7 +1,7 @@
-<Project Sdk="Dalamud.NET.Sdk/13.0.0">
+<Project Sdk="Dalamud.NET.Sdk/14.0.0">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <Configurations>Debug (Full);Release (Full);Debug (Mini);Release (Mini)</Configurations>
   </PropertyGroup>
@@ -40,7 +40,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="13.0.0" />
+    <PackageReference Include="DalamudPackager" Version="14.0.0" />
   </ItemGroup>
 
   <ItemGroup>

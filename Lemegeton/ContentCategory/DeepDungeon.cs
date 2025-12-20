@@ -26,6 +26,7 @@ namespace Lemegeton.ContentCategory
             items["PalaceOfTheDead"] = new PalaceOfTheDead(st);
             items["HeavenOnHigh"] = new HeavenOnHigh(st);
             items["EurekaOrthos"] = new EurekaOrthos(st);
+            items["PilgrimsTraverse"] = new PilgrimsTraverse(st);
             return items;
         }
 

@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public Japanese(State st) : base(st)
         {
+            #region 1.0.7.8
+            //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
+            #endregion
+            #region 1.0.7.7
+            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse", "ピルグリム・トラバース");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "有効");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "敵の描画");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "有効");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "敵の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "近くの敵に対して線を描画する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "ネームタグを表示");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "ネームタグに距離を記載する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "ネームタグの文字色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "ネームタグの背景を表示する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "ネームタグの背景色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "塔の描画");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "有効");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "塔の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "ネームタグを表示");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "ネームタグに距離を記載する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "ネームタグの文字色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "ネームタグの背景を表示する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "ネームタグの背景色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "宝箱と埋もれた財宝の描画");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "有効");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "金の宝箱の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "銀の宝箱の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "銅の宝箱の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "木の宝箱の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "埋もれた財宝の表示色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "ネームタグを表示");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "ネームタグに距離を記載する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "ネームタグの文字色");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "ネームタグの背景を表示する");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "ネームタグの背景色");
+            #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion

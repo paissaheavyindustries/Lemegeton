@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public Korean(State st) : base(st)
         {
+            #region 1.0.7.8
+            //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
+            #endregion
+            #region 1.0.7.7
+            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse", "Pilgrim's Traverse");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "활성화");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "적 강조");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "활성화");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "적 강조색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "가까운 적 강조");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "네임 태그 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "네임 태그에서 대상과의 거리 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "네임 태그 글자색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "네임 태그 배경 표시");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "네임 태그 배경색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "전송장치 강조");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "활성화");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "전송장치 강조색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "네임 태그 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "네임 태그에서 대상과의 거리 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "네임 태그 글자색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "네임 태그 배경 표시");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "네임 태그 배경색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "상자 및 파묻힌 보물 강조");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "활성화");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "금 상자 색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "은 상자 색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "동 상자 색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "일반 상자 색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "파묻힌 보물 색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "네임 태그 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "네임 태그에서 대상과의 거리 보기");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "네임 태그 글자색");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "네임 태그 배경 표시");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "네임 태그 배경색");
+            #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion

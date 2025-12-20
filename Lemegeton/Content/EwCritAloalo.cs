@@ -36,6 +36,8 @@ namespace Lemegeton.Content
         private const int StatusPlayerThree = 3721;
         private const int StatusPlayerFive = 3790;
         private const int StatusBullsEye = 3742;
+        private const int AbilityLeadHook1 = 35950;
+        private const int AbilityLeadHook2 = 35783;
         private const int AbilityArcaneBlightN1 = 34956;
         private const int AbilityArcaneBlightE1 = 34957;
         private const int AbilityArcaneBlightS1 = 34955;
@@ -65,6 +67,9 @@ namespace Lemegeton.Content
 
         private bool ZoneOk = false;
         private bool _subbed = false;
+        private bool _sawFirstHeadMarker = false;
+        private bool _sawLeadHook = false;
+        private uint _firstHeadMarker = 0;
 
         private SpringCrystal _springCrystal;
         private LalaRotation _lalaRotation;
@@ -516,7 +521,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained);
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} {1} on {2:X}", statusId, gained, actorId);
                 if (gained == true)
                 {
                     switch (statusId)
@@ -1300,6 +1305,10 @@ namespace Lemegeton.Content
         {
             switch (actionId)
             {
+                case AbilityLeadHook1:
+                case AbilityLeadHook2:
+                    _sawLeadHook = true;
+                    break;
                 case AbilityArcaneBlightN1:
                 case AbilityArcaneBlightE1:
                 case AbilityArcaneBlightS1:
@@ -1336,28 +1345,34 @@ namespace Lemegeton.Content
 
         private void _state_OnHeadMarker(uint dest, uint markerId)
         {
-            switch (markerId)
+            if (_sawFirstHeadMarker == false && _sawLeadHook == true)
+            {
+                _sawFirstHeadMarker = true;
+                _firstHeadMarker = markerId - 198;
+            }
+            uint realMarkerId = markerId - _firstHeadMarker;
+            switch (realMarkerId)
             {
                 case HeadmarkerLalaCW:
                 case HeadmarkerLalaCCW:
-                    _lalaRotation.FeedHeadmarker(dest, markerId);
+                    _lalaRotation.FeedHeadmarker(dest, realMarkerId);
                     break;
                 case HeadmarkerPlayerCW:
                 case HeadmarkerPlayerCCW:
                     if (CurrentPhase == PhaseEnum.Lala_Inferno)
                     {
-                        _playerRotation.FeedHeadmarker(dest, markerId);
+                        _playerRotation.FeedHeadmarker(dest, realMarkerId);
                     }
                     if (CurrentPhase == PhaseEnum.Lala_Planar)
                     {
-                        _playerMarch.FeedHeadmarker(dest, markerId);
+                        _playerMarch.FeedHeadmarker(dest, realMarkerId);
                     }
                     break;
                 case HeadmarkerChain:
                 case HeadmarkerEnumeration:
                     if (CurrentPhase == PhaseEnum.Statice_Pinwheel)
                     {
-                        _staticePinwheelAM.FeedHeadmarker(dest, markerId);
+                        _staticePinwheelAM.FeedHeadmarker(dest, realMarkerId);
                     }
                     break;
             }
@@ -1444,6 +1459,8 @@ namespace Lemegeton.Content
             if (newZoneOk == true && ZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Content available");
+                _sawLeadHook = false;
+                _sawFirstHeadMarker = false;
                 _springCrystal = (SpringCrystal)Items["SpringCrystal"];
                 _lalaRotation = (LalaRotation)Items["LalaRotation"];
                 _playerRotation = (PlayerRotation)Items["PlayerRotation"];

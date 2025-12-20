@@ -14,6 +14,43 @@ namespace Lemegeton.Language
 
         public German(State st) : base(st)
         {
+            #region 1.0.7.8
+            //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
+            #endregion
+            #region 1.0.7.7
+            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse", "Pilgers Phad");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "Aktiviert");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "Draw enemies");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "Aktiviert");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "Enemy highlight color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "Draw line to nearby enemies");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "Show name tags");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "Include distance on the name tag");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "Name tag text color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "Show name tag background");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "Name tag background color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "Draw pylons");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "Aktiviert");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "Pylon highlight color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "Show name tags");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "Include distance on the name tag");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "Name tag text color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "Show name tag background");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "Name tag background color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "Draw chests and Accursed Hoard");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "Aktiviert");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "Gold chest color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "Silver chest color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "Bronze chest color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "Banded chest color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "Accursed Hoard color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "Show name tags");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "Include distance on the name tag");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "Name tag text color");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "Show name tag background");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "Name tag background color");
+            #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion

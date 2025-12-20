@@ -149,11 +149,11 @@ namespace Lemegeton.Content
                         (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
                         &&
                         (
-                            (go.DataId == 2007187 || go.DataId == 2007188)
+                            (go.BaseId == 2007187 || go.BaseId == 2007188)
                             ||
-                            (go.DataId == 2009506 || go.DataId == 2009507)
+                            (go.BaseId == 2009506 || go.BaseId == 2009507)
                             ||
-                            (go.DataId == 2013286 || go.DataId == 2013287)
+                            (go.BaseId == 2013286 || go.BaseId == 2013287)
                         )
                     )
                     {
@@ -243,10 +243,10 @@ namespace Lemegeton.Content
                     if (
                         (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Treasure)
                         ||
-                        (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj && (go.DataId == 2007357 || go.DataId == 2007358 || go.DataId == 2007542 || go.DataId == 2007543))
+                        (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj && (go.BaseId == 2007357 || go.BaseId == 2007358 || go.BaseId == 2007542 || go.BaseId == 2007543))
                     )
                     {                        
-                        switch (go.DataId)
+                        switch (go.BaseId)
                         {
                             case 2007358:
                                 itemcol = GoldColor;
@@ -267,7 +267,7 @@ namespace Lemegeton.Content
                         double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
-                        string rname = go.DataId != 2007542 ? go.Name.ToString() : I18n.Translate("Content/DeepDungeon/AccursedHoard");
+                        string rname = go.BaseId != 2007542 ? go.Name.ToString() : I18n.Translate("Content/DeepDungeon/AccursedHoard");
                         string name = IncludeDistance == true ? String.Format("{0} ({1:0})", rname, dist) : String.Format("{0}", rname);
                         Vector2 sz = ImGui.CalcTextSize(name);
                         sz.X *= mul;
