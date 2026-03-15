@@ -195,8 +195,7 @@ namespace Lemegeton.Core
         internal GameNetwork gn = null;
         internal bool StatusGotOpcodes { get; set; } = false;
         internal bool StatusMarkingFuncAvailable { get; set; } = false;
-        internal bool StatusPostCommandAvailable { get; set; } = false;
-        internal DateTime LastNetworkTrafficUp { get; set; } = DateTime.MinValue;
+        internal bool StatusPostCommandAvailable { get; set; } = false;        
         internal DateTime LastNetworkTrafficDown { get; set; } = DateTime.MinValue;
         internal int NumFeaturesAutomarker { get; set; } = 0;
         internal int NumFeaturesDrawing { get; set; } = 0;

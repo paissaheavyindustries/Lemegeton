@@ -12,7 +12,7 @@ namespace Lemegeton.Core
     internal class GameNetwork : IDisposable
     {
 
-        public delegate void OnNetworkMessageDelegate(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId, NetworkMessageDirection direction);
+        public delegate void OnNetworkMessageDelegate(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId);
 
         public event OnNetworkMessageDelegate? NetworkMessage;
 
@@ -51,8 +51,8 @@ namespace Lemegeton.Core
                         dataPtr + 0x20,
                         (ushort)Marshal.ReadInt16(dataPtr, 0x12),
                         0,
-                        targetId,
-                        NetworkMessageDirection.ZoneDown);
+                        targetId
+                    );
                 }
                 catch (Exception ex)
                 {

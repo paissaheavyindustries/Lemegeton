@@ -14,6 +14,12 @@ namespace Lemegeton.Language
 
         public English(State st) : base(st)
         {
+            #region 1.0.7.9
+            AddEntry("Changelog/1.0.7.9", " The Final Verse HP difference indicator\n Updated French translation");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble", "The Final Verse HP difference indicator");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble/Enabled", "Enabled");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble/Area", "Overlay configuration");
+            #endregion
             #region 1.0.7.8
             AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
             #endregion

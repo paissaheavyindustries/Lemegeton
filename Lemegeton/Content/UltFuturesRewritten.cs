@@ -10,8 +10,6 @@ using System.Numerics;
 using GameObjectPtr = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using static Lemegeton.Core.AutomarkerPrio;
 using static Lemegeton.Core.State;
-using static Lemegeton.Content.UltDragonsongReprise;
-using static Lemegeton.Content.UltFuturesRewritten;
 
 namespace Lemegeton.Content
 {

@@ -14,59 +14,65 @@ namespace Lemegeton.Language
 
         public French(State st) : base(st)
         {
+            #region 1.0.7.9
+            //AddEntry("Changelog/1.0.7.9", " The Final Verse HP difference indicator\n Updated French translation");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble", "The Final Verse HP difference indicator");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble/Enabled", "Enabled");
+            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble/Area", "Overlay configuration");
+            #endregion
             #region 1.0.7.8
             //AddEntry("Changelog/1.0.7.8", " Dalamud API 14 & .NET 10");
             #endregion
             #region 1.0.7.7
-            //AddEntry("Changelog/1.0.7.7", " Some Criterion fixes\n Added Pilgrim's Traverse Deep Dungeon");
+            AddEntry("Changelog/1.0.7.7", " Ajustements de quelques problèmes du Criterion \n Ajout du donjon sans fond \"Le Sanctuaire des pélerins\"");
             AddEntry("Content/DeepDungeon/PilgrimsTraverse", "Le Sanctuaire des pèlerins");
             AddEntry("Content/DeepDungeon/PilgrimsTraverse/Enabled", "Activé");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "Draw enemies");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies", "Montrer les ennemis");
             AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/Enabled", "Activé");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "Enemy highlight color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "Draw line to nearby enemies");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "Show name tags");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "Include distance on the name tag");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "Name tag text color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "Show name tag background");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "Name tag background color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "Draw pylons");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ObjectColor", "Couleur du surlignage ennemi");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/DrawLine", "Trace une ligne vers les ennemis proches");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNames", "Montrer les plaques de noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/IncludeDistance", "Inclure la distance avec les plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/TextColor", "Couleur des noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/ShowNameBg", "Activer l'arrière-plan des plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawEnemies/BgColor", "Couleur d'arrière-plan des plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons", "Montrer/Surligner les balises");
             AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/Enabled", "Activé");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "Pylon highlight color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "Show name tags");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "Include distance on the name tag");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "Name tag text color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "Show name tag background");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "Name tag background color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "Draw chests and Accursed Hoard");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ObjectColor", "Couleur du surlignage des balises");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNames", "Montrer les plaques de noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/IncludeDistance", "Inclure la distance avec les plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/TextColor", "Couleur des noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/ShowNameBg", "Activer l'arrière-plan des plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawPylons/BgColor", "Couleur d'arrière-plan des plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests", "Montrer les coffres et trésors cachés");
             AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/Enabled", "Activé");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "Gold chest color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "Silver chest color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "Bronze chest color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "Banded chest color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "Accursed Hoard color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "Show name tags");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "Include distance on the name tag");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "Name tag text color");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "Show name tag background");
-            //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "Name tag background color");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/GoldColor", "Couleur des coffres dorés");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/SilverColor", "Couleur des coffres d'argent");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BronzeColor", "Couleur des coffres de bronze");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BandedColor", "Couleur des coffres classiques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/HoardColor", "Couleur des trésors cachés");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNames", "Montrer les plaques de noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/IncludeDistance", "Inclure la distance avec les plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/TextColor", "Couleur des noms");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/ShowNameBg", "Activer l'arrière-plan des plaques");
+            AddEntry("Content/DeepDungeon/PilgrimsTraverse/DrawChests/BgColor", "Couleur d'arrière-plan des plaques");
             #endregion
             #region 1.0.7.6
             //AddEntry("Changelog/1.0.7.6", " Performance improvements\n Fixed TEA Fate Calibration automarkers");
             #endregion
             #region 1.0.7.4
-            //AddEntry("Changelog/1.0.7.4", " New troubleshooting feature to help with problems\n Adjustments to TEA automarkers");
-            //AddEntry("Status/Troubleshooting", "Troubleshooting");
-            //AddEntry("Troubleshooting/Title", "Lemegeton Troubleshooting");
-            //AddEntry("Troubleshooting/Intro", "If you have encountered a problem with Lemegeton and something is not working as it should, please follow these instructions to collect some information and report the issue. This is most valuable when done within 30 minutes of the problem occurring, as details of the issue is still stored within memory.");
-            //AddEntry("Troubleshooting/Step1", "Press this button to generate a zip archive that contains your dalamud.log, your Lemegeton configuration, and some Lemegeton internal information from the last 30 minutes. This information will help greatly when trying to sort out the issue.");
-            //AddEntry("Troubleshooting/Step1Button", "Generate package");
-            //AddEntry("Troubleshooting/Step1Working", "Generating package...");
-            //AddEntry("Troubleshooting/Step1Done", "Your package has been generated and can be found at:");
-            //AddEntry("Troubleshooting/Step1Error", "An error occurred while trying to generate your package.");
-            //AddEntry("Troubleshooting/CopyToClipboard", "Copy filename to clipboard");
-            //AddEntry("Troubleshooting/Step2", "To use that package, make note of the filename as you'll need it soon, and join the Lemegeton Discord server by hitting the Discord button below, and follow the instructions pinned in channel #lemmy_questions.");
-            //AddEntry("Troubleshooting/Outro", "Your reports and logs help locate and fix issues rapidly - thank you for helping out!");
+            AddEntry("Changelog/1.0.7.4", " Nouvel outil de résolution de problèmes \n Ajustement des automarkers pour TEA");
+            AddEntry("Status/Troubleshooting", "Troubleshooting");
+            AddEntry("Troubleshooting/Title", "Troubleshooting Lemegeton");
+            AddEntry("Troubleshooting/Intro", "Si vous rencontrez des problèmes avec Lemegeton et que quelque chose ne fonctionne pas correctement, merci de suivre les instructions pour collecter des informations de base et reporter ce problème. C'est d'autant plus utile quand c'est réalisé dans les 30 premières minutes où le problème apparaît, car les détails du problème sont toujours en mémoire.");
+            AddEntry("Troubleshooting/Step1", "Appuyez sur ce bouton pour générer un fichier ZIP qui contiendra votre dalamud.log, votre configuration Lemegeton, et quelques informations internes à Lemegeton des 30 dernières minutes. Ces informations aideront grandement à la résolution des problèmes.");
+            AddEntry("Troubleshooting/Step1Button", "Générer le fichier");
+            AddEntry("Troubleshooting/Step1Working", "Génération en cours du fichier...");
+            AddEntry("Troubleshooting/Step1Done", "Votre fichier a été généré et peut être trouvé ici :");
+            AddEntry("Troubleshooting/Step1Error", "Une erreur a empêché la génération de votre fichier.");
+            AddEntry("Troubleshooting/CopyToClipboard", "Copier le nom du fichier au presse-papier");
+            AddEntry("Troubleshooting/Step2", "Pour utiliser ce fichier, notez le nom du fichier car vous en aurez besoin, et rejoigner le serveur Discord Lemegeton en appuyant sur le bouton ci-dessous, et suivez les instructions épinglées au canal #lemmy_questions. (Anglais requis)");
+            AddEntry("Troubleshooting/Outro", "Vos reports et fichiers aident à identifier et résoudre les problèmes - Merci pour votre aide !");
             #endregion
             #region 1.0.6.9
             //AddEntry("Changelog/1.0.6.9", " 7.3 fixes");
@@ -124,141 +130,141 @@ namespace Lemegeton.Language
             //AddEntry("Changelog/1.0.6.3", " Dalamud API 12 + NET 9 update");
             #endregion
             #region 1.0.6.2
-            //AddEntry("Changelog/1.0.6.2", " Added automarker for FRU P4 Crystallize Time");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM", "(P4) Crystallize Time automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero1", "Aero 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero2", "Aero 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard1", "Red Blizzard 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard2", "Red Blizzard 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Fire", "Dark Eruption (Fire)");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/BlueBlizzard", "Blue Blizzard");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Water", "Dark Water");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Earth", "Unholy Darkness (Earth)");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Prio", "Priority configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Test", "Test random assignment");
+            AddEntry("Changelog/1.0.6.2", " Ajout d'automarkers pour la P4 de FRU : Cristallisation Temporelle (CT)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM", "(P4) Automarkers Cristallisation Temporelle");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/SelfMarkOnly", "Seulement pour moi");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/AsSoftmarker", "Montrer en tant que marqueurs seulement chez moi (soft markers)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs", "Configuration des marqueurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero1", "Vent 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Aero2", "Vent 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard1", "Glace Rouge 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/RedBlizzard2", "Glace Rouge 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Fire", "Éruption ténébreuse");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/BlueBlizzard", "Glace bleue");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Water", "Eau ténébreuse");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Signs/Earth", "Ténèbres (Terre)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Prio", "Choix de la priorité");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CrystallizeTimeAM/Test", "Tester avec des rôles aléatoires");
             #endregion
             #region 1.0.6.1
-            //AddEntry("Changelog/1.0.6.1", " Added Crystallize Time indicators\n Added Ryne & Gaia HP difference indicator");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator", "(P4) Crystallize Time indicators");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Hourglasses", "Highlight exploding hourglasses");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Cleanses", "Highlight cleanses");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Corner", "Highlight knockback corner");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/ExplodingHourglassColor", "Hourglass highlight color");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Test", "Test display");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble", "(P4) Usurper & Oracle HP difference indicator");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Area", "Overlay configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Test", "Test on self and closest enemy");
+            AddEntry("Changelog/1.0.6.1", " Ajouts d'indicateurs pour Crystallize Time \n Ajout d'un indicateur de la différence des HP entre Ryne et Gaia");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator", "(P4) Crystallize Time indicateurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Hourglasses", "Mettre en évidence quel sablier explose");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Cleanses", "Mettre en évidence les flaques bleues au sol");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Corner", "Mettre en évidence le coin repoussant (Knockback)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/ExplodingHourglassColor", "Couleur du surlignage des sabliers");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/CTIndicator/Test", "Affichage de test");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble", "(P4) Indicateur de différence des HP de l'Usurptateur et de l'Oracle");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Area", "Configuration Overlay");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DoubleTrouble/Test", "Tester sur soi et l'ennemi le plus proche");
             #endregion
             #region 1.0.6.0
-            //AddEntry("Changelog/1.0.6.0", " Added JP box strategy for FRU P2 Light Rampant automarker (old one is EU/NA)");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/BoxJP", "Box 4/4 (JP)");
+            AddEntry("Changelog/1.0.6.0", " Ajout de la stratégie \"Box\" JP pour la P2 de FRU Débordement de Lumière (l'ancienne est EU/NA)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/BoxJP", "Box 4/4 (JP)");
             #endregion
             #region 1.0.5.9
             //AddEntry("Changelog/1.0.5.9", " Some quick fixes");
             #endregion
             #region 1.0.5.8         
-            //AddEntry("Changelog/1.0.5.8", " Added automarker for FRU P3 Ultimate Relativity\n Added automarker for FRU P3 Dark Water");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM", "(P3) Dark Water automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_1", "Short 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_2", "Short 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_1", "Mid 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_2", "Mid 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_1", "Long 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_2", "Long 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_1", "Nothing 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_2", "Nothing 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Prio", "Priority configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Test", "Test random assignment");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM", "(P3) Ultimate Relativity automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support10", "Support 10");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support20", "Support 20");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_1", "Support 30 #1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_2", "Support 30 #2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/SupportIce", "Support Ice");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_1", "DPS 10 #1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_2", "DPS 10 #2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps20", "DPS 20");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps30", "DPS 30");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/DpsIce", "DPS Ice");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Prio", "Priority configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Test", "Test random assignment");
+            AddEntry("Changelog/1.0.5.8", " Ajour d'automarkers pour la P3 de FRU Compression temporelle fatale (UR) \n Ajout d'automarkers pour la P3 de FRU Méga eau ténébreuse");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM", "(P3) Automarkers Méga eau ténébreuse");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/SelfMarkOnly", "Seulement pour moi");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/AsSoftmarker", "Montrer en tant que marqueurs seulement chez moi (soft markers)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs", "Configuration des marqueurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_1", "Court 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water10_2", "Court 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_1", "Moyen 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water29_2", "Moyen 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_1", "Long 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Water38_2", "Long 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_1", "Rien 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Signs/Nothing_2", "Rien 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Prio", "Choix de la priorité");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/DarkWaterAM/Test", "Tester avec des rôles aléatoires");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM", "(P3) Automarkers Compression temporelle fatale");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/SelfMarkOnly", "Seulement pour moi");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/AsSoftmarker", "Montrer en tant que marqueurs seulement chez moi (soft markers)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs", "Configuration des marqueurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support10", "Support 10");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support20", "Support 20");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_1", "Support 30 #1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Support30_2", "Support 30 #2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/SupportIce", "Support Glace");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_1", "DPS 10 #1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps10_2", "DPS 10 #2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps20", "DPS 20");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/Dps30", "DPS 30");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Signs/DpsIce", "DPS Glace");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Prio", "Choix de la priorité");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/UltimateRelativityAM/Test", "Tester avec des rôles aléatoires");
             #endregion
             #region 1.0.5.7
-            //AddEntry("Changelog/1.0.5.7", " Additional fixes to FRU P2 Light Rampant\n Added box strategy for FRU P2 Light Rampant automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Box", "Box 4/4 (EU/NA)");
+            AddEntry("Changelog/1.0.5.7", " Ajustements additionnels pour FRU P2 Débordment de Lumière \n Ajjout de la stratégie \"Box\" pour Débordement de Lumière FRU P2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Box", "Box 4/4 (EU/NA)");
             #endregion
             #region 1.0.5.6
             //AddEntry("Changelog/1.0.5.6", " Fixes to FRU P2 Light Rampant");
             #endregion
             #region 1.0.5.5
-            //AddEntry("Changelog/1.0.5.5", " Added AB1234 strategy for FRU P2 Light Rampant automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy", "Solver strategy");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Seal of Orichalcos (Generic)");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234");
+            AddEntry("Changelog/1.0.5.5", " Ajout de la stratégie AB1234 pour les automarqueurs de FRU P2 Débordement de Lumière");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy", "Stratégie adoptée");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/Generic", "Seal of Orichalcos (Generic)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Strategy/AB1234", "AB1234");
             #endregion
             #region 1.0.5.4
-            //AddEntry("Changelog/1.0.5.4", " Added automarker for FRU P2 Light Rampant\n Added a new 'Clockspots' priority configuration method, available for all AMs");
-            //AddEntry("Automarker/PrioType/Clockspots", "Clockspots");
-            //AddEntry("Automarker/PrioType/Clockspots/StartingFrom", "Select priority starting point");
-            //AddEntry("Automarker/PrioType/Clockspots/Reversed", "Sort counter-clockwise instead of clockwise");
-            //AddEntry("Automarker/PrioDirection/N", "N");
-            //AddEntry("Automarker/PrioDirection/NE", "NE");
-            //AddEntry("Automarker/PrioDirection/NW", "NW");
-            //AddEntry("Automarker/PrioDirection/E", "E");
-            //AddEntry("Automarker/PrioDirection/W", "W");
-            //AddEntry("Automarker/PrioDirection/SE", "SE");
-            //AddEntry("Automarker/PrioDirection/SW", "SW");
-            //AddEntry("Automarker/PrioDirection/S", "S");
+            AddEntry("Changelog/1.0.5.4", " Ajout d'automarkers pour la P2 de FRU \"Débordement de Lumière\" \n Ajout du choix de priorité \"Clockspot\" pour tous les automarkers");
+            AddEntry("Automarker/PrioType/Clockspots", "Clockspots");
+            AddEntry("Automarker/PrioType/Clockspots/StartingFrom", "Sélectionner le point de départ de la priorité");
+            AddEntry("Automarker/PrioType/Clockspots/Reversed", "Trier par anti-horaire au lieu de horaire");
+            AddEntry("Automarker/PrioDirection/N", "N");
+            AddEntry("Automarker/PrioDirection/NE", "NE");
+            AddEntry("Automarker/PrioDirection/NW", "NW");
+            AddEntry("Automarker/PrioDirection/E", "E");
+            AddEntry("Automarker/PrioDirection/W", "W");
+            AddEntry("Automarker/PrioDirection/SE", "SE");
+            AddEntry("Automarker/PrioDirection/SW", "SW");
+            AddEntry("Automarker/PrioDirection/S", "S");
             #endregion
             #region 1.0.5.3
             //AddEntry("Changelog/1.0.5.3", " Fixes to FRU P1 Fall of Faith");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM", "(P2) Light Rampant automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs", "Marker configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerN", "Tower ↑");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNE", "Tower ↗");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSE", "Tower ↘");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerS", "Tower ↓");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSW", "Tower ↙");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNW", "Tower ↖");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle1", "Puddle 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle2", "Puddle 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Prio", "Priority configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM", "(P2) Automarkers Débordement de Lumière");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/SelfMarkOnly", "Seulement pour moi");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/AsSoftmarker", "Montrer en tant que marqueurs seulement chez moi (soft markers)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs", "Configuration des marqueurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerN", "Tower ↑");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNE", "Tower ↗");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSE", "Tower ↘");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerS", "Tower ↓");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerSW", "Tower ↙");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/TowerNW", "Tower ↖");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle1", "Puddle 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Signs/Puddle2", "Puddle 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Prio", "Choix de la priorité");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/LightRampantAM/Test", "Tester avec des rôles aléatoires");
             #endregion
             #region 1.0.5.2
             //AddEntry("Changelog/1.0.5.2", " Added automarker for FRU P1 Fall of Faith");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM", "(P1) Fall of Faith automarker");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Enabled", "Enabled");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/SelfMarkOnly", "Self-marking only");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/AsSoftmarker", "Show as client-side soft markers");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs", "Marker configuration");            
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether1", "Tether 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether2", "Tether 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether3", "Tether 3");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether4", "Tether 4");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow1", "Overflow 1");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow2", "Overflow 2");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow3", "Overflow 3");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow4", "Overflow 4");            
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Prio", "Priority configuration");
-            //AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM", "(P1) Automarkers Section Illuminée");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Enabled", "Activé");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/SelfMarkOnly", "Seulement pour moi");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/AsSoftmarker", "Montrer en tant que marqueurs seulement chez moi (soft markers)");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs", "Configuration des marqueurs");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether1", "Lien 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether2", "Lien 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether3", "Lien 3");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Tether4", "Lien 4");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow1", "Lévitation 1");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow2", "Lévitation 2");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow3", "Lévitation 3");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Signs/Overflow4", "Lévitation 4");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Prio", "Choix de la priorité");
+            AddEntry("Content/Ultimate/UltFuturesRewritten/FallOfFaithAM/Test", "Tester avec des rôles aléatoires");
             #endregion
             #region 1.0.5.1
             //AddEntry("Changelog/1.0.5.1", " DSR Dragon HP indicator now much more configurable\n additional minor housekeeping");

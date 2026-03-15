@@ -615,13 +615,8 @@ namespace Lemegeton.Core
             _nextOpcodeRegion = reg;
         }
 
-        internal void NetworkMessageReceived(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId, NetworkMessageDirection direction)
+        internal void NetworkMessageReceived(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId)
         {
-            if (direction != NetworkMessageDirection.ZoneDown)
-            {
-                _st.LastNetworkTrafficUp = DateTime.Now;
-                return;
-            }
             _st.LastNetworkTrafficDown = DateTime.Now;
             if (_nextOpcodeRegion != null)
             {                
