@@ -1,4 +1,4 @@
-<Project Sdk="Dalamud.NET.Sdk/14.0.0">
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -38,10 +38,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Mini)|x64'">
     <DefineConstants>$(DefineConstants);SANS_GOETIA</DefineConstants>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="14.0.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Dalamud">
@@ -58,10 +54,6 @@
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGui.NET">
-      <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="ImGuiScene">

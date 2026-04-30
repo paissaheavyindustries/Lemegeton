@@ -14,6 +14,9 @@ namespace Lemegeton.Language
 
         public Korean(State st) : base(st)
         {
+            #region 1.0.8.0
+            //AddEntry("Changelog/1.0.8.0", " Dalamud API 15\n Fixed Pilgrim's Traverse Deep Dungeon");
+            #endregion
             #region 1.0.7.9
             //AddEntry("Changelog/1.0.7.9", " The Final Verse HP difference indicator\n Updated French translation");
             //AddEntry("Content/DeepDungeon/PilgrimsTraverse/DoubleTrouble", "The Final Verse HP difference indicator");

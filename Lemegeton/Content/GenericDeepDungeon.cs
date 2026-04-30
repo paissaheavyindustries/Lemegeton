@@ -42,7 +42,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                Vector3 me = _state.cs.LocalPlayer.Position;
+                Vector3 me = _state.ot.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
@@ -54,7 +54,7 @@ namespace Lemegeton.Content
                         IBattleChara bc = (IBattleChara)go;
                         if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.RowId == 0)
                         {
-                            double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                            double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                             Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                             pt.Y = temp.Y + 10.0f;
                             string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
@@ -157,7 +157,7 @@ namespace Lemegeton.Content
                         )
                     )
                     {
-                        double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                        double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
@@ -264,7 +264,7 @@ namespace Lemegeton.Content
                                 itemcol = BronzeColor;
                                 break;
                         }
-                        double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                        double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string rname = go.BaseId != 2007542 ? go.Name.ToString() : I18n.Translate("Content/DeepDungeon/AccursedHoard");

@@ -510,12 +510,12 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(968);
-                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
                 _idNidhogg = me.GameObjectId;
                 _idHraesvelgr = me.GameObjectId;
                 foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
@@ -551,12 +551,12 @@ namespace Lemegeton.Content
 
             protected void Render(ImDrawListPtr draw, bool configuring)
             {
-                IGameObject goH = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idHraesvelgr);
+                IGameObject goH = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idHraesvelgr);
                 if (goH == null)
                 {
                     return;
                 }
-                IGameObject goN = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idNidhogg);
+                IGameObject goN = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idNidhogg);
                 if (goN == null)
                 {
                     return;
@@ -820,7 +820,7 @@ namespace Lemegeton.Content
             Reset();
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 968);
             if (newZoneOk == true && ZoneOk == false)

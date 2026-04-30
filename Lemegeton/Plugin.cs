@@ -59,7 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.7.9";
+        public string Version = "1.0.8.0";
 
         internal class Downloadable
         {
@@ -116,7 +116,8 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.7.7"), "Changelog/1.0.7.7"),
             new Tuple<Version, string>(new System.Version("1.0.7.8"), "Changelog/1.0.7.8"),
             new Tuple<Version, string>(new System.Version("1.0.7.9"), "Changelog/1.0.7.9"),
-        };
+			new Tuple<Version, string>(new System.Version("1.0.8.0"), "Changelog/1.0.8.0"),
+		};
         internal List<Version> ChangeLogVersions = null;        
 
         internal delegate void DownloadableCompletionDelegate(Downloadable d);
@@ -899,7 +900,7 @@ namespace Lemegeton
                                 }
                                 else
                                 {
-                                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
+                                    tl.AddProfile(pro, _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.ClassJob.RowId : 0);
                                 }
                             }
                         }
@@ -934,7 +935,7 @@ namespace Lemegeton
                 root.AppendChild(c);
                 lock (_state.AllTimelines)
                 {
-                    foreach (KeyValuePair<ushort, Timeline> kp in _state.AllTimelines)
+                    foreach (KeyValuePair<uint, Timeline> kp in _state.AllTimelines)
                     {
                         XmlNode cc = doc.CreateElement("Profile");
                         c.AppendChild(cc);
@@ -963,7 +964,7 @@ namespace Lemegeton
                 root.AppendChild(c);
                 lock (_state.TimelineOverrides)
                 {
-                    foreach (KeyValuePair<ushort, string> kp in _state.TimelineOverrides)
+                    foreach (KeyValuePair<uint, string> kp in _state.TimelineOverrides)
                     {
                         XmlNode cc = doc.CreateElement("Override");
                         c.AppendChild(cc);
@@ -2067,7 +2068,7 @@ namespace Lemegeton
             return "???";
         }
 
-        internal string GetInstanceNameForTerritory(ushort territory)
+        internal string GetInstanceNameForTerritory(uint territory)
         {
             TerritoryType tt = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.TerritoryType>().GetRow(territory);
             ContentFinderCondition cfc = _state.dm.Excel.GetSheet<Lumina.Excel.Sheets.ContentFinderCondition>().Where(x => x.TerritoryType.IsValid == true && x.TerritoryType.Value.RowId == tt.RowId).FirstOrDefault();
@@ -2196,7 +2197,7 @@ namespace Lemegeton
                 }
                 lock (_state.AllTimelines)
                 {
-                    foreach (KeyValuePair<ushort, Timeline> kp in _state.AllTimelines)
+                    foreach (KeyValuePair<uint, Timeline> kp in _state.AllTimelines)
                     {
                         name = GetInstanceNameForTimeline(kp.Value);
                         if (ImGui.Selectable(name, kp.Value == SelectedTimeline) == true)
@@ -2311,7 +2312,7 @@ namespace Lemegeton
             if (UserInterface.IconButton(FontAwesomeIcon.Trash, I18n.Translate("Timelines/DeleteProfile")) == true)
             {
                 Log(LogLevelEnum.Debug, "Deleting profile {0}", SelectedProfile.Name);
-                SelectedTimeline.RemoveProfile(SelectedProfile, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
+                SelectedTimeline.RemoveProfile(SelectedProfile, _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.ClassJob.RowId : 0);
                 SelectedProfile = SelectedTimeline.DefaultProfile;
             }
             if (SelectedProfile == null || SelectedProfile.Default == true)
@@ -2337,7 +2338,7 @@ namespace Lemegeton
                     string prname = _newProfileName.Trim();
                     Log(LogLevelEnum.Debug, "Creating new blank profile as {0}", prname);
                     Timeline.Profile pro = new Timeline.Profile() { Name = prname };
-                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);                    
+                    tl.AddProfile(pro, _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.ClassJob.RowId : 0);                    
                     SelectedProfile = pro;
                     ImGui.CloseCurrentPopup();
                 }
@@ -2370,7 +2371,7 @@ namespace Lemegeton
                     Timeline.Profile pro = orp.Duplicate();
                     pro.Default = false;
                     pro.Name = prname;
-                    tl.AddProfile(pro, _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
+                    tl.AddProfile(pro, _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.ClassJob.RowId : 0);
                     SelectedProfile = pro;
                     ImGui.CloseCurrentPopup();
                 }
@@ -2562,7 +2563,7 @@ namespace Lemegeton
                         SelectedProfile.ApplyOnJobs = newmap;
                         if (_state._timeline != null)
                         {
-                            _state._timeline.SelectProfiles(_state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.ClassJob.RowId : 0);
+                            _state._timeline.SelectProfiles(_state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.ClassJob.RowId : 0);
                         }
                     }
                 }
@@ -4137,7 +4138,7 @@ namespace Lemegeton
             _state.NumFeaturesHack = 0;
             _state.NumFeaturesAutomation = 0;
 #endif
-            if (_state.cs.LocalPlayer != null)
+            if (_state.ot.LocalPlayer != null)
             {
                 foreach (Core.ContentCategory cc in _content)
                 {
@@ -4222,7 +4223,7 @@ namespace Lemegeton
                 {
                     sign = AutomarkerSigns.SignEnum.Plus;
                 }
-                DrawSoftmarkerOn(sign, _state.cs.LocalPlayer.GameObjectId);
+                DrawSoftmarkerOn(sign, _state.ot.LocalPlayer.GameObjectId);
             }
             else
             {
@@ -5293,13 +5294,13 @@ namespace Lemegeton
             ImGui.TableSetupColumn(I18n.Translate("Timelines/TimelineSelector/ColZoneFile"), ImGuiTableColumnFlags.WidthStretch | ImGuiTableColumnFlags.NoSort);
             ImGui.TableSetupColumn("##Lemegeton_TimelineSelector_actions", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoSort | ImGuiTableColumnFlags.NoResize);
             ImGui.TableHeadersRow();
-            Dictionary<ushort, Timeline> tlcopy;
+            Dictionary<uint, Timeline> tlcopy;
             lock (_state.AllTimelines)
             {
-                tlcopy = new Dictionary<ushort, Timeline>(_state.AllTimelines);
+                tlcopy = new Dictionary<uint, Timeline>(_state.AllTimelines);
             }
-            Dictionary<ushort, string> zonenames = new Dictionary<ushort, string>();
-            foreach (ushort t in tlcopy.Keys)
+            Dictionary<uint, string> zonenames = new Dictionary<uint, string>();
+            foreach (uint t in tlcopy.Keys)
             {
                 zonenames[t] = GetInstanceNameForTerritory(t);
             }
@@ -5472,7 +5473,7 @@ namespace Lemegeton
             ImGui.End();
         }
 
-        private void RemoveTimelineOverrideFrom(ushort territory)
+        private void RemoveTimelineOverrideFrom(uint territory)
         {
             Log(LogLevelEnum.Debug, "Removing timeline override from territory {0}", territory);
             lock (_state.TimelineOverrides)
@@ -5496,7 +5497,7 @@ namespace Lemegeton
             }
         }
 
-        private void SetTimelineOverrideToFile(ushort territory, string filename)
+        private void SetTimelineOverrideToFile(uint territory, string filename)
         {
             Log(LogLevelEnum.Debug, "Setting timeline override for territory {0} to {1}", territory, filename);
             Timeline tl = _state.LoadTimeline(filename);

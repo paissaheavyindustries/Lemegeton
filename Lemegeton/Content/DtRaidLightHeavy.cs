@@ -504,7 +504,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                var temp = _state.cs.LocalPlayer.Position;
+                var temp = _state.ot.LocalPlayer.Position;
                 if ((DateTime.Now - _active).TotalMilliseconds > 4000.0f)
                 {
                     _activeLr = 0;
@@ -686,7 +686,7 @@ namespace Lemegeton.Content
             base.Reset();
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             if (Enum.TryParse<ZoneEnum>(newZone.ToString(), out ZoneEnum parsedZone) == true)
             {

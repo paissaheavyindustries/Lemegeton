@@ -246,7 +246,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                IPlayerCharacter c = _state.cs.LocalPlayer;
+                IPlayerCharacter c = _state.ot.LocalPlayer;
                 Vector2 disp = ImGui.GetIO().DisplaySize;
                 foreach (GameObject go in _state.ot)
                 {
@@ -353,10 +353,10 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                IPlayerCharacter c = _state.cs.LocalPlayer;
+                IPlayerCharacter c = _state.ot.LocalPlayer;
                 foreach (GameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != ObjectKind.BattleNpc && go.ObjectKind != ObjectKind.Player)
+                    if (go.ObjectKind != ObjectKind.BattleNpc && go.ObjectKind != ObjectKind.Pc)
                     {
                         continue;
                     }
@@ -368,7 +368,7 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
-                    if (go.ObjectKind == ObjectKind.Player && DrawOnPlayers == false)
+                    if (go.ObjectKind == ObjectKind.Pc && DrawOnPlayers == false)
                     {
                         continue;
                     }

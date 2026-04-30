@@ -185,7 +185,7 @@ namespace Lemegeton.Content
             Reset();
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 777);
             if (newZoneOk == true && ZoneOk == false)

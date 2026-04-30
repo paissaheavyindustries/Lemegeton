@@ -110,7 +110,7 @@ namespace Lemegeton.Content
                 unsafe
                 {
                     ActionManager* am = ActionManager.Instance();
-                    return (am->GetActionStatus((ActionType)1, 268) == 0 && _state.cs.LocalPlayer.CurrentGp >= 100);
+                    return (am->GetActionStatus((ActionType)1, 268) == 0 && _state.ot.LocalPlayer.CurrentGp >= 100);
                 }
             }
 
@@ -265,7 +265,7 @@ namespace Lemegeton.Content
 
             protected override bool ExecutionImplementation()
             {
-                if (DateTime.Now < _reeval || _state.cs.LocalPlayer.ClassJob.RowId != 18)
+                if (DateTime.Now < _reeval || _state.ot.LocalPlayer.ClassJob.RowId != 18)
                 {
                     return false;
                 }
@@ -292,7 +292,7 @@ namespace Lemegeton.Content
                                 _reeval = DateTime.Now.AddMilliseconds(3000 + GetRandomDelay(500));
                                 return true;
                             }
-                            if (UseThaliakFavor == true && _state.cs.LocalPlayer.CurrentGp < _state.cs.LocalPlayer.MaxGp - 200 && _anglerStacks >= 3)
+                            if (UseThaliakFavor == true && _state.ot.LocalPlayer.CurrentGp < _state.ot.LocalPlayer.MaxGp - 200 && _anglerStacks >= 3)
                             {
                                 Log(Core.State.LogLevelEnum.Debug, null, "Applying Thaliak's Favor");
                                 _reeval = DateTime.Now.AddMilliseconds(500 + GetRandomDelay(500));
@@ -303,7 +303,7 @@ namespace Lemegeton.Content
                             {
                                 if (CanMooch() == false && CanMooch2() == false)
                                 {
-                                    if (_state.cs.LocalPlayer.CurrentGp >= 560)
+                                    if (_state.ot.LocalPlayer.CurrentGp >= 560)
                                     {
                                         Log(Core.State.LogLevelEnum.Debug, null, "Applying Patience 2");
                                         _reeval = DateTime.Now.AddMilliseconds(2000 + GetRandomDelay(1000));
@@ -379,7 +379,7 @@ namespace Lemegeton.Content
                         (param3 == 38 && IgnoreHeavy == false)
                     )
                     {
-                        if (_patience2Active == true && _state.cs.LocalPlayer.CurrentGp >= 50)
+                        if (_patience2Active == true && _state.ot.LocalPlayer.CurrentGp >= 50)
                         {
                             if (param3 == 36)
                             {

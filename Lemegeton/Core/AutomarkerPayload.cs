@@ -29,7 +29,7 @@ namespace Lemegeton.Core
         {
             if (markSelfOnly == true)
             {
-                if (go.GameObjectId != _st.cs.LocalPlayer.GameObjectId)
+                if (go.GameObjectId != _st.ot.LocalPlayer.GameObjectId)
                 {
                     return;
                 }

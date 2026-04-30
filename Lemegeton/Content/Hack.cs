@@ -53,11 +53,11 @@ namespace Lemegeton.Content
             protected override bool ExecutionImplementation()
             {
                 ImDrawListPtr draw;
-                ulong myid = _state.cs.LocalPlayer.GameObjectId;
+                ulong myid = _state.ot.LocalPlayer.GameObjectId;
                 int plys = 0;
                 foreach (GameObject go in _state.ot)
                 {
-                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.GameObjectId != myid)
+                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.GameObjectId != myid)
                     {
                         plys++;
                     }
@@ -135,7 +135,7 @@ namespace Lemegeton.Content
 
             private void GetCurrentPosition()
             {
-                GameObject go = _state.cs.LocalPlayer as GameObject;
+                GameObject go = _state.ot.LocalPlayer as GameObject;
                 X = go.Position.X;
                 Y = go.Position.Y;
                 Z = go.Position.Z;
@@ -147,7 +147,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                GameObject go = _state.cs.LocalPlayer as GameObject;
+                GameObject go = _state.ot.LocalPlayer as GameObject;
                 unsafe
                 {
                     GameObjectPtr* gop = (GameObjectPtr*)go.Address;

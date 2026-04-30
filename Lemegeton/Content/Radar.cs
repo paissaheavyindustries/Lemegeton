@@ -65,7 +65,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                Vector3 me = _state.cs.LocalPlayer.Position;
+                Vector3 me = _state.ot.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
@@ -77,7 +77,7 @@ namespace Lemegeton.Content
                         IBattleChara bc = (IBattleChara)go;
                         if (bc.CurrentHp > 0 && (_state.GetStatusFlags(bc) & Dalamud.Game.ClientState.Objects.Enums.StatusFlags.Hostile) != 0 && bc.ClassJob.RowId == 0)
                         {
-                            double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                            double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                             Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                             pt.Y = temp.Y + 10.0f;
                             string name = IncludeDistance == true ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
@@ -164,17 +164,17 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                ulong myid = _state.cs.LocalPlayer.GameObjectId;
-                Vector3 me = _state.cs.LocalPlayer.Position;
+                ulong myid = _state.ot.LocalPlayer.GameObjectId;
+                Vector3 me = _state.ot.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
                 float mul = 20.0f / defSize;
                 foreach (GameObject go in _state.ot)
                 {
-                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                    if (go.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc)
                     {
-                        double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                        double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                         Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
                         pt.Y = temp.Y + 10.0f;
                         string name = IncludeDistance == true && go.GameObjectId != myid ? String.Format("{0} ({1:0})", go.Name.ToString(), dist) : String.Format("{0}", go.Name.ToString());
@@ -343,14 +343,14 @@ namespace Lemegeton.Content
                 }
                 if (OnlyOnGatherers == true)
                 {
-                    uint myjob = _state.cs.LocalPlayer.ClassJob.RowId;
+                    uint myjob = _state.ot.LocalPlayer.ClassJob.RowId;
                     if (myjob != 16 && myjob != 17)
                     {
                         return false;
                     }
                 }
-                ulong myid = _state.cs.LocalPlayer.GameObjectId;
-                Vector3 origme = _state.cs.LocalPlayer.Position;
+                ulong myid = _state.ot.LocalPlayer.GameObjectId;
+                Vector3 origme = _state.ot.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 Vector3 me = _state.plug._ui.TranslateToScreen(origme.X, origme.Y, origme.Z);
                 float defSize = ImGui.GetFontSize();
@@ -470,11 +470,18 @@ namespace Lemegeton.Content
                     string[] temp = data.Split(";");
                     foreach (string t in temp)
                     {
-                        string[] item = t.Split("=", 2);
+                        string[] item = t.Split("=", 2);                        
                         switch (item[0])
                         {
                             case "Kind":
-                                Kind = (ObjectKind)Enum.Parse(typeof(ObjectKind), item[1]);
+                                {
+                                    string dalashit = item[1];
+                                    if (dalashit == "Player")
+                                    {
+                                        dalashit = "Pc";
+                                    }
+                                    Kind = (ObjectKind)Enum.Parse(typeof(ObjectKind), dalashit);
+                                }
                                 break;
                             case "IsRegex":
                                 IsRegex = bool.Parse(item[1]);
@@ -513,7 +520,7 @@ namespace Lemegeton.Content
                 internal State state;
 
                 private string inputbuffer = "";
-                private ObjectKind selKind = ObjectKind.Player;
+                private ObjectKind selKind = ObjectKind.Pc;
                 private bool selRegex = false;
 
                 public override void Deserialize(string data)
@@ -1271,7 +1278,7 @@ namespace Lemegeton.Content
                 }
                 Vector2 pt = new Vector2();
                 Vector3 temp = _state.plug._ui.TranslateToScreen(go.Position.X, go.Position.Y, go.Position.Z);
-                double dist = Vector3.Distance(_state.cs.LocalPlayer.Position, go.Position);
+                double dist = Vector3.Distance(_state.ot.LocalPlayer.Position, go.Position);
                 Vector4 mycol = ObjectColor;                
                 switch (e.Type)
                 {
@@ -1315,7 +1322,7 @@ namespace Lemegeton.Content
                 sz.Y *= mul;
                 pt.X = temp.X - (sz.X / 2.0f);
                 pt.Y = temp.Y + 10.0f;
-                Vector3 tf = _state.cs.LocalPlayer.Position;
+                Vector3 tf = _state.ot.LocalPlayer.Position;
                 Vector3 tt = go.Position;
                 float distance = Vector3.Distance(tf, tt);
                 double anglexz = Math.Atan2(tf.Z - tt.Z, tf.X - tt.X);
@@ -1437,7 +1444,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                ushort curter = _state.cs.TerritoryType;
+                uint curter = _state.cs.TerritoryType;
                 DateTime run = DateTime.Now;
                 Dictionary<ObjectKind, List<Entry>> lookup = LookFor.entries.GroupBy(x => x.Kind).ToDictionary(x => x.Key, x => x.ToList());
                 if (IncludeRankS == true)

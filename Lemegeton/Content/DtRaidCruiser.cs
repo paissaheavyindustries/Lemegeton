@@ -547,7 +547,7 @@ namespace Lemegeton.Content
             base.Reset();
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             if (Enum.TryParse<ZoneEnum>(newZone.ToString(), out ZoneEnum parsedZone) == true)
             {

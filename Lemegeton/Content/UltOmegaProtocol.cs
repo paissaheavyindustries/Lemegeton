@@ -638,7 +638,7 @@ namespace Lemegeton.Content
 
             public void FeedTether(uint actorId1, uint actorId2)
             {
-                ulong myid = _state.cs.LocalPlayer.GameObjectId;
+                ulong myid = _state.ot.LocalPlayer.GameObjectId;
                 if (actorId1 == myid || actorId2 == myid)
                 {
                     Log(State.LogLevelEnum.Debug, null, "Registered tether between {0:X} and {1:X}", actorId1, actorId2);
@@ -670,10 +670,10 @@ namespace Lemegeton.Content
                 _state.InvokeZoneChange(1122);
                 _currentDebuff = 0;
                 _partnerId = 0;
-                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
                 foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
@@ -717,7 +717,7 @@ namespace Lemegeton.Content
                     return false;
                 }
                 Vector3 t1, t2;
-                Vector3 p1 = _state.cs.LocalPlayer.Position;
+                Vector3 p1 = _state.ot.LocalPlayer.Position;
                 Vector3 p2 = go.Position;
                 float dist = Vector3.Distance(p1, p2);
                 double anglexz = Math.Atan2(p1.Z - p2.Z, p1.X - p2.X);
@@ -1264,7 +1264,7 @@ namespace Lemegeton.Content
                 _state.InvokeZoneChange(1122);
                 Random r = new Random();
                 int test = r.Next(0, 2);
-                FeedAction(_state.cs.LocalPlayer.GameObjectId, (uint)(test == 0 ? AbilityBossMonitorDeltaLeft : AbilityBossMonitorDeltaRight));
+                FeedAction(_state.ot.LocalPlayer.GameObjectId, (uint)(test == 0 ? AbilityBossMonitorDeltaLeft : AbilityBossMonitorDeltaRight));
                 omegaPos = (DirectionsEnum)r.Next(0, 4);
             }
 
@@ -2065,7 +2065,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             // normal modes included for some easier testing
             bool newZoneOk = (newZone == 800 || newZone == 804 || newZone == 1122);

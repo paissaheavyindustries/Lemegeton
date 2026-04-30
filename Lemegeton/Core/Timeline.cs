@@ -430,7 +430,7 @@ namespace Lemegeton.Core
         [XmlAttribute]
         public Guid Id = Guid.NewGuid();
         [XmlAttribute]
-        public ushort Territory { get; set; }
+        public uint Territory { get; set; }
         [XmlAttribute]
         public string Description { get; set; } = "(undefined)";
 

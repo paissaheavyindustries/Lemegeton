@@ -275,7 +275,7 @@ namespace Lemegeton.Content
                         case StatusCompressedWater:
                             {
                                 IGameObject go = _state.GetActorById(actorId);
-                                if (SelfMarkOnly == false || _state.cs.LocalPlayer.GameObjectId == go.GameObjectId)
+                                if (SelfMarkOnly == false || _state.ot.LocalPlayer.GameObjectId == go.GameObjectId)
                                 {
                                     AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                                     ap.Assign(Signs.Roles["Water"], go);
@@ -287,7 +287,7 @@ namespace Lemegeton.Content
                         case StatusCompressedLightning:
                             {
                                 IGameObject go = _state.GetActorById(actorId);
-                                if (SelfMarkOnly == false || _state.cs.LocalPlayer.GameObjectId == go.GameObjectId)
+                                if (SelfMarkOnly == false || _state.ot.LocalPlayer.GameObjectId == go.GameObjectId)
                                 {
                                     AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                                     ap.Assign(Signs.Roles["Lightning"], go);
@@ -1196,7 +1196,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {            
             bool newZoneOk = (newZone == 887);
             if (newZoneOk == true && ZoneOk == false)

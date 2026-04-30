@@ -22,7 +22,7 @@ namespace Lemegeton.Content
             st.OnZoneChange += OnZoneChange;
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone >= 1099 && newZone <= 1108);
             if (newZoneOk == true && ZoneOk == false)

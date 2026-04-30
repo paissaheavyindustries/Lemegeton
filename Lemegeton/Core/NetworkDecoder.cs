@@ -353,7 +353,7 @@ namespace Lemegeton.Core
                     }
                 }
             }
-            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains((int)_st._territoryCurrent))
             {
                 _st.Log(State.LogLevelEnum.Debug, null, "SEL: {0}", string.Join(", ", temp));
             }
@@ -362,7 +362,7 @@ namespace Lemegeton.Core
 
         internal unsafe void Decode(nint dataPtr, ushort opCode, uint sourceActorId, uint targetActorId)
         {
-            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.Opcodes) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+            if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.Opcodes) != 0 && _currentOpcodeRegion.DebugInstances.Contains((int)_st._territoryCurrent))
             {
                 _st.Log(State.LogLevelEnum.Debug, null, "Opcode: {0} / {1:X} (source: {2:X8}, target: {3:X8})", opCode, opCode, sourceActorId, targetActorId);
             }
@@ -440,7 +440,7 @@ namespace Lemegeton.Core
                         );
                     }
                 }
-                if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains(_st._territoryCurrent))
+                if ((_currentOpcodeRegion?.DebugFlags & Blueprint.DebugFlags.StatusEffects) != 0 && _currentOpcodeRegion.DebugInstances.Contains((int)_st._territoryCurrent))
                 {
                     _st.Log(State.LogLevelEnum.Debug, null, "ER: {0}", string.Join(", ", temp));
                 }

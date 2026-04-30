@@ -143,7 +143,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(1179);
-                _midCrystalId = _state.cs.LocalPlayer.GameObjectId;
+                _midCrystalId = _state.ot.LocalPlayer.GameObjectId;
             }
 
             internal void FeedMidCrystal(IGameObject go)
@@ -270,7 +270,7 @@ namespace Lemegeton.Content
                 }
                 _state.InvokeZoneChange(1179);
                 Random r = new Random();
-                _lalaId = _state.cs.LocalPlayer.GameObjectId;
+                _lalaId = _state.ot.LocalPlayer.GameObjectId;
                 _lalaStatus = (uint)(r.Next(0, 2) == 0 ? StatusLalaThree : StatusLalaFive);
                 _lalaHeadmarker = (uint)(r.Next(0, 2) == 0 ? HeadmarkerLalaCW : HeadmarkerLalaCCW);
                 switch (r.Next(0, 4))
@@ -517,7 +517,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.GameObjectId)
+                if (actorId != _state.ot.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -552,7 +552,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.GameObjectId)
+                if (actorId != _state.ot.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -623,7 +623,7 @@ namespace Lemegeton.Content
                 {
                     return true;
                 }
-                IGameObject go = _state.cs.LocalPlayer;
+                IGameObject go = _state.ot.LocalPlayer;
                 Vector3 t1, t2;
                 Vector3 p1 = go.Position;
                 Vector3 p2, p3, p4;
@@ -736,7 +736,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.GameObjectId)
+                if (actorId != _state.ot.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -764,7 +764,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (actorId != _state.cs.LocalPlayer.GameObjectId)
+                if (actorId != _state.ot.LocalPlayer.GameObjectId)
                 {
                     return;
                 }
@@ -803,7 +803,7 @@ namespace Lemegeton.Content
                 {
                     return true;
                 }
-                IGameObject go = _state.cs.LocalPlayer;
+                IGameObject go = _state.ot.LocalPlayer;
                 Vector3 t1, t2;
                 Vector3 p1 = go.Position;
                 Vector3 p2, p3, p4, p5;
@@ -937,7 +937,7 @@ namespace Lemegeton.Content
                     }
                     return;
                 }
-                _staticeId = _state.cs.LocalPlayer.GameObjectId;
+                _staticeId = _state.ot.LocalPlayer.GameObjectId;
                 _state.InvokeZoneChange(1179);
                 Random r = new Random();
                 for (int i = 0; i < 8; i++)
@@ -1067,10 +1067,10 @@ namespace Lemegeton.Content
                     return;
                 }                
                 _state.InvokeZoneChange(1179);
-                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
                 foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
@@ -1102,7 +1102,7 @@ namespace Lemegeton.Content
                 {
                     return;
                 }
-                if (_trackerId == 0 && dest == _state.cs.LocalPlayer.GameObjectId)
+                if (_trackerId == 0 && dest == _state.ot.LocalPlayer.GameObjectId)
                 {
                     _trackerId = src;
                 }
@@ -1127,7 +1127,7 @@ namespace Lemegeton.Content
                 }
                 Vector3 pos = new Vector3(go.Position.X, go.Position.Y, go.Position.Z);
                 Vector3 t1 = _state.plug._ui.TranslateToScreen(pos.X, pos.Y, pos.Z);
-                go = _state.cs.LocalPlayer;
+                go = _state.ot.LocalPlayer;
                 Vector3 pos2 = new Vector3(go.Position.X, go.Position.Y, go.Position.Z);
                 Vector3 t2 = _state.plug._ui.TranslateToScreen(pos2.X, pos2.Y, pos2.Z);
                 draw.AddLine(new Vector2(t1.X, t1.Y), new Vector2(t2.X, t2.Y), ImGui.GetColorU32(TetherColor), 5.0f);
@@ -1453,7 +1453,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 1179 || newZone == 1180);
             if (newZoneOk == true && ZoneOk == false)

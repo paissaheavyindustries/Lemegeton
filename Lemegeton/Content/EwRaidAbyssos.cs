@@ -287,7 +287,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 1086);
             if (newZoneOk == true && ZoneOk == false)

@@ -56,12 +56,12 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(1238);
-                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
                 _idGrief = me.GameObjectId;
                 _idEater = me.GameObjectId;
                 foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
@@ -97,12 +97,12 @@ namespace Lemegeton.Content
 
             protected void Render(ImDrawListPtr draw, bool configuring)
             {
-                IGameObject goR = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idGrief);
+                IGameObject goR = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idGrief);
                 if (goR == null)
                 {
                     return;
                 }
-                IGameObject goG = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idEater);
+                IGameObject goG = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idEater);
                 if (goG == null)
                 {
                     return;
@@ -293,17 +293,21 @@ namespace Lemegeton.Content
             st.OnZoneChange += OnZoneChange;
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone >= 1281 && newZone <= 1290);
             bool bossZoneOk = (newZone == 1311 || newZone == 1333);
             if (newZoneOk == true && DungeonZoneOk == false)
             {
-                Log(State.LogLevelEnum.Info, null, "Dungeon content available");                
-                _doubleTrouble = null;
-                _doubleTrouble.Reset();
-            }
-            else if (bossZoneOk == true && BossZoneOk == false)
+                Log(State.LogLevelEnum.Info, null, "Dungeon content available");
+                if (_doubleTrouble != null)
+                {
+                    _doubleTrouble._idEater = 0;
+                    _doubleTrouble._idGrief = 0;
+					_doubleTrouble = null;
+				}
+			}
+			else if (bossZoneOk == true && BossZoneOk == false)
             {
                 Log(State.LogLevelEnum.Info, null, "Quantum content available");
                 _doubleTrouble = (DoubleTrouble)Items["DoubleTrouble"];
@@ -313,9 +317,13 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Info, null, "Content unavailable");
                 _state.OnCombatantAdded -= OnCombatantAdded;
-                _doubleTrouble = null;
-                _doubleTrouble.Reset();
-            }
+                if (_doubleTrouble != null)
+                {
+                    _doubleTrouble._idEater = 0;
+                    _doubleTrouble._idGrief = 0;
+					_doubleTrouble = null;
+				}
+			}
             DungeonZoneOk = newZoneOk;
             BossZoneOk = bossZoneOk;
         }

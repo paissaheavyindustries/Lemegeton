@@ -852,12 +852,12 @@ namespace Lemegeton.Content
                     return;
                 }
                 _state.InvokeZoneChange(1238);
-                IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
                 _idRyne = me.GameObjectId;
                 _idGaia = me.GameObjectId;
                 foreach (IGameObject go in _state.ot)
                 {
-                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+                    if (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc && go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     {
                         continue;
                     }
@@ -893,12 +893,12 @@ namespace Lemegeton.Content
 
             protected void Render(ImDrawListPtr draw, bool configuring)
             {
-                IGameObject goR = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idRyne);
+                IGameObject goR = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idRyne);
                 if (goR == null)
                 {
                     return;
                 }
-                IGameObject goG = configuring == true ? _state.cs.LocalPlayer : _state.GetActorById(_idGaia);
+                IGameObject goG = configuring == true ? _state.ot.LocalPlayer : _state.GetActorById(_idGaia);
                 if (goG == null)
                 {
                     return;
@@ -1294,7 +1294,7 @@ namespace Lemegeton.Content
                 {
                     Reset();
                     _state.InvokeZoneChange(1238);
-                    IGameObject me = _state.cs.LocalPlayer as IGameObject;
+                    IGameObject me = _state.ot.LocalPlayer as IGameObject;
                     _hourglasses.Add(new Tuple<float, float, DateTime>(100.0f, 89.0f, DateTime.Now.AddSeconds(2.0)));
                     _hourglasses.Add(new Tuple<float, float, DateTime>(100.0f, 111.0f, DateTime.Now.AddSeconds(2.0)));
                     _hourglasses.Add(new Tuple<float, float, DateTime>(90.47372f, 94.5f, DateTime.Now.AddSeconds(12.0)));
@@ -1426,7 +1426,7 @@ namespace Lemegeton.Content
                 }
                 float x = _westEast == 1 ? 85.0f : 115.0f;
                 float z = _northSouth == 1 ? 85.0f : 115.0f;
-                Vector3 start = _state.plug._ui.TranslateToScreen(_state.cs.LocalPlayer.Position.X, 0.0, _state.cs.LocalPlayer.Position.Z);
+                Vector3 start = _state.plug._ui.TranslateToScreen(_state.ot.LocalPlayer.Position.X, 0.0, _state.ot.LocalPlayer.Position.Z);
                 Vector3 end = _state.plug._ui.TranslateToScreen(x, 0.0, z);
                 draw.PathLineTo(new Vector2(start.X, start.Y));
                 draw.PathLineTo(new Vector2(end.X, end.Y));
@@ -1694,7 +1694,7 @@ namespace Lemegeton.Content
             }
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 1238);
             if (newZoneOk == true && ZoneOk == false)

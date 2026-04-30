@@ -221,8 +221,8 @@ namespace Lemegeton.Core
         private delegate void PostCommandDelegate(IntPtr ui, IntPtr cmd, IntPtr unk1, byte unk2);
         private PostCommandDelegate _postCmdFuncptr = null;
         public Dictionary<AutomarkerSigns.SignEnum, ulong> SoftMarkers = new Dictionary<AutomarkerSigns.SignEnum, ulong>();
-        internal Dictionary<ushort, Timeline> AllTimelines = new Dictionary<ushort, Timeline>();
-        internal Dictionary<ushort, string> TimelineOverrides = new Dictionary<ushort, string>();
+        internal Dictionary<uint, Timeline> AllTimelines = new Dictionary<uint, Timeline>();
+        internal Dictionary<uint, string> TimelineOverrides = new Dictionary<uint, string>();
         internal List<Tuple<DateTime, string>>[] internalDebug;
         internal int internalDebugCursor = -1;
 
@@ -243,14 +243,14 @@ namespace Lemegeton.Core
         internal List<DeferredInvoke> InvoqFramework = new List<DeferredInvoke>();
         internal AutoResetEvent InvoqThreadNew = new AutoResetEvent(false);
         internal bool _newReactions = false;
-        internal ushort _territoryCurrent = 0;
-        internal ushort _territoryNext = 0;
+        internal uint _territoryCurrent = 0;
+        internal uint _territoryNext = 0;
 
         private Dictionary<nint, bool> _objectsInCombat = new Dictionary<nint, bool>();
         private Dictionary<nint, ulong> _objectsSeen = new Dictionary<nint, ulong>();
         private Dictionary<nint, ulong> _objectsToActors = new Dictionary<nint, ulong>();
 
-        internal delegate void ZoneChangeDelegate(ushort newZone);
+        internal delegate void ZoneChangeDelegate(uint newZone);
         internal event ZoneChangeDelegate OnZoneChange;
 
         internal delegate void CombatChangeDelegate(bool inCombat);
@@ -299,13 +299,13 @@ namespace Lemegeton.Core
         internal unsafe delegate StatusFlags StatusFlagGetterDelegate(BattleChara bc);
         internal StatusFlagGetterDelegate GetStatusFlags;
 
-        internal string FormatZoneChange(ushort newZone)
+        internal string FormatZoneChange(uint newZone)
         {
             string fmt = "InvokeZoneChange {0}";
             return String.Format(fmt, newZone);
         }
 
-        internal void InvokeZoneChange(ushort newZone)
+        internal void InvokeZoneChange(uint newZone)
         {
             fw.RunOnFrameworkThread(() =>
             {
@@ -582,7 +582,7 @@ namespace Lemegeton.Core
             {
                 if (source == null)
                 {
-                    source = cs.LocalPlayer;
+                    source = ot.LocalPlayer;
                 }
                 string location = plug.GetInstanceNameForTerritory(cs.TerritoryType);
                 MarkerApplication ma = new MarkerApplication()
@@ -614,14 +614,14 @@ namespace Lemegeton.Core
             Directory.CreateDirectory(Path.GetDirectoryName(path));
         }
 
-        public void LoadLocalTimelines(ushort territory)
+        public void LoadLocalTimelines(uint territory)
         {
             try
             {
                 PrepareFolder(cfg.TimelineLocalFolder);
                 var timelinefiles = Directory.GetFiles(cfg.TimelineLocalFolder, "*.timeline.xml").OrderBy(x => new FileInfo(x).LastWriteTime);
                 Regex rex = new Regex("Lemegeton_(?<territory>[0-9]{1,})[^0-9]");                
-                Dictionary<ushort, Timeline> tls = new Dictionary<ushort, Timeline>();
+                Dictionary<uint, Timeline> tls = new Dictionary<uint, Timeline>();
                 foreach (string fn in timelinefiles)
                 {
                     Match m = rex.Match(fn);
@@ -640,7 +640,7 @@ namespace Lemegeton.Core
                         tls[tlx.Territory] = tlx;
                     }
                 }
-                foreach (KeyValuePair<ushort, Timeline> kp in tls)
+                foreach (KeyValuePair<uint, Timeline> kp in tls)
                 {
                     lock (TimelineOverrides)
                     {
@@ -665,12 +665,12 @@ namespace Lemegeton.Core
 
         public void LoadOverriddenTimelines()
         {
-            Dictionary<ushort, string> tlcopy;
+            Dictionary<uint, string> tlcopy;
             lock (TimelineOverrides)                
             {
-                tlcopy = new Dictionary<ushort, string>(TimelineOverrides);
+                tlcopy = new Dictionary<uint, string>(TimelineOverrides);
             }
-            foreach (KeyValuePair<ushort, string> kp in tlcopy)
+            foreach (KeyValuePair<uint, string> kp in tlcopy)
             {
                 Timeline tlx = LoadTimeline(kp.Value);
                 Log(LogLevelEnum.Debug, null, "Timeline override from {0} set to territory {1}", kp.Value, kp.Key);
@@ -716,7 +716,7 @@ namespace Lemegeton.Core
             }
         }
 
-        public Timeline GetTimeline(ushort territory)
+        public Timeline GetTimeline(uint territory)
         {
             lock (AllTimelines)
             {
@@ -893,10 +893,10 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void AutoselectTimeline(ushort territory)
+        internal void AutoselectTimeline(uint territory)
         {
             _timeline = null;
-            if (cs.LocalPlayer == null)
+            if (ot.LocalPlayer == null)
             {
                 return;
             }
@@ -906,7 +906,7 @@ namespace Lemegeton.Core
                 tl = CheckTimelineReload(tl);
                 _timeline = tl;
                 _timeline.Reset(this);
-                int num = tl.SelectProfiles(cs.LocalPlayer.ClassJob.RowId);
+                int num = tl.SelectProfiles(ot.LocalPlayer.ClassJob.RowId);
                 if (num > 0)
                 {
                     Log(LogLevelEnum.Debug, null, "Timeline available for territory {0}, {1} selected profile(s)", territory, num);
@@ -923,7 +923,7 @@ namespace Lemegeton.Core
             ClearReactionQueue();
         }
 
-        internal void Cs_TerritoryChanged(ushort e)
+        internal void Cs_TerritoryChanged(uint e)
         {
             _territoryNext = e;
         }
@@ -939,7 +939,7 @@ namespace Lemegeton.Core
                 {
                     if (t != null)
                     {
-                        int num = t.SelectProfiles(cs.LocalPlayer.ClassJob.RowId);
+                        int num = t.SelectProfiles(ot.LocalPlayer.ClassJob.RowId);
                         if (num > 0)
                         {
                             Log(LogLevelEnum.Debug, null, "Resetting timeline on combat end, {0} selected profile(s)", num);
@@ -1445,7 +1445,7 @@ namespace Lemegeton.Core
 
         internal bool CurrentlyWellFed(float forAtLeast)
         {
-            StatusList sl = cs.LocalPlayer.StatusList;
+            StatusList sl = ot.LocalPlayer.StatusList;
             for (int i = 0; i < sl.Length; i++)
             {                
                 IStatus st = sl[i];
@@ -1522,7 +1522,7 @@ namespace Lemegeton.Core
                 if (
                     (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                     &&
-                    (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                    (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc)
                     &&
                     (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
                 )
@@ -1738,7 +1738,7 @@ namespace Lemegeton.Core
             switch (target.ToLower())
             {
                 case "<0>":
-                case "<me>": { return cs.LocalPlayer; }
+                case "<me>": { return ot.LocalPlayer; }
                 case "<1>": { Party pty = GetPartyMembers(); return pty.GetByIndex(1)?.GameObject; }
                 case "<2>": { Party pty = GetPartyMembers(); return pty.GetByIndex(2)?.GameObject; }
                 case "<3>": { Party pty = GetPartyMembers(); return pty.GetByIndex(3)?.GameObject; }
@@ -1748,9 +1748,9 @@ namespace Lemegeton.Core
                 case "<7>": { Party pty = GetPartyMembers(); return pty.GetByIndex(7)?.GameObject; }
                 case "<8>": { Party pty = GetPartyMembers(); return pty.GetByIndex(8)?.GameObject; }
                 case "<target>":
-                case "<t>": { return cs.LocalPlayer.TargetObject; }
+                case "<t>": { return ot.LocalPlayer.TargetObject; }
                 case "<tt>":
-                case "<t2t>": { return cs.LocalPlayer.TargetObject?.TargetObject; }
+                case "<t2t>": { return ot.LocalPlayer.TargetObject?.TargetObject; }
                 case "<attack1>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack1);  }
                 case "<attack2>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack2); }
                 case "<attack3>": { return GetSoftmarkHolder(AutomarkerSigns.SignEnum.Attack3); }
@@ -1849,9 +1849,9 @@ namespace Lemegeton.Core
                 pty.Members.Add(new Party.PartyMember()
                 {
                     Index = 1,
-                    Name = cs.LocalPlayer.Name.ToString(),
-                    ObjectId = cs.LocalPlayer.GameObjectId,
-                    GameObject = cs.LocalPlayer
+                    Name = ot.LocalPlayer.Name.ToString(),
+                    ObjectId = ot.LocalPlayer.GameObjectId,
+                    GameObject = ot.LocalPlayer
                 });
             }
             return pty;

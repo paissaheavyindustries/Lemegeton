@@ -396,7 +396,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                ulong me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.GameObjectId : 0;
+                ulong me = _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.GameObjectId : 0;
                 if (me == 0)
                 {
                     return false;
@@ -566,7 +566,7 @@ namespace Lemegeton.Content
                 }
             }
 
-            private void OnZoneChange(ushort newZone)
+            private void OnZoneChange(uint newZone)
             {
                 ClearDots(0);
             }
@@ -578,7 +578,7 @@ namespace Lemegeton.Content
 
             private void OnStatusChange(uint src, uint dest, uint statusId, bool gained, float duration, int stacks)
             {
-                ulong me = _state.cs.LocalPlayer != null ? _state.cs.LocalPlayer.GameObjectId : 0;
+                ulong me = _state.ot.LocalPlayer != null ? _state.ot.LocalPlayer.GameObjectId : 0;
                 if (me == 0 || src != me)
                 {
                     return;

@@ -547,7 +547,7 @@ namespace Lemegeton.Content
             CurrentPhase = PhaseEnum.Start;
         }
 
-        private void OnZoneChange(ushort newZone)
+        private void OnZoneChange(uint newZone)
         {
             bool newZoneOk = (newZone == 733);
             if (newZoneOk == true && ZoneOk == false)

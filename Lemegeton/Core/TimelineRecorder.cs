@@ -293,7 +293,7 @@ namespace Lemegeton.Core
             }
         }
 
-        private void _state_OnZoneChange(ushort newZone)
+        private void _state_OnZoneChange(uint newZone)
         {
             if (recState != RecordingStateEnum.Idle)
             {

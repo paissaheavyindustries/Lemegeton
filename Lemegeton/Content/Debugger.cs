@@ -61,7 +61,7 @@ namespace Lemegeton.Content
                 {
                     return false;
                 }
-                Vector3 me = _state.cs.LocalPlayer.Position;
+                Vector3 me = _state.ot.LocalPlayer.Position;
                 Vector2 pt = new Vector2();
                 me = _state.plug._ui.TranslateToScreen(me.X, me.Y, me.Z);
                 float defSize = ImGui.GetFontSize();
@@ -89,7 +89,7 @@ namespace Lemegeton.Content
                     }                    
                     switch (go.ObjectKind)
                     {
-                        case Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player:
+                        case Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc:
                             if (TagPlayers == false)
                             {
                                 continue;
@@ -671,7 +671,7 @@ namespace Lemegeton.Content
                     if (
                         (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
                         &&
-                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                        (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc)
                         &&
                         (go.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj)
                     )
@@ -805,7 +805,7 @@ namespace Lemegeton.Content
                 Log(_state.FormatTether(src, dest, tetherId));
             }
 
-            private void OnZoneChange(ushort newZone)
+            private void OnZoneChange(uint newZone)
             {
                 if (GoodToLog() == false)
                 {
