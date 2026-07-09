@@ -8,9 +8,6 @@ namespace Lemegeton.Core
     internal static class I18n
     {
 
-        internal delegate void FontDownloadRequest(Language lang);
-        internal static event FontDownloadRequest OnFontDownload;
-
         internal static Dictionary<string, Language> RegisteredLanguages = new Dictionary<string, Language>();
         internal static Language DefaultLanguage = null;
         private static Language _CurrentLanguage = null;
@@ -25,13 +22,6 @@ namespace Lemegeton.Core
                 if (value != _CurrentLanguage)
                 {
                     _CurrentLanguage = value;
-                    if (_CurrentLanguage != null && _CurrentLanguage.Font == null)
-                    {
-                        if (_CurrentLanguage.FontDownload != null && _CurrentLanguage.FontDownloadNecessary == true) 
-                        {
-                            OnFontDownload?.Invoke(_CurrentLanguage);
-                        }
-                    }
                 }
             }
         }
@@ -47,11 +37,6 @@ namespace Lemegeton.Core
             {
                 _CurrentLanguage = ld;
             }
-        }
-
-        internal static ImFontPtr? GetFont()
-        {
-            return CurrentLanguage != null ? CurrentLanguage.Font : DefaultLanguage.Font;
         }
 
         internal static string Translate(string key, params object[] args)

@@ -59,18 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.8.0";
-
-        internal class Downloadable
-        {
-
-            public string DownloadUrl { get; set; }
-            public string LocalFile { get; set; }
-            public object Object { get; set; }
-            public DownloadableCompletionDelegate OnSuccess { get; set; } = null;
-            public DownloadableCompletionDelegate OnFailure { get; set; } = null;
-
-        }
+        public string Version = "1.0.8.1";
 
         internal class ActionTypeItem
         {
@@ -117,11 +106,10 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.7.8"), "Changelog/1.0.7.8"),
             new Tuple<Version, string>(new System.Version("1.0.7.9"), "Changelog/1.0.7.9"),
 			new Tuple<Version, string>(new System.Version("1.0.8.0"), "Changelog/1.0.8.0"),
-		};
+            new Tuple<Version, string>(new System.Version("1.0.8.1"), "Changelog/1.0.8.1"),
+        };
         internal List<Version> ChangeLogVersions = null;        
 
-        internal delegate void DownloadableCompletionDelegate(Downloadable d);
-        private List<Tuple<Core.Language, string>> _fontBuilderQueue = new List<Tuple<Core.Language, string>>();
         private List<Notification> Notifications = new List<Notification>();
         private List<Notification> NotificationsQueue = new List<Notification>();
         private List<ActionTypeItem> ActionTypes = new List<ActionTypeItem>();
@@ -129,8 +117,7 @@ namespace Lemegeton
         private State _state = new State();
         private Thread _mainThread = null;
         private ManualResetEvent _stopEvent = new ManualResetEvent(false);
-        private AutoResetEvent _retryEvent = new AutoResetEvent(false);
-        private AutoResetEvent _downloadRequestEvent = new AutoResetEvent(false);
+        private AutoResetEvent _retryEvent = new AutoResetEvent(false);        
         private float _adjusterX = 0.0f;
         private float _adjusterXtl = 0.0f;
         private float _adjusterYtl = 0.0f;
@@ -142,9 +129,6 @@ namespace Lemegeton
         private bool _timelineSelectorOpened = false;
         private DateTime _aboutOpened;
         private Dictionary<Delegate, string[]> _delDebugInput = new Dictionary<Delegate, string[]>();
-        private Queue<Downloadable> _downloadQueue = new Queue<Downloadable>();
-        private bool _downloadPending = false;
-        private string _downloadFilename = "";
         private string _timelineActionFilter = "";
         private string _timelineSelectorZoneFilter = "";
         private string _timelineSelectorFileFilter = "";
@@ -314,7 +298,6 @@ namespace Lemegeton
             Log(LogLevelEnum.Info, "This is Lemegeton {0}", Version);
             LoadConfig();
             ApplyVersionChanges();
-            I18n.OnFontDownload += I18n_OnFontDownload;
             InitializeLanguage();
             InitializeContent();            
             _state.Initialize();
@@ -373,64 +356,6 @@ namespace Lemegeton
             }
         }
 
-        private void LoadFontFromDisk(Downloadable d)
-        {
-            Core.Language l = (Core.Language)d.Object;
-            lock (_fontBuilderQueue)
-            {
-                _fontBuilderQueue.Add(new Tuple<Core.Language, string>(l, d.LocalFile));
-                //_state.pi.UiBuilder.RebuildFonts(); todo
-            }
-        }
-
-        private void I18n_OnFontDownload(Core.Language lang)
-        {
-            Log(LogLevelEnum.Debug, "Font download requested for {0} from {1}", lang.LanguageName, lang.FontDownload);
-            Downloadable d = new Downloadable();
-            d.Object = lang;
-            d.DownloadUrl = lang.FontDownload;
-            d.OnSuccess = LoadFontFromDisk;
-            QueueForDownload(d);
-        }
-
-        private unsafe void UiBuilder_BuildFonts()
-        {
-            List<Tuple<Core.Language, string>> fonts = new List<Tuple<Core.Language, string>>();
-            lock (_fontBuilderQueue)
-            {
-                fonts.AddRange(_fontBuilderQueue);
-                _fontBuilderQueue.Clear();
-            }
-            foreach (Tuple<Core.Language, string> tp in fonts)
-            {
-                try
-                {
-                    ushort *range = null;
-                    switch (tp.Item1.GlyphRange)
-                    {
-                        case Core.Language.GlyphRangeEnum.ChineseSimplifiedCommon:
-                            range = ImGui.GetIO().Fonts.GetGlyphRangesChineseSimplifiedCommon();
-                            break;
-                        case Core.Language.GlyphRangeEnum.ChineseFull:
-                            range = ImGui.GetIO().Fonts.GetGlyphRangesChineseFull();
-                            break;
-                    }
-                    ImFontPtr font = ImGui.GetIO().Fonts.AddFontFromFileTTF(
-                        tp.Item2,
-                        18.0f,
-                        null,
-                        range
-                    );
-                    Log(LogLevelEnum.Debug, "Font loaded from {0}, setting font to language {1}", tp.Item2, tp.Item1.LanguageName);
-                    tp.Item1.Font = font;
-                }
-                catch (Exception ex)
-                {
-                    GenericExceptionHandler(ex);
-                }
-            }
-        }
-
         private void Cs_Login()
         {
             lock (this)
@@ -466,20 +391,17 @@ namespace Lemegeton
                 _state._markingFuncHook.Dispose();
                 _state._markingFuncHook = null;
             }
-            I18n.OnFontDownload -= I18n_OnFontDownload;
             _state.cs.Logout -= Cs_Logout;
             _state.cs.Login -= Cs_Login;
             Cs_Logout(0, 0);
             _state.Uninitialize();
-            _stopEvent.Set();
-            //_state.pi.UiBuilder.BuildFonts -= UiBuilder_BuildFonts; todo            
+            _stopEvent.Set();            
             SaveConfig();
             if (_state.InvoqThreadNew != null)
             {
                 _state.InvoqThreadNew.Dispose();
             }
             _mainThread.Join(1000);
-            _downloadRequestEvent.Dispose();
             _stopEvent.Dispose();
             _retryEvent.Dispose();
         }
@@ -488,7 +410,7 @@ namespace Lemegeton
         {
             Log(State.LogLevelEnum.Info, "Changing language to {0}", language);
             I18n.ChangeLanguage(language);
-            Log(State.LogLevelEnum.Info, "Language changed to {0}", I18n.CurrentLanguage.LanguageName);
+            Log(State.LogLevelEnum.Info, "Language changed to {0}", I18n.CurrentLanguage?.LanguageName);
         }
 
         internal void GenericExceptionHandler(Exception ex)
@@ -499,15 +421,6 @@ namespace Lemegeton
         internal void Log(State.LogLevelEnum level, string message, params object[] args)
         {
             _state.Log(level, null, message, args);
-        }
-
-        private void QueueForDownload(Downloadable d)
-        {
-            lock (_downloadQueue)
-            {
-                _downloadQueue.Enqueue(d);
-                _downloadRequestEvent.Set();
-            }
         }
 
         private void AddPropertiesToNode(XmlElement n, object o, List<Tuple<PropertyInfo, int>> props)
@@ -1135,8 +1048,9 @@ namespace Lemegeton
 
                 try
                 {
-                    //Log(LogLevelEnum.Debug, "Creating Language {0}", type.Name.ToString());
-                    Core.Language c = (Core.Language)Activator.CreateInstance(type, new object[] { _state });
+                    Log(LogLevelEnum.Debug, "Creating Language {0}", type.Name.ToString());
+                    Core.Language c = (Core.Language)Activator.CreateInstance(type);
+                    Log(LogLevelEnum.Debug, "Created Language {0} (default: {1})", c.LanguageName, c.IsDefault);
                     I18n.AddLanguage(c);
                 }
                 catch (Exception ex)
@@ -4106,16 +4020,7 @@ namespace Lemegeton
             }
             _state.TrackObjects();
             _softMarkerPreview = false;
-            ImFontPtr? font = I18n.GetFont();
-            if (font != null)
-            {
-                ImGui.PushFont((ImFontPtr)font);
-            }
             DrawMainWindow();
-            if (font != null)
-            {
-                ImGui.PopFont();
-            }
             DrawContent();
             DrawSoftmarkers();
             if (_renderTimelineOverlay == true && _state.cfg.QuickToggleOverlays == true && _state.cfg.TimelineOverlayVisible == true)
@@ -5159,27 +5064,6 @@ namespace Lemegeton
             ImGuiStylePtr style = ImGui.GetStyle();
             Vector2 fsz = ImGui.GetContentRegionAvail();
             fsz.Y -= ImGui.GetTextLineHeight() + (style.ItemSpacing.Y * 2) + style.WindowPadding.Y;
-            bool dling = _downloadPending;
-            string dlfn = _downloadFilename;
-            if (dling == true)
-            {
-                Vector2 tenp = ImGui.GetCursorPos();
-                float time = (float)((DateTime.Now - _loaded).TotalMilliseconds / 600.0);
-                IDalamudTextureWrap tw = _ui.GetMiscIcon(UserInterface.MiscIconEnum.Exclamation).GetWrapOrEmpty();
-                ImGui.Image(
-                    tw.Handle, new Vector2(tw.Width, tw.Height),
-                    new Vector2(0, 0), new Vector2(1, 1),
-                    new Vector4(1.0f, 1.0f, 1.0f, 0.5f + 0.5f * (float)Math.Abs(Math.Cos(time)))
-                );
-                Vector2 anp1 = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(tenp.X + tw.Width + 10, tenp.Y));
-                ImGui.TextWrapped("Downloading, please wait.." + Environment.NewLine + (dlfn != null ? dlfn : ""));
-                Vector2 anp2 = ImGui.GetCursorPos();
-                ImGui.SetCursorPos(new Vector2(tenp.X, Math.Max(anp1.Y, anp2.Y)));
-                ImGui.Separator();
-                fsz.Y -= ImGui.GetCursorPosY() - tenp.Y;
-                ImGui.BeginDisabled();
-            }
             ImGui.BeginChild("LemmyFrame", fsz);
             ImGui.BeginTabBar("Lemmytabs");
             // changelog
@@ -5255,10 +5139,6 @@ namespace Lemegeton
             }
             ImGui.EndTabBar();
             ImGui.EndChild();
-            if (dling == true)
-            {
-                ImGui.EndDisabled();
-            }
             RenderFooter();
             UserInterface.KeepWindowInSight();
             ImGui.End();
@@ -5932,113 +5812,13 @@ namespace Lemegeton
             return doc;
         }
 
-        internal void ProcessDownloadQueue()
-        {
-            Downloadable d = null;
-            do
-            {
-                lock (_downloadQueue)
-                {
-                    if (_downloadQueue.Count > 0)
-                    {
-                        d = _downloadQueue.Dequeue();
-                    }
-                    else
-                    {
-                        d = null;
-                    }
-                }
-                if (d == null)
-                {
-                    continue;
-                }
-                _downloadPending = true;
-                _downloadFilename = d.DownloadUrl;
-                try
-                {
-                    string localfn = DownloadFileFromUri(d.DownloadUrl);
-                    if (localfn == null)
-                    {
-                        d.OnFailure?.Invoke(d);
-                    }
-                    else
-                    {
-                        d.LocalFile = localfn;
-                        d.OnSuccess?.Invoke(d);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    GenericExceptionHandler(ex);
-                }
-            }
-            while (d != null);
-            _downloadPending = false;
-            _downloadFilename = "";
-        }
-
-        internal string DownloadFileFromUri(string uri)
-        {
-            try
-            {
-                Uri u = new Uri(uri);
-                Log(LogLevelEnum.Debug, "Downloading file from URI {0}", uri);
-                if (u.IsFile == true)
-                {
-                    Log(LogLevelEnum.Debug, "Local file, exists as {0}", u.LocalPath);
-                    return u.LocalPath;
-                }
-                else
-                {
-                    string md5 = GenerateMD5Hash(uri);
-                    string fileext = Path.GetExtension(u.AbsoluteUri);
-                    string temp = Path.GetTempPath();
-                    string dlfile = Path.Combine(temp, md5 + fileext);
-                    if (File.Exists(dlfile) == true)
-                    {
-                        Log(LogLevelEnum.Debug, "Download {0} already exists as {1}", uri, dlfile);
-                        return dlfile;
-                    }
-                    Log(LogLevelEnum.Debug, "Downloading from URI {0}..", uri);
-                    using HttpClient http = new HttpClient();
-                    using HttpRequestMessage req = new HttpRequestMessage()
-                    {
-                        Method = HttpMethod.Get,
-                        RequestUri = u
-                    };
-                    using HttpResponseMessage resp = http.Send(req);
-                    if (resp.StatusCode != System.Net.HttpStatusCode.OK)
-                    {
-                        Log(State.LogLevelEnum.Error, null, "Couldn't load file from {0}, response code was: {1}", uri, resp.StatusCode);
-                        return null;
-                    }
-                    byte[] data;
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        resp.Content.ReadAsStream().CopyTo(ms);
-                        data = ms.ToArray();
-                    }
-                    Log(LogLevelEnum.Debug, "Downloaded {0}, writing to {1}", uri, dlfile);
-                    File.WriteAllBytes(dlfile, data);
-                    Log(LogLevelEnum.Debug, "Downloaded {0} as {1}", uri, dlfile);
-                    return dlfile;
-                }
-            }
-            catch (Exception ex)
-            {
-                GenericExceptionHandler(ex);
-            }
-            return null;
-        }
-
         public void MainThreadProc(object o)
         {
             Plugin p = (Plugin)o;
-            WaitHandle[] wh = new WaitHandle[4];
+            WaitHandle[] wh = new WaitHandle[3];
             wh[0] = p._stopEvent;
             wh[1] = _state.InvoqThreadNew;
-            wh[2] = p._downloadRequestEvent;
-            wh[3] = p._retryEvent;
+            wh[2] = p._retryEvent;
             int timeout = 0;
             int tries = 0;
             bool ready = false;
@@ -6054,9 +5834,6 @@ namespace Lemegeton
                             timeout = _state.ProcessInvocations(_state.InvoqThread);
                             break;
                         case 2:
-                            ProcessDownloadQueue();
-                            break;
-                        case 3:
                             Log(LogLevelEnum.Debug, "Going to reload opcodes");
                             _state.UnprepareInternals();
                             ready = false;

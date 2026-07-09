@@ -1,4 +1,5 @@
 ﻿using Lemegeton.Core;
+using static Lemegeton.Content.UltDancingMad;
 
 namespace Lemegeton.Language
 {
@@ -8,12 +9,98 @@ namespace Lemegeton.Language
 
         public override bool IsDefault => true;
         public override string LanguageName => "English";
-        public override bool FontDownloadNecessary => false;
-        public override string FontDownload => null;
-        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.Undefined;
 
-        public English(State st) : base(st)
+        public English()
         {
+            #region 1.0.8.1
+            AddEntry("Changelog/1.0.8.1", " Added automarker for UMAD P2 Forsaken");
+            AddEntry("Content/Ultimate/UltDancingMad", "Dancing Mad (Ultimate)");
+            AddEntry("Content/Ultimate/UltDancingMad/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM", "(P1) Double-trouble Trap automarker");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/Signs/Trap1", "Trap 1");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/Signs/Trap2", "Trap 2");
+            AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM", "(P2) Forsaken automarker");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Strategy", "Solver strategy");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Strategy/AAABBBBA", "AAABBBBA");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Strategy/ABBAABBA", "ABBAABBA");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsideCone1", "Cone 1");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsideCone2", "Cone 2");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsideStack1", "Stack 1");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsideStack2", "Stack 2");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsidePb1", "Point blank 1");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/InsidePb2", "Point blank 2");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/Outside1", "Outside 1");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/Outside2", "Outside 2");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/Outside3", "Outside 3");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Signs/Outside4", "Outside 4");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/ForsakenAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM", "(P3) Ultima Blaster automarker");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/ClockwiseFromNorth", "Mark by static safe spots clockwise from north");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign1", "One");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign2", "Two");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign3", "Three");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign4", "Four");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign5", "Five");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign6", "Six");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign7", "Seven");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Signs/Sign8", "Eight");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/UltimaBlasterAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM", "(P3) Black Hole automarker");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/MarkOnlyNecessary", "Mark only the needed 1-3 people per set");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/AccretionLast", "Accretion last in set");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs", "Marker configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/First1", "First in Line 1");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/First2", "First in Line 2");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/First3", "First in Line 3");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/Second1", "Second in Line 1");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/Second2", "Second in Line 2");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/Second3", "Second in Line 3");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/Third1", "Third in Line 1");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Signs/Third2", "Third in Line 2");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/BlackHoleAM/Test", "Test random assignment");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM", "(P4) Kefka Says automarker");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Enabled", "Enabled");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/SelfMarkOnly", "Self-marking only");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/AsSoftmarker", "Show as client-side soft markers");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1", "Stack/spread markers");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack1", "Stack 1");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack2", "Stack 2");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack3", "Stack 3");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack4", "Stack 4");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack5", "Stack 5");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Stack6", "Stack 6");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Forked1", "Spread 1");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs1/Forked2", "Spread 2");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs2", "Gaze markers");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs2/LookAt1", "Look at 1");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs2/LookAt2", "Look at 2");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs2/LookAway1", "Look away 1");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs2/LookAway2", "Look away 2");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs3", "Tsunami/Inferno markers");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs3/Donut", "Donut");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Signs3/Twister", "Twister");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Prio", "Priority configuration");
+            AddEntry("Content/Ultimate/UltDancingMad/KefkaSaysAM/Test", "Test random assignment");
+            #endregion
             #region 1.0.8.0
             AddEntry("Changelog/1.0.8.0", " Dalamud API 15\n Fixed Pilgrim's Traverse Deep Dungeon");
             #endregion

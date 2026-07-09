@@ -8,11 +8,8 @@ namespace Lemegeton.Language
 
         public override bool IsDefault => false;
         public override string LanguageName => "Dansk";
-        public override bool FontDownloadNecessary => false;
-        public override string FontDownload => null;
-        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.Undefined;
 
-        public Danish(State st) : base(st)
+        public Danish()
         {
             #region 1.0.8.0
             //AddEntry("Changelog/1.0.8.0", " Dalamud API 15\n Fixed Pilgrim's Traverse Deep Dungeon");

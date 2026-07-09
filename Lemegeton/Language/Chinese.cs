@@ -8,11 +8,8 @@ namespace Lemegeton.Language
 
         public override bool IsDefault => false;
         public override string LanguageName => "中文";
-        public override bool FontDownloadNecessary { get { return (int)_state.cs.ClientLanguage != 4; } }
-        public override string FontDownload => @"https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf";
-        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.ChineseFull;
 
-        public Chinese(State st) : base(st)
+        public Chinese() : base()
         {
             #region 1.0.8.0
             //AddEntry("Changelog/1.0.8.0", " Dalamud API 15\n Fixed Pilgrim's Traverse Deep Dungeon");

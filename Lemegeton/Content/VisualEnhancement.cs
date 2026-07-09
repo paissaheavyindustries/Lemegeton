@@ -262,31 +262,38 @@ namespace Lemegeton.Content
                     {
                         continue;
                     }
+                    int exp = 0;
                     try
                     {
                         if (!(go is IBattleChara))
                         {
                             continue;
                         }
+                        exp = 1;
                         bool isTargettable;
                         unsafe
                         {
                             GameObjectPtr* gop = (GameObjectPtr*)go.Address;
                             isTargettable = gop->GetIsTargetable();
                         }
+                        exp = 2;
                         if (OnlyTargettable == true && isTargettable == false)
                         {
                             continue;
                         }
                         IBattleChara bc = go as IBattleChara;
-                        if (bc.IsCasting == true && bc.CastActionId > 0)
+                        exp = 3;
+                        if (bc != null && bc.IsCasting == true && bc.CastActionId > 0)
                         {
+                            exp = 4;
                             Vector3 pos = _state.plug._ui.TranslateToScreen(
                                 go.Position.X + _visualBarOffsetWorldX,
                                 go.Position.Y + _visualBarOffsetWorldY,
                                 go.Position.Z + _visualBarOffsetWorldZ
                             );
+                            exp = 5;
                             pos = new Vector3(pos.X + _visualBarOffsetScreenX, pos.Y + _visualBarOffsetScreenY, pos.Z);
+                            exp = 6;
                             if (ClampToScreen == true)
                             {                                
                                 if (pos.X < 0.0f + (_visualBarWidth / 2.0f))
@@ -306,6 +313,7 @@ namespace Lemegeton.Content
                                     pos.Y = disp.Y;
                                 }
                             }
+                            exp = 7;
                             DrawCastBar(draw, pos.X - (_visualBarWidth / 2.0f), pos.Y - _visualBarHeight, _visualBarWidth, _visualBarHeight, bc.TotalCastTime - bc.CurrentCastTime, bc.TotalCastTime, bc.IsCastInterruptible,
                                 ShowCastName == true ? _state.plug.GetActionName(bc.CastActionId) : ""                                
                             );
@@ -313,7 +321,11 @@ namespace Lemegeton.Content
                     }
                     catch (Exception ex)
                     {
-                        Log(LogLevelEnum.Error, ex, "Exception when drawing {0}", go);
+                        if (exp != 3)
+                        {
+                            // IsCasting/CastActionId can throw an exception because dalamud lmao
+                            Log(LogLevelEnum.Error, ex, "Exception {0} when drawing {1}", exp, go);
+                        }
                     }
                 }
                 return true;

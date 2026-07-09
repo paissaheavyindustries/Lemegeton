@@ -8,11 +8,8 @@ namespace Lemegeton.Language
 
         public override bool IsDefault => false;
         public override string LanguageName => "Korean";
-        public override bool FontDownloadNecessary => false;
-        public override string FontDownload => null;
-        public override GlyphRangeEnum GlyphRange => GlyphRangeEnum.Undefined;
 
-        public Korean(State st) : base(st)
+        public Korean()
         {
             #region 1.0.8.0
             //AddEntry("Changelog/1.0.8.0", " Dalamud API 15\n Fixed Pilgrim's Traverse Deep Dungeon");
