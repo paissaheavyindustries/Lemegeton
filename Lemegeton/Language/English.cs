@@ -12,6 +12,9 @@ namespace Lemegeton.Language
 
         public English()
         {
+            #region 1.0.8.3
+            AddEntry("Changelog/1.0.8.3", " Fixes to UMAD P4 Kefka Says automarker");
+            #endregion
             #region 1.0.8.2
             AddEntry("Changelog/1.0.8.2", " Fixed UMAD P3 Black Hole automarker");
             #endregion

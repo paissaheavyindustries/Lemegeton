@@ -1408,8 +1408,7 @@ namespace Lemegeton.Content
                     CurrentPhase = PhaseEnum.P3_BlackHole;
                     break;
                 case AbilityKefkaSays:
-                    CurrentPhase = PhaseEnum.P4_KefkaSays;
-                    _kefkaSaysAM.CurrentSet = 1;
+                    CurrentPhase = PhaseEnum.P4_KefkaSays;                    
                     break;
                 case AbilityFloodOfNaught1:
                 case AbilityFloodOfNaught2:
