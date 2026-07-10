@@ -21,7 +21,7 @@ namespace Lemegeton.Content
         private const int AbilityDefinitionOfInsanity = 47842;
         private const int AbilityUltimaBlaster = 47843;
         private const int AbilityUltimaBlaster2 = 47844;
-        private const int AbilityBlackHole = 47867;
+        private const int AbilityMax = 47845;        
         private const int AbilityNothingness = 47868;
         private const int AbilityKefkaSays = 49884;
         private const int AbilityFloodOfNaught1 = 50066;
@@ -919,7 +919,8 @@ namespace Lemegeton.Content
                 _numMarkers++;
                 if (_numMarkers == 10)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                    Log(State.LogLevelEnum.Debug, null, "Ready for automarkers, updating to set 1");
+                    _currentSet = 1;
                     Party pty = _state.GetPartyMembers();
                     _firstGo = pty.GetByActorIds(_first);
                     _secondGo = pty.GetByActorIds(_second);
@@ -1403,13 +1404,12 @@ namespace Lemegeton.Content
                 case AbilityDefinitionOfInsanity:
                     CurrentPhase = PhaseEnum.P3_ExChaos;
                     break;
-                case AbilityBlackHole:
+                case AbilityMax:
                     CurrentPhase = PhaseEnum.P3_BlackHole;
-                    _blackHoleAM.CurrentSet = 1;
                     break;
                 case AbilityKefkaSays:
                     CurrentPhase = PhaseEnum.P4_KefkaSays;
-                    _blackHoleAM.CurrentSet = 1;
+                    _kefkaSaysAM.CurrentSet = 1;
                     break;
                 case AbilityFloodOfNaught1:
                 case AbilityFloodOfNaught2:
@@ -1446,7 +1446,7 @@ namespace Lemegeton.Content
                 case StatusSecondInLine:
                 case StatusThirdInLine:
                 case StatusAccretion:
-                    if (CurrentPhase == PhaseEnum.P3_BlackHole)
+                    if (CurrentPhase == PhaseEnum.P3_BlackHole && gained == true)
                     {
                         _blackHoleAM.FeedStatus(statusId, dest);
                     }

@@ -12,8 +12,11 @@ namespace Lemegeton.Language
 
         public English()
         {
+            #region 1.0.8.2
+            AddEntry("Changelog/1.0.8.2", " Fixed UMAD P3 Black Hole automarker");
+            #endregion
             #region 1.0.8.1
-            AddEntry("Changelog/1.0.8.1", " Added automarker for UMAD P2 Forsaken");
+            AddEntry("Changelog/1.0.8.1", " Added automarkers for UMAD");
             AddEntry("Content/Ultimate/UltDancingMad", "Dancing Mad (Ultimate)");
             AddEntry("Content/Ultimate/UltDancingMad/Enabled", "Enabled");
             AddEntry("Content/Ultimate/UltDancingMad/DoubleTroubleAM", "(P1) Double-trouble Trap automarker");
