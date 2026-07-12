@@ -12,6 +12,9 @@ namespace Lemegeton.Language
 
         public English()
         {
+            #region 1.0.8.4
+            AddEntry("Changelog/1.0.8.4", " Fixes to UMAD P2 Forsaken automarker\n Fixes to UMAD P3 Ultima Blaster automarker");
+            #endregion
             #region 1.0.8.3
             AddEntry("Changelog/1.0.8.3", " Fixes to UMAD P4 Kefka Says automarker");
             #endregion

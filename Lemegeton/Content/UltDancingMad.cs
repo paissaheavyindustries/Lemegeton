@@ -292,8 +292,8 @@ namespace Lemegeton.Content
 
             private int _currentTower = 0;
             private int _numMarkers = 0;
-            private bool _fired = false;
-            internal DateTime _lastTowerUpdate = DateTime.MinValue;
+            private int _firedTower = 0;
+            internal DateTime _nextTowerUpdate = DateTime.MinValue;
             internal StratEnum _strat { get; set; } = StratEnum.AAABBBBA;
 
             public ForsakenAM(State state) : base(state)
@@ -325,9 +325,10 @@ namespace Lemegeton.Content
                 _conesGo.Clear();
                 _pointblanksGo.Clear();
                 _stacksGo.Clear();
-                _lastTowerUpdate = DateTime.MinValue;
+                _nextTowerUpdate = DateTime.MinValue;
                 _numMarkers = 0;
-                _fired = false;
+                _currentTower = 0;
+                _firedTower = 0;
             }
 
             internal void UpdateTowerSet()
@@ -370,6 +371,10 @@ namespace Lemegeton.Content
                         _stacks.Add(actorId);
                         break;
                 }
+                if (_currentTower == _firedTower)
+                {
+                    return;
+                }
                 switch (_currentTower)
                 {
                     case 1:
@@ -398,7 +403,6 @@ namespace Lemegeton.Content
                             if (_numMarkers == 4)
                             {
                                 Log(State.LogLevelEnum.Debug, null, "Full set of {0} received", _numMarkers);
-                                _numMarkers = 0;
                                 BuildTowerset();
                             }
                         }
@@ -410,18 +414,19 @@ namespace Lemegeton.Content
             {
                 if (_currentTower > 8)
                 {
-                    if (_fired == true)
+                    if (_firedTower > 0)
                     {
                         Log(State.LogLevelEnum.Debug, null, "Clearing automarkers");
                         _state.ClearAutoMarkers();
-                        _fired = false;
+                        _firedTower = 0;
                     }
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
                 AutomarkerPayload ap = BuildPayload();
                 _state.ExecuteAutomarkers(ap, Timing);
-                _fired = true;
+                _firedTower = _currentTower;
+                _numMarkers = 0;
             }
 
             internal AutomarkerPayload BuildPayload()
@@ -586,6 +591,12 @@ namespace Lemegeton.Content
             {
                 if (_diveDirection != 0)
                 {
+                    if (actionId == AbilityUltimaBlaster2 && _fired == true)
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Registered action {0}", actionId);
+                        _state.ClearAutoMarkers();
+                        _fired = false;
+                    }
                     return;
                 }
                 IGameObject go = _state.GetActorById(src);
@@ -597,12 +608,6 @@ namespace Lemegeton.Content
                 {
                     Log(State.LogLevelEnum.Debug, null, "Registered action {0} from {1} at x {2} y {3}", actionId, go.Name.ToString(), go.Position.X, go.Position.Z);
                     FeedAction(go.Position.X, go.Position.Z);
-                }
-                if (actionId == AbilityUltimaBlaster2 && _fired == true)
-                {
-                    Log(State.LogLevelEnum.Debug, null, "Registered action {0} from {1} at x {2} y {3}", actionId, go.Name.ToString(), go.Position.X, go.Position.Z);
-                    _state.ClearAutoMarkers();
-                    _fired = false;
                 }
             }
 
@@ -1342,9 +1347,9 @@ namespace Lemegeton.Content
                 case PhaseEnum.P2_Forsaken:
                     if (actionId == AbilityPathOfLight)
                     {
-                        if (DateTime.Now.AddSeconds(-5) > _forsakenAm._lastTowerUpdate)
+                        if (DateTime.Now > _forsakenAm._nextTowerUpdate)
                         {
-                            _forsakenAm._lastTowerUpdate = DateTime.Now;
+                            _forsakenAm._nextTowerUpdate = DateTime.Now.AddSeconds(5);
                             _forsakenAm.CurrentTower++;
                         }
                     }
