@@ -992,6 +992,7 @@ namespace Lemegeton.Content
             private List<Tuple<IGameObject, DateTime>> _spreads = new List<Tuple<IGameObject, DateTime>>();
             private List<Tuple<IGameObject, DateTime, bool>> _gazes = new List<Tuple<IGameObject, DateTime, bool>>();
             private List<Tuple<bool, DateTime>> _fireWater = new List<Tuple<bool, DateTime>>();
+            private IGameObject _kefker = null;
             private int _currentSet = 0;
             public int CurrentSet
             {
@@ -1058,6 +1059,7 @@ namespace Lemegeton.Content
                 _gazes.Clear();
                 _fireWater.Clear();
                 _currentSet = 0;
+                _kefker = null;
             }
 
             public void TestFunctionality()
@@ -1166,6 +1168,10 @@ namespace Lemegeton.Content
                         }
                         break;
                     case StatusThunderCharged:
+                        if (gained == true)
+                        {
+                            _kefker = de;
+                        }
                         AdvanceSet();
                         break;
                 }
@@ -1226,23 +1232,14 @@ namespace Lemegeton.Content
                         {
                             ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             var donut = (from ix in _fireWater orderby ix.Item2 ascending select ix).Take(1).ToList();
-                            Party pty = _state.GetPartyMembers();
                             if (donut[0].Item1 == true)
                             {
-                                ap.Assign(Signs3.Roles["Donut"], pty.Members[0].GameObject);
+                                ap.Assign(Signs3.Roles["Donut"], _kefker);
                             }
                             else
                             {
-                                ap.Assign(Signs3.Roles["Twister"], pty.Members[0].GameObject);
+                                ap.Assign(Signs3.Roles["Twister"], _kefker);
                             }
-                        }
-                        break;
-                    case 6: // ultima upsurge hit
-                        _state.ClearAutoMarkers();
-                        break;
-                    case 7: // late spreads and stacks (blizzard iii blowout)
-                        {
-                            ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             var spreads = (from ix in _spreads orderby ix.Item2 descending select ix.Item1).Take(2).ToList();
                             Party pty = _state.GetPartyMembers();
                             List<Party.PartyMember> stacks = new List<Party.PartyMember>(
@@ -1256,6 +1253,14 @@ namespace Lemegeton.Content
                             ap.Assign(Signs1.Roles["Stack4"], stacks[3]);
                             ap.Assign(Signs1.Roles["Stack5"], stacks[4]);
                             ap.Assign(Signs1.Roles["Stack6"], stacks[5]);
+                        }
+                        break;
+                    case 6: // ultima upsurge hit
+                        break;
+                    case 7: // late spreads and stacks (blizzard iii blowout)
+                        {
+                            bool soft = _state.cfg.AutomarkerSoft == true || AsSoftmarker;
+                            _state.ClearMarkerOn(_kefker, soft == false, soft);
                         }
                         break;
                     case 8: // forked lightning lost
@@ -1287,16 +1292,19 @@ namespace Lemegeton.Content
                             Party pty = _state.GetPartyMembers();
                             if (donut[0].Item1 == true)
                             {
-                                ap.Assign(Signs3.Roles["Donut"], pty.Members[0].GameObject);
+                                ap.Assign(Signs3.Roles["Donut"], _kefker);
                             }
                             else
                             {
-                                ap.Assign(Signs3.Roles["Twister"], pty.Members[0].GameObject);
+                                ap.Assign(Signs3.Roles["Twister"], _kefker);
                             }
                         }
                         break;
                     case 12: // ultima upsurge
-                        _state.ClearAutoMarkers();
+                        {
+                            bool soft = _state.cfg.AutomarkerSoft == true || AsSoftmarker;
+                            _state.ClearMarkerOn(_kefker, soft == false, soft);
+                        }
                         break;
                 }
                 if (ap != null)
@@ -1413,7 +1421,7 @@ namespace Lemegeton.Content
                     CurrentPhase = PhaseEnum.P3_BlackHole;
                     break;
                 case AbilityKefkaSays:
-                    CurrentPhase = PhaseEnum.P4_KefkaSays;                    
+                    CurrentPhase = PhaseEnum.P4_KefkaSays;
                     break;
                 case AbilityFloodOfNaught1:
                 case AbilityFloodOfNaught2:
