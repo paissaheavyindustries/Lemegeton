@@ -23,6 +23,10 @@ namespace Lemegeton.Content
         private const int AbilityUltimaBlaster2 = 47844;
         private const int AbilityMax = 47845;        
         private const int AbilityNothingness = 47868;
+        private const int AbilityLookAndDespair = 47854;
+        private const int AbilityDamningEdict = 47873;
+        private const int AbilityLongitudalImplosion = 47869;
+        private const int AbilityLatitudinalImplosion = 47870;
         private const int AbilityKefkaSays = 49884;
         private const int AbilityFloodOfNaught1 = 50066;
         private const int AbilityFloodOfNaught2 = 50067;
@@ -32,6 +36,7 @@ namespace Lemegeton.Content
         private const int AbilityUltimaRepeater = 47936;
         private const int AbilityManaRelease = 47781;
         private const int AbilityBlizzardBlowout = 47765;
+        private const int AbilityStrayApocalypse = 47932;
 
         private const int HeadmarkerStack = 734;
         private const int HeadmarkerPointblank = 735;
@@ -77,7 +82,7 @@ namespace Lemegeton.Content
         private ForsakenAM _forsakenAm;
         private UltimaBlasterAM _ultimaBlasterAm;
         private BlackHoleAM _blackHoleAM;
-        private KefkaSaysAM _kefkaSaysAM;        
+        private KefkaSaysAM _kefkaSaysAM;
 
         private enum PhaseEnum
         {
@@ -455,7 +460,7 @@ namespace Lemegeton.Content
                         if (_currentTower % 2 == 0)
                         {
                             // even (pbs cones)
-                            Log(State.LogLevelEnum.Debug, null, "Switch even for {0} {1}", _currentTower);
+                            Log(State.LogLevelEnum.Debug, null, "Switch even for {0} {1}", _strat, _currentTower);
                             ap.Assign(Signs.Roles["InsideCone1"], _conesGo[0].GameObject);
                             ap.Assign(Signs.Roles["InsideCone2"], _conesGo[1].GameObject);
                             ap.Assign(Signs.Roles["InsidePb1"], _pointblanksGo[0].GameObject);
@@ -467,7 +472,7 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Switch odd for {0} {1}", _currentTower);
+                            Log(State.LogLevelEnum.Debug, null, "Switch odd for {0} {1}", _strat, _currentTower);
                             // odd (stacks pb cone)
                             ap.Assign(Signs.Roles["InsideCone1"], _conesGo[0].GameObject);
                             ap.Assign(Signs.Roles["InsidePb1"], _pointblanksGo[0].GameObject);
@@ -484,7 +489,7 @@ namespace Lemegeton.Content
                         // keep groups
                         if (_currentTower % 2 == 0)
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Keep even for {0} {1}", _currentTower);
+                            Log(State.LogLevelEnum.Debug, null, "Keep even for {0} {1}", _strat, _currentTower);
                             // even (pbs cones)
                             ap.Assign(Signs.Roles["InsideCone1"], _conesGo[1].GameObject);
                             ap.Assign(Signs.Roles["InsideCone2"], _conesGo[2].GameObject);
@@ -497,7 +502,7 @@ namespace Lemegeton.Content
                         }
                         else
                         {
-                            Log(State.LogLevelEnum.Debug, null, "Keep even for {0} {1}", _currentTower);
+                            Log(State.LogLevelEnum.Debug, null, "Keep even for {0} {1}", _strat, _currentTower);
                             // odd (stacks pb cone)
                             ap.Assign(Signs.Roles["InsideCone1"], _conesGo[2].GameObject);
                             ap.Assign(Signs.Roles["InsidePb1"], _pointblanksGo[2].GameObject);
@@ -709,6 +714,7 @@ namespace Lemegeton.Content
                         _diveDirection = 2;
                     }
                     Log(State.LogLevelEnum.Debug, null, "First {0} is {1}", _diveDirection == 1 ? "CW" : "CCW", _diveDirection == 1 ? pts[_startSpot].Item4 : pts[_startSpot].Item5);
+                    _firstSafeSpot = _diveDirection == 1 ? pts[_startSpot].Item4 : pts[_startSpot].Item5;
                 }
                 _dives++;
             }
@@ -1179,8 +1185,7 @@ namespace Lemegeton.Content
 
             public void AdvanceSet()
             {
-                CurrentSet++;
-                PerformMarking();
+                CurrentSet++;                
             }
 
             private void PerformMarking()
@@ -1213,7 +1218,7 @@ namespace Lemegeton.Content
                         {
                             ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             var gazes = (from ix in _gazes orderby ix.Item2 ascending select ix).Take(2).ToList();
-                            if (gazes[0].Item3 == true)
+                            if (gazes[0].Item3 == false)
                             {
                                 ap.Assign(Signs2.Roles["LookAt1"], gazes[0].Item1);
                                 ap.Assign(Signs2.Roles["LookAt2"], gazes[1].Item1);
@@ -1270,7 +1275,7 @@ namespace Lemegeton.Content
                         {
                             ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             var gazes = (from ix in _gazes orderby ix.Item2 descending select ix).Take(2).ToList();
-                            if (gazes[0].Item3 == true)
+                            if (gazes[0].Item3 == false)
                             {
                                 ap.Assign(Signs2.Roles["LookAt1"], gazes[0].Item1);
                                 ap.Assign(Signs2.Roles["LookAt2"], gazes[1].Item1);
@@ -1289,7 +1294,6 @@ namespace Lemegeton.Content
                         {
                             ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
                             var donut = (from ix in _fireWater orderby ix.Item2 descending select ix).Take(1).ToList();
-                            Party pty = _state.GetPartyMembers();
                             if (donut[0].Item1 == true)
                             {
                                 ap.Assign(Signs3.Roles["Donut"], _kefker);
@@ -1537,7 +1541,7 @@ namespace Lemegeton.Content
                 Log(State.LogLevelEnum.Info, null, "Content available");
                 _sawFirstHeadMarker = false;
                 _doubleTroubleAm = (DoubleTroubleAM)Items["DoubleTroubleAM"];
-                _forsakenAm = (ForsakenAM)Items["ForsakenAM"];                
+                _forsakenAm = (ForsakenAM)Items["ForsakenAM"];
                 _ultimaBlasterAm = (UltimaBlasterAM)Items["UltimaBlasterAM"];
                 _blackHoleAM = (BlackHoleAM)Items["BlackHoleAM"];
                 _kefkaSaysAM = (KefkaSaysAM)Items["KefkaSaysAM"];
