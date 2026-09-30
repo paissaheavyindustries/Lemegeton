@@ -30,6 +30,7 @@ namespace Lemegeton.Content
         private const int AbilityDynamisSigma = 32788;
         private const int AbilityDynamisOmega = 32789;
         private const int AbilityHelloDistantWorldBig = 33040;
+        private const int AbilityDischarge = 31534;
         private const int AbilityLaserShower = 0x7B45;
 
         private const int StatusDistantWorld = 3443;
@@ -50,6 +51,7 @@ namespace Lemegeton.Content
         private const int HeadmarkerSquare = 418;
         private const int HeadmarkerCross = 419;
         private const int HeadmarkerTriangle = 417;
+        private const int HeadmarkerWaveCannon = 244;
 
         private bool ZoneOk = false;
         private bool _subbed = false;
@@ -70,7 +72,8 @@ namespace Lemegeton.Content
         private P3TransitionAM _p3transAm;
         private P3MonitorAM _p3moniAm;
         private DynamisDeltaAM _deltaAm;
-        private DynamisSigmaAM _sigmaAm;
+        private DynamisSigmaFirstAM _sigmaFirstAM;
+        private DynamisSigmaSecondAM _sigmaSecondAM;
         private DynamisOmegaAM _omegaAm;
 
         private enum PhaseEnum
@@ -78,9 +81,11 @@ namespace Lemegeton.Content
             P1_Start,
             P1_ProgramLoop,
             P1_Pantokrator,
+            P2_Synergy,
             P3_Transition,
             P5_Delta,
             P5_Sigma,
+            P5_Sigma2nd,
             P5_Omega,
             P5_Omega2nd,
         }
@@ -629,7 +634,7 @@ namespace Lemegeton.Content
                 Test = new System.Action(() => TestFunctionality());
             }
 
-            public void Reset()
+            public override void Reset()
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
                 _partnerId = 0;
@@ -830,8 +835,7 @@ namespace Lemegeton.Content
             private void SetupPresets()
             {
                 AutomarkerSigns.Preset pr;
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "BPOG - GPOB";
+                pr = new() { Builtin = true, Name = "BPOG - GPOB" };
                 pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
                 pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
@@ -841,8 +845,7 @@ namespace Lemegeton.Content
                 pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
                 pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
                 Signs.AddPreset(pr);
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "BPOG - GOPB";
+                pr = new() { Builtin = true, Name = "BPOG - GOPB" };
                 pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack4;
                 pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
@@ -852,8 +855,7 @@ namespace Lemegeton.Content
                 pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
                 pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack1;
                 Signs.AddPreset(pr);
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "BPOG - BPOG";
+                pr = new() { Builtin = true, Name = "BPOG - BPOG" };
                 pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Attack1;
                 pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Square;
@@ -862,6 +864,26 @@ namespace Lemegeton.Content
                 pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Attack3;
                 pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Triangle;
                 pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs2.AddPreset(pr);
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Bind3;
+                pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["SquareR"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["CircleL"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Bind2;
+                Signs.AddPreset(pr);
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["CrossL"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CrossR"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["SquareL"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["SquareR"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["CircleL"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["CircleR"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["TriangleL"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["TriangleR"] = AutomarkerSigns.SignEnum.Bind3;
                 Signs2.AddPreset(pr);
             }
 
@@ -874,6 +896,11 @@ namespace Lemegeton.Content
                 _psCircle.Clear();
                 _psTriangle.Clear();
                 _statusId = 0;
+            }
+
+            internal void FeedAction()
+            {
+                _state.ClearAutoMarkers();
             }
 
             internal void FeedStatus(uint statusId)
@@ -1352,7 +1379,9 @@ namespace Lemegeton.Content
             [AttributeOrderNumber(3000)]
             public System.Action Test { get; set; }
 
-            private Dictionary<uint, IGameObject> _debuffs = new Dictionary<uint, IGameObject>();
+            private Dictionary<uint, IGameObject> _debuffs = [];
+
+            private HashSet<(uint, uint)> _tethers = [];
 
             public DynamisDeltaAM(State state) : base(state)
             {
@@ -1367,15 +1396,29 @@ namespace Lemegeton.Content
             private void SetupPresets()
             {
                 AutomarkerSigns.Preset pr;
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "LPDU";
+                pr = new() { Builtin = true, Name = "LPDU" };
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.None;
                 Signs.AddPreset(pr);
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "ElementalDC";
+                pr = new() { Builtin = true, Name = "ElementalDC" };
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.None;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.None;
+                Signs.AddPreset(pr);
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["CloseTether1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["CloseTether2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["CloseTether3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["CloseTether4"] = AutomarkerSigns.SignEnum.Attack4;
                 Signs.AddPreset(pr);
             }
 
@@ -1383,6 +1426,7 @@ namespace Lemegeton.Content
             {
                 Log(State.LogLevelEnum.Debug, null, "Reset");
                 _debuffs.Clear();
+                _tethers.Clear();
             }
 
             internal void FeedStatus(uint actorId, uint statusId)
@@ -1393,23 +1437,197 @@ namespace Lemegeton.Content
                 }
                 Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1:X}", statusId, actorId);
                 _debuffs[statusId] = _state.GetActorById(actorId);
-                if (_debuffs.Count == 2)
+                if (_debuffs.Count == 2 && _tethers.Count == 2)
                 {
-                    Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
-                    AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
-                    ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
-                    ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
-                    _state.ExecuteAutomarkers(ap, Timing);
+                    ReadyForDecision();
                 }
             }
 
+            internal void FeedTether(uint actorId1, uint actorId2)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered tether between {0:X} and {1:X}", actorId1, actorId2);
+                _tethers.Add(actorId1 < actorId2 ? (actorId1, actorId2) : (actorId2, actorId1));
+                if (_debuffs.Count == 2 && _tethers.Count == 2)
+                {
+                    ReadyForDecision();
+                }
+            }
+
+            internal void ReadyForDecision()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                AutomarkerPayload ap = new(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["DistantWorld"], _debuffs[StatusDistantWorld]);
+                ap.Assign(Signs.Roles["NearWorld"], _debuffs[StatusNearWorld]);
+                ap.Assign(Signs.Roles["CloseTether1"], _state.GetActorById(_tethers.ElementAt(0).Item1));
+                ap.Assign(Signs.Roles["CloseTether2"], _state.GetActorById(_tethers.ElementAt(0).Item2));
+                ap.Assign(Signs.Roles["CloseTether3"], _state.GetActorById(_tethers.ElementAt(1).Item1));
+                ap.Assign(Signs.Roles["CloseTether4"], _state.GetActorById(_tethers.ElementAt(1).Item2));
+                _state.ExecuteAutomarkers(ap, Timing);
+            }
         }
 
         #endregion
 
-        #region DynamisSigmaAM
+        #region DynamisSigmaFirstAM
 
-        public class DynamisSigmaAM : Automarker
+        public class DynamisSigmaFirstAM : Automarker
+        {
+
+            [AttributeOrderNumber(1000)]
+            public AutomarkerSigns Signs { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(2500)]
+            public AutomarkerTiming Timing { get; set; }
+
+            [DebugOption]
+            [AttributeOrderNumber(3000)]
+            public System.Action Test { get; set; }
+
+            private List<uint> _psCross = [];
+            private List<uint> _psSquare = [];
+            private List<uint> _psCircle = [];
+            private List<uint> _psTriangle = [];
+            private List<uint> _psWaveCannon = [];
+            private bool _fired = false;
+
+            public DynamisSigmaFirstAM(State state) : base(state)
+            {
+                Enabled = false;
+                Signs = new AutomarkerSigns();
+                Timing = new AutomarkerTiming()
+                {
+                    TimingType = AutomarkerTiming.TimingTypeEnum.Inherit,
+                    Parent = state.cfg.DefaultAutomarkerTiming
+                };
+                SetupPresets();
+                Signs.ApplyPreset("MLM");
+                Test = new System.Action(() => Signs.TestFunctionality(state, null, Timing, SelfMarkOnly, AsSoftmarker));
+            }
+
+            private void SetupPresets()
+            {
+                AutomarkerSigns.Preset pr;
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["NoMarker1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["NoMarker2"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["TetheredToNoMarker1"] = AutomarkerSigns.SignEnum.Circle;
+                pr.Roles["TetheredToNoMarker2"] = AutomarkerSigns.SignEnum.Attack4;
+                pr.Roles["FirstOtherTether1"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["FirstOtherTether2"] = AutomarkerSigns.SignEnum.Bind3;
+                pr.Roles["SecondOtherTether1"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["SecondOtherTether2"] = AutomarkerSigns.SignEnum.Bind2;
+                Signs.AddPreset(pr);
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _fired = false;
+                _psCross.Clear();
+                _psSquare.Clear();
+                _psCircle.Clear();
+                _psTriangle.Clear();
+                _psWaveCannon.Clear();
+            }
+
+            internal void FeedHeadmarker(uint actorId, uint headMarkerId)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                if (_fired == true)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered headMarkerId {0} on {1:X}", headMarkerId, actorId);
+                switch (headMarkerId)
+                {
+                    case HeadmarkerCross:
+                        _psCross.Add(actorId);
+                        break;
+                    case HeadmarkerSquare:
+                        _psSquare.Add(actorId);
+                        break;
+                    case HeadmarkerCircle:
+                        _psCircle.Add(actorId);
+                        break;
+                    case HeadmarkerTriangle:
+                        _psTriangle.Add(actorId);
+                        break;
+                    case HeadmarkerWaveCannon:
+                        _psWaveCannon.Add(actorId);
+                        break;
+                }
+                if (_psCross.Count == 2 &&
+                    _psSquare.Count == 2 &&
+                    _psCircle.Count == 2 &&
+                    _psTriangle.Count == 2 &&
+                    _psWaveCannon.Count == 6)
+                {
+                    ReadyForDecision();
+                }
+                else
+                {
+                    Log(State.LogLevelEnum.Debug, null, "Not enough headmarkers registered yet: {0} Cross, {1} Square, {2} Circle, {3} Triangle, {4} WaveCannon",
+                        _psCross.Count, _psSquare.Count, _psCircle.Count, _psTriangle.Count, _psWaveCannon.Count);
+                }
+            }
+
+            internal void ReadyForDecision()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
+                Party pty = _state.GetPartyMembers();
+                List<(Party.PartyMember, Party.PartyMember)> pairs = [
+                    (pty.GetByActorIds(_psCross)[0], pty.GetByActorIds(_psCross)[1]),
+                    (pty.GetByActorIds(_psSquare)[0], pty.GetByActorIds(_psSquare)[1]),
+                    (pty.GetByActorIds(_psCircle)[0], pty.GetByActorIds(_psCircle)[1]),
+                    (pty.GetByActorIds(_psTriangle)[0], pty.GetByActorIds(_psTriangle)[1])
+                ];
+                List<Party.PartyMember> _psWaveCannonGo = pty.GetByActorIds(_psWaveCannon);
+                List<Party.PartyMember> noTether = [.. pty.Members.Except(_psWaveCannonGo)];
+                if (_psWaveCannonGo.Count != 6 || noTether.Count != 2)
+                {
+                    Log(State.LogLevelEnum.Error, null, "Wrong number of WaveCannon players registered: {0}, current players are: {1}, noTether: {2}",
+                        _psWaveCannonGo.Count, string.Join(", ", _psWaveCannonGo.Select(x => x.ToString())), string.Join(", ", noTether.Select(x => x.ToString())));
+                    return;
+                }
+                Dictionary<Party.PartyMember, Party.PartyMember> tetheredToNoMarker = [];
+                List<(Party.PartyMember, Party.PartyMember)> otherPairs = [];
+                foreach (var (a, b) in pairs)
+                {
+                    if (noTether.Contains(a) && _psWaveCannonGo.Contains(b))
+                        tetheredToNoMarker[a] = b;
+                    else if (noTether.Contains(b) && _psWaveCannonGo.Contains(a))
+                        tetheredToNoMarker[b] = a;
+                    else if (_psWaveCannonGo.Contains(a) && _psWaveCannonGo.Contains(b))
+                        otherPairs.Add((a, b));
+                }
+                AutomarkerPayload ap = new(_state, SelfMarkOnly, AsSoftmarker);
+                ap.Assign(Signs.Roles["NoMarker1"], noTether[0].GameObject);
+                ap.Assign(Signs.Roles["NoMarker2"], noTether[1].GameObject);
+                ap.Assign(Signs.Roles["TetheredToNoMarker1"], tetheredToNoMarker.GetValueOrDefault(noTether[0]).GameObject);
+                ap.Assign(Signs.Roles["TetheredToNoMarker2"], tetheredToNoMarker.GetValueOrDefault(noTether[1]).GameObject);
+                ap.Assign(Signs.Roles["FirstOtherTether1"], otherPairs[0].Item1.GameObject);
+                ap.Assign(Signs.Roles["FirstOtherTether2"], otherPairs[0].Item2.GameObject);
+                ap.Assign(Signs.Roles["SecondOtherTether1"], otherPairs[1].Item1.GameObject);
+                ap.Assign(Signs.Roles["SecondOtherTether2"], otherPairs[1].Item2.GameObject);
+                _state.ExecuteAutomarkers(ap, Timing);
+                _fired = true;
+            }
+        }
+
+        #endregion
+
+        #region DynamisSigmaSecondAM
+
+        public class DynamisSigmaSecondAM : Automarker
         {
 
             [AttributeOrderNumber(1000)]
@@ -1428,20 +1646,17 @@ namespace Lemegeton.Content
 
             private Dictionary<uint, int> _dynamisStacks = new Dictionary<uint, int>();
             private Dictionary<uint, uint> _debuffs = new Dictionary<uint, uint>();
+            internal AutomarkerPayload payload;
 
-            public DynamisSigmaAM(State state) : base(state)
+            public DynamisSigmaSecondAM(State state) : base(state)
             {
                 Enabled = false;
                 Signs = new AutomarkerSigns();
                 Prio = new AutomarkerPrio() { Priority = AutomarkerPrio.PrioTypeEnum.PartyListOrder };
                 Timing = new AutomarkerTiming()
                 {
-                    TimingType = AutomarkerTiming.TimingTypeEnum.Explicit,
-                    Parent = state.cfg.DefaultAutomarkerTiming,
-                    IniDelayMin = 28.0f,
-                    IniDelayMax = 32.0f,
-                    SubDelayMin = state.cfg.AutomarkerSubDelayMin,
-                    SubDelayMax = state.cfg.AutomarkerSubDelayMax
+                    TimingType = AutomarkerTiming.TimingTypeEnum.Inherit,
+                    Parent = state.cfg.DefaultAutomarkerTiming
                 };
                 SetupPresets();
                 Signs.ApplyPreset("LPDU");
@@ -1451,8 +1666,7 @@ namespace Lemegeton.Content
             private void SetupPresets()
             {
                 AutomarkerSigns.Preset pr;
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "LPDU";
+                pr = new() { Builtin = true, Name = "LPDU" };
                 pr.Roles["Arm1"] = AutomarkerSigns.SignEnum.Bind1;
                 pr.Roles["Arm2"] = AutomarkerSigns.SignEnum.Bind2;
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
@@ -1462,8 +1676,7 @@ namespace Lemegeton.Content
                 pr.Roles["NearBait1"] = AutomarkerSigns.SignEnum.Attack2;
                 pr.Roles["NearBait2"] = AutomarkerSigns.SignEnum.Attack3;
                 Signs.AddPreset(pr);
-                pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "ElementalDC";
+                pr = new() { Builtin = true, Name = "ElementalDC" };
                 pr.Roles["Arm1"] = AutomarkerSigns.SignEnum.Attack1;
                 pr.Roles["Arm2"] = AutomarkerSigns.SignEnum.Attack2;
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Ignore2;
@@ -1472,6 +1685,16 @@ namespace Lemegeton.Content
                 pr.Roles["DistantCloseBait"] = AutomarkerSigns.SignEnum.Bind1;
                 pr.Roles["NearBait1"] = AutomarkerSigns.SignEnum.Bind2;
                 pr.Roles["NearBait2"] = AutomarkerSigns.SignEnum.Bind3;
+                Signs.AddPreset(pr);
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["Arm1"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["Arm2"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Bind2;
+                pr.Roles["DistantFarBait"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["DistantCloseBait"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["NearBait1"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["NearBait2"] = AutomarkerSigns.SignEnum.Attack4;
                 Signs.AddPreset(pr);
             }
 
@@ -1505,7 +1728,7 @@ namespace Lemegeton.Content
                     return;
                 }
                 Log(State.LogLevelEnum.Debug, null, "Ready for automarkers");
-                AutomarkerPayload ap = new AutomarkerPayload(_state, SelfMarkOnly, AsSoftmarker);
+                AutomarkerPayload ap = new(_state, SelfMarkOnly, AsSoftmarker);
                 Party pty = _state.GetPartyMembers();
                 uint distant = _debuffs[StatusDistantWorld];
                 uint near = _debuffs[StatusNearWorld];
@@ -1532,7 +1755,7 @@ namespace Lemegeton.Content
                 ap.Assign(Signs.Roles["DistantCloseBait"], theRest[0].GameObject);
                 ap.Assign(Signs.Roles["NearBait1"], theRest[1].GameObject);
                 ap.Assign(Signs.Roles["NearBait2"], theRest[2].GameObject);
-                _state.ExecuteAutomarkers(ap, Timing);
+                payload = ap;
                 _debuffs.Clear();
             }
 
@@ -1671,12 +1894,22 @@ namespace Lemegeton.Content
 
             private void SetupPresets()
             {
-                AutomarkerSigns.Preset pr = new AutomarkerSigns.Preset() { Builtin = true };
-                pr.Name = "LPDU";
+                AutomarkerSigns.Preset pr;
+                pr = new() { Builtin = true, Name = "LPDU" };
                 pr.Roles["Monitor1"] = AutomarkerSigns.SignEnum.Bind1;
                 pr.Roles["Monitor2"] = AutomarkerSigns.SignEnum.Bind2;
                 pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Plus;
                 pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Triangle;
+                pr.Roles["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
+                pr.Roles["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
+                pr.Roles["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
+                pr.Roles["Bait4"] = AutomarkerSigns.SignEnum.Attack4;
+                Signs.AddPreset(pr);
+                pr = new() { Builtin = true, Name = "MLM" };
+                pr.Roles["Monitor1"] = AutomarkerSigns.SignEnum.Ignore1;
+                pr.Roles["Monitor2"] = AutomarkerSigns.SignEnum.Ignore2;
+                pr.Roles["DistantWorld"] = AutomarkerSigns.SignEnum.Bind1;
+                pr.Roles["NearWorld"] = AutomarkerSigns.SignEnum.Bind2;
                 pr.Roles["Bait1"] = AutomarkerSigns.SignEnum.Attack1;
                 pr.Roles["Bait2"] = AutomarkerSigns.SignEnum.Attack2;
                 pr.Roles["Bait3"] = AutomarkerSigns.SignEnum.Attack3;
@@ -1855,9 +2088,14 @@ namespace Lemegeton.Content
                 _firstHeadMarker = markerId - 23;
             }
             uint realMarkerId = markerId - _firstHeadMarker;
-            if (CurrentPhase == PhaseEnum.P1_Pantokrator)
+            if (CurrentPhase == PhaseEnum.P1_Pantokrator || CurrentPhase == PhaseEnum.P2_Synergy)
             {
                 _p2synergyAm.FeedHeadmarker(dest, realMarkerId);
+                CurrentPhase = PhaseEnum.P2_Synergy;
+            }
+            if (CurrentPhase == PhaseEnum.P5_Sigma)
+            {
+                _sigmaFirstAM.FeedHeadmarker(dest, realMarkerId);
             }
         }
 
@@ -1868,7 +2106,7 @@ namespace Lemegeton.Content
 #if !SANS_GOETIA
                 _glitchTether.FeedStatus(gained == false ? 0 : statusId);
 #endif
-                if (CurrentPhase == PhaseEnum.P1_Pantokrator && gained == true)
+                if ((CurrentPhase == PhaseEnum.P1_Pantokrator || CurrentPhase == PhaseEnum.P2_Synergy) && gained == true)
                 {
                     _p2synergyAm.FeedStatus(statusId);
                 }
@@ -1883,7 +2121,7 @@ namespace Lemegeton.Content
             }
             if (gained == true && statusId == StatusDynamis)
             {
-                _sigmaAm.FeedStatus(dest, statusId, stacks);
+                _sigmaSecondAM.FeedStatus(dest, statusId, stacks);
                 _omegaAm.FeedStatus(dest, statusId, stacks);
                 return;
             }
@@ -1910,7 +2148,7 @@ namespace Lemegeton.Content
                 case PhaseEnum.P5_Sigma:
                     if (gained == true && (statusId == StatusDistantWorld || statusId == StatusNearWorld))
                     {
-                        _sigmaAm.FeedStatus(dest, statusId, stacks);
+                        _sigmaSecondAM.FeedStatus(dest, statusId, stacks);
                     }
                     break;
                 case PhaseEnum.P5_Omega:
@@ -1998,12 +2236,26 @@ namespace Lemegeton.Content
 #endif
                     }
                     break;
+                case AbilityDischarge:
+                    if (CurrentPhase == PhaseEnum.P2_Synergy && _p2synergyAm.Active == true)
+                    {
+                        _p2synergyAm.FeedAction();
+                    }
+                    if (CurrentPhase == PhaseEnum.P5_Sigma && _sigmaFirstAM.Active == true)
+                    {
+                        if (_sigmaSecondAM.Active == true)
+                        {
+                            _state.ExecuteAutomarkers(_sigmaSecondAM.payload, _state.cfg.DefaultAutomarkerTiming);
+                        }
+                        CurrentPhase = PhaseEnum.P5_Sigma2nd;
+                    }
+                    break;
                 case AbilityHelloDistantWorldBig:
                     if (CurrentPhase == PhaseEnum.P5_Delta && _deltaAm.Active == true)
                     {
                         _state.ClearAutoMarkers();
                     }
-                    if (CurrentPhase == PhaseEnum.P5_Sigma && _sigmaAm.Active == true)
+                    if (CurrentPhase == PhaseEnum.P5_Sigma2nd && _sigmaSecondAM.Active == true)
                     {
                         _state.ClearAutoMarkers();
                     }
@@ -2031,6 +2283,10 @@ namespace Lemegeton.Content
                 _glitchTether.FeedTether(src, dest);
             }
 #endif
+            if (CurrentPhase == PhaseEnum.P5_Delta && _deltaAm.Active == true && tetherId == 200)
+            {
+                _deltaAm.FeedTether(src, dest);
+            }
         }
 
         private void UnsubscribeFromEvents()
@@ -2087,7 +2343,8 @@ namespace Lemegeton.Content
                 _p3transAm = (P3TransitionAM)Items["P3TransitionAM"];
                 _p3moniAm = (P3MonitorAM)Items["P3MonitorAM"];
                 _deltaAm = (DynamisDeltaAM)Items["DynamisDeltaAM"];
-                _sigmaAm = (DynamisSigmaAM)Items["DynamisSigmaAM"];
+                _sigmaFirstAM = (DynamisSigmaFirstAM)Items["DynamisSigmaFirstAM"];
+                _sigmaSecondAM = (DynamisSigmaSecondAM)Items["DynamisSigmaSecondAM"];
                 _omegaAm = (DynamisOmegaAM)Items["DynamisOmegaAM"];
                 _state.OnCombatChange += OnCombatChange;
                 _state.OnDirectorUpdate += OnDirectorUpdate;
