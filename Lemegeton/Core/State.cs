@@ -215,7 +215,8 @@ namespace Lemegeton.Core
 
         private Dictionary<string, nint> _sigs = new Dictionary<string, nint>();
         internal delegate char MarkingFunctionDelegate(nint ctrl, byte markId, uint actorId);
-        private MarkingFunctionDelegate _markingFuncPtr = null;
+        internal delegate void MarkingMethodDelegate(ulong run, IGameObject go, AutomarkerSigns.SignEnum sign, bool soft);
+        private MarkingFunctionDelegate _markingFuncPtr = null;        
         internal Dalamud.Hooking.Hook<MarkingFunctionDelegate> _markingFuncHook = null;
 
         private delegate void PostCommandDelegate(IntPtr ui, IntPtr cmd, IntPtr unk1, byte unk2);
@@ -1654,24 +1655,6 @@ namespace Lemegeton.Core
                 }
             }            
             return null;
-        }        
-
-        internal void AttachTaskToTaskChain(Task parent, Task task)
-        {
-            if (parent != null)
-            {
-                parent.ContinueWith(new Action<Task>((tx) =>
-                {
-                    if (parent.IsCompleted == true && parent.IsFaulted == false && parent.IsCanceled == false)
-                    {
-                        task.Start();
-                    }
-                    else
-                    {
-                        Log(LogLevelEnum.Error, parent.Exception, "Exception occurred: {0}", parent.Exception.Message);
-                    }
-                }));
-            }
         }
 
         internal void ClearAutoMarkers()
@@ -1687,7 +1670,6 @@ namespace Lemegeton.Core
 
         internal void ExecuteAutomarkers(AutomarkerPayload ap, AutomarkerTiming at)
         {
-            Task first = null, prev = null, tx = null;
             if (cfg.QuickToggleAutomarkers == false && ap.softMarker == false)
             {
                 Log(LogLevelEnum.Debug, null, "Hard automarkers disabled");
@@ -1699,37 +1681,28 @@ namespace Lemegeton.Core
                 return;
             }
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
+            DateTime startTime = DateTime.Now;            
+            int delay = at.SampleInitialTime();
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<IGameObject>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
                 {
                     continue;
-                }
-                int delay;
+                }                
                 foreach (IGameObject go in kp.Value)
-                {
-                    delay = first == null ? at.SampleInitialTime() : at.SampleSubsequentTime();
-                    Log(LogLevelEnum.Debug, null, "After {0} ms, mark actor {1:X} with {2} on instance {3}", delay,go, kp.Key, _runInstance);
-                    tx = new Task(() =>
+                {                    
+                    startTime = startTime.AddMilliseconds(delay);
+                    Log(LogLevelEnum.Debug, null, "At {0}, mark actor {1:X} with {2} on instance {3}", startTime, go, kp.Key, _runInstance);
+                    DeferredInvoke di = new DeferredInvoke()
                     {
-                        ulong run = _runInstance;
-                        if (delay > 0)
-                        {
-                            Thread.Sleep(delay);
-                        }
-                        PerformMarking(run, go, kp.Key, ap.softMarker);
-                    });
-                    if (first == null)
-                    {
-                        first = tx;
-                    }
-                    AttachTaskToTaskChain(prev, tx);
-                    prev = tx;
+                        State = this,
+                        Function = (MarkingMethodDelegate)PerformMarking,
+                        Params = new object[] { _runInstance, go, kp.Key, ap.softMarker },
+                        FireAt = startTime
+                    };
+                    QueueInvocation(di);
                 }
-            }
-            if (first != null)
-            {
-                first.Start();
+                delay = at.SampleSubsequentTime();
             }
         }
 

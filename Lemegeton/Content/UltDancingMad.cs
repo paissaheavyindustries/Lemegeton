@@ -21,7 +21,7 @@ namespace Lemegeton.Content
         private const int AbilityDefinitionOfInsanity = 47842;
         private const int AbilityUltimaBlaster = 47843;
         private const int AbilityUltimaBlaster2 = 47844;
-        private const int AbilityMax = 47845;        
+        private const int AbilityMax = 47845;
         private const int AbilityNothingness = 47868;
         private const int AbilityLookAndDespair = 47854;
         private const int AbilityDamningEdict = 47873;
@@ -83,6 +83,12 @@ namespace Lemegeton.Content
         private UltimaBlasterAM _ultimaBlasterAm;
         private BlackHoleAM _blackHoleAM;
         private KefkaSaysAM _kefkaSaysAM;
+#if !SANS_GOETIA
+        private DrawCleaves _drawCleaves;
+        private DrawUltimaBlasterLimitCut _ultimaBlasterLc;
+        private DrawKefkaSays _kefkaSays;
+        private DrawStrayApocalypse _strayApoc;
+#endif
 
         private enum PhaseEnum
         {
@@ -574,13 +580,13 @@ namespace Lemegeton.Content
                 pts[2] = new Tuple<float, float, string, int, int>(114.1421f, 114.1421f, "SE->NW", 2, 7);
                 pts[3] = new Tuple<float, float, string, int, int>(120.0f, 100.0f, "E->W", 3, 6);
                 pts[4] = new Tuple<float, float, string, int, int>(114.1421f, 85.85787f, "NE->SW", 4, 5);
-                pts[5] = new Tuple<float, float, string, int, int>(100.0f, 80.0f, "N->S", 5, 4); 
+                pts[5] = new Tuple<float, float, string, int, int>(100.0f, 80.0f, "N->S", 5, 4);
                 pts[6] = new Tuple<float, float, string, int, int>(85.85786f, 85.85787f, "NW->SE", 6, 3);
                 pts[7] = new Tuple<float, float, string, int, int>(80.0f, 100.0f, "W->E", 7, 2);
             }
 
             public override void Reset()
-            {                
+            {
                 _diveDirection = 0;
                 _dives = 0;
                 _markers = 0;
@@ -652,7 +658,7 @@ namespace Lemegeton.Content
                         ap.Assign(Signs.Roles["Sign8"], pty.GetByActorId(_marked[7]).GameObject);
                     }
                     else
-                    {                        
+                    {
                         for (int i = 0; i < 8; i++)
                         {
                             ap.Assign(Signs.Roles["Sign" + (i + 1).ToString()], pty.GetByActorId(_marked[_firstSafeSpot - 1]).GameObject);
@@ -705,7 +711,7 @@ namespace Lemegeton.Content
                 {
                     _nextAngle = (float)Math.Atan2(y - 100.0f, x - 100.0f);
                     Log(State.LogLevelEnum.Debug, null, "Next angle is {0}", _nextAngle);
-                    if (Math.Atan2(Math.Sin(_nextAngle - _startAngle), Math.Cos(_nextAngle - _startAngle)) < 0.0f)                    
+                    if (Math.Atan2(Math.Sin(_nextAngle - _startAngle), Math.Cos(_nextAngle - _startAngle)) < 0.0f)
                     {
                         _diveDirection = 1;
                     }
@@ -844,7 +850,7 @@ namespace Lemegeton.Content
                     _state.ClearAutoMarkers();
                 }
                 else if (MarkOnlyNecessary == true)
-                {                 
+                {
                     MarkSet();
                 }
             }
@@ -898,7 +904,7 @@ namespace Lemegeton.Content
                         break;
                     case 10:
                         ap.Assign(Signs.Roles["First1"], _thirdGo[1].GameObject);
-                        ap.Assign(AutomarkerSigns.SignEnum.None, _thirdGo[0].GameObject);                        
+                        ap.Assign(AutomarkerSigns.SignEnum.None, _thirdGo[0].GameObject);
                         break;
                 }
                 _fired = true;
@@ -1041,7 +1047,7 @@ namespace Lemegeton.Content
                 Signs2 = new AutomarkerSigns();
                 Signs3 = new AutomarkerSigns();
                 Timing = new AutomarkerTiming() { TimingType = AutomarkerTiming.TimingTypeEnum.Inherit, Parent = state.cfg.DefaultAutomarkerTiming };
-                Test = new System.Action(() => TestFunctionality());                
+                Test = new System.Action(() => TestFunctionality());
                 Signs1.SetRole("Stack1", AutomarkerSigns.SignEnum.Attack1, false);
                 Signs1.SetRole("Stack2", AutomarkerSigns.SignEnum.Attack2, false);
                 Signs1.SetRole("Stack3", AutomarkerSigns.SignEnum.Attack3, false);
@@ -1185,12 +1191,12 @@ namespace Lemegeton.Content
 
             public void AdvanceSet()
             {
-                CurrentSet++;                
+                CurrentSet++;
             }
 
             private void PerformMarking()
             {
-                AutomarkerPayload ap = null; 
+                AutomarkerPayload ap = null;
                 switch (_currentSet)
                 {
                     case 1: // early spreads and stacks (flood of naught)
@@ -1321,6 +1327,849 @@ namespace Lemegeton.Content
 
         #endregion
 
+#if !SANS_GOETIA
+
+        #region DrawCleaves
+
+        public class DrawCleaves : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(500)]
+            public bool DrawLatLong { get; set; } = true;
+
+            [AttributeOrderNumber(600)]
+            public bool DrawDamningEdict { get; set; } = true;
+
+            [AttributeOrderNumber(700)]
+            public bool DrawDespair { get; set; } = true;
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 DespairColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.2f);
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 EdictColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.2f);
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 LatlongColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.2f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private DateTime _startDespair = DateTime.MinValue;
+            private float _rotDespair;
+            private DateTime _startEdict = DateTime.MinValue;
+            private DateTime _startLatlong = DateTime.MinValue;
+            private float _xChaos, _yChaos, _rotChaos;
+            private uint _idChaos;
+            private uint _latlong;
+
+            public DrawCleaves(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public void FeedAction(uint src, uint actionId)
+            {
+                IGameObject go = _state.GetActorById(src);
+                if (go == null)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered action {0} from {1} at x {2} y {3} rot {4}", actionId, go.Name.ToString(), go.Position.X, go.Position.Z, go.Rotation);
+                switch (actionId)
+                {
+                    case AbilityLookAndDespair:
+                        _startDespair = DateTime.Now;
+                        _rotDespair = go.Rotation;
+                        break;
+                    case AbilityDamningEdict:
+                        _startEdict = DateTime.Now;
+                        _xChaos = go.Position.X;
+                        _yChaos = go.Position.Z;
+                        _rotChaos = go.Rotation;
+                        _idChaos = src;
+                        break;
+                    case AbilityLongitudalImplosion:
+                    case AbilityLatitudinalImplosion:
+                        _startLatlong = DateTime.Now;
+                        _xChaos = go.Position.X;
+                        _yChaos = go.Position.Z;
+                        _rotChaos = go.Rotation;
+                        _latlong = actionId;
+                        break;
+                }
+            }
+
+            public void TestFunctionality()
+            {
+                _state.InvokeZoneChange(1363);
+                Random r = new Random();
+                _startDespair = DateTime.Now;
+                _rotDespair = (float)(r.NextDouble() * Math.PI * 2.0);
+                _startEdict = DateTime.Now;
+                _startLatlong = DateTime.Now;
+                float a = (float)(r.NextDouble() * Math.PI * 2.0);
+                _xChaos = 100.0f + (float)(Math.Cos(a) * 10.0f);
+                _yChaos = 100.0f - (float)(Math.Sin(a) * 10.0f);
+                _rotChaos = (float)(r.NextDouble() * Math.PI * 2.0);
+                _latlong = AbilityLongitudalImplosion;
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (DrawLatLong == true)
+                {
+                    if (DateTime.Now < _startLatlong.AddSeconds(6.5))
+                    {
+                        float ang = _rotChaos - (float)(Math.PI / 2.0f) + (_latlong == AbilityLatitudinalImplosion ? (float)Math.PI / 2.0f : 0.0f);
+                        if (DateTime.Now > _startLatlong.AddSeconds(4.5))
+                        {
+                            ang += (float)Math.PI / 2.0f;
+                        }
+                        if (_state.StartDrawing(out draw) == true)
+                        {
+                            Vector3 t1 = new Vector3(_xChaos, 0.0f, _yChaos);
+                            Vector3 t2 = new Vector3(_xChaos + (float)(Math.Cos(ang - (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang - (Math.PI / 4.0f)) * 40.0f));
+                            Vector3 t3 = new Vector3(_xChaos + (float)(Math.Cos(ang + (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang + (Math.PI / 4.0f)) * 40.0f));
+                            Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                            Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                            Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                            draw.AddTriangleFilled(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), ImGui.GetColorU32(LatlongColor));
+                            t2 = new Vector3(_xChaos - (float)(Math.Cos(ang - (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos + (float)(Math.Sin(ang - (Math.PI / 4.0f)) * 40.0f));
+                            t3 = new Vector3(_xChaos - (float)(Math.Cos(ang + (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos + (float)(Math.Sin(ang + (Math.PI / 4.0f)) * 40.0f));
+                            v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                            v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                            draw.AddTriangleFilled(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), ImGui.GetColorU32(LatlongColor));
+                        }
+                    }
+                }
+                if (DrawDamningEdict == true)
+                {
+                    if (DateTime.Now < _startEdict.AddSeconds(4.5))
+                    {
+                        IGameObject go = _state.GetActorById(_idChaos);
+                        if (_state.StartDrawing(out draw) == true)
+                        {
+                            float ang = (go != null ? go.Rotation : _rotChaos) - (float)(Math.PI / 2.0f);
+                            Vector3 t1 = new Vector3(_xChaos + (float)(Math.Cos(ang - (Math.PI / 2.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang - (Math.PI / 2.0f)) * 40.0f));
+                            Vector3 t2 = new Vector3(_xChaos + (float)(Math.Cos(ang - (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang - (Math.PI / 4.0f)) * 40.0f));
+                            Vector3 t3 = new Vector3(_xChaos + (float)(Math.Cos(ang + (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang + (Math.PI / 4.0f)) * 40.0f));
+                            Vector3 t4 = new Vector3(_xChaos + (float)(Math.Cos(ang + (Math.PI / 2.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang + (Math.PI / 2.0f)) * 40.0f));
+                            Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                            Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                            Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                            Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                            draw.AddQuadFilled(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), new Vector2(v4.X, v4.Y), ImGui.GetColorU32(EdictColor));
+                        }
+                    }
+                }
+                if (DrawDespair == true)
+                {
+                    if (DateTime.Now < _startDespair.AddSeconds(4.5))
+                    {
+                        if (_state.StartDrawing(out draw) == true)
+                        {
+                            float ang = _rotDespair - (float)(Math.PI / 2.0f);
+                            float xd = (float)(Math.Cos(ang) * 20.0f);
+                            float yd = (float)(Math.Sin(ang) * 20.0f);
+                            float xxd = (float)(Math.Cos(ang - (Math.PI / 2.0f)) * 8.0f);
+                            float yyd = (float)(Math.Sin(ang - (Math.PI / 2.0f)) * 8.0f);
+                            Vector3 t1 = new Vector3(100.0f + xd + xxd, 0.0f, 100.0f - yd - yyd);
+                            Vector3 t2 = new Vector3(100.0f + xd - xxd, 0.0f, 100.0f - yd + yyd);
+                            Vector3 t3 = new Vector3(100.0f - xd - xxd, 0.0f, 100.0f + yd + yyd);
+                            Vector3 t4 = new Vector3(100.0f - xd + xxd, 0.0f, 100.0f + yd - yyd);
+                            Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                            Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                            Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                            Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                            draw.AddQuadFilled(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), new Vector2(v4.X, v4.Y), ImGui.GetColorU32(DespairColor));
+                        }
+                    }
+                }
+                return true;
+            }
+
+        }
+
+        #endregion
+
+        #region DrawUltimaBlasterLimitCut
+
+        public class DrawUltimaBlasterLimitCut : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 MarkerColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 0.5f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private float _startAngle = 0.0f;
+            private float _nextAngle = 0.0f;
+            private int _diveDirection = 0;
+            private int _dives = 0;
+            private DateTime _lastSeen = DateTime.MinValue;
+            private DateTime _startTime;
+
+            public DrawUltimaBlasterLimitCut(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public override void Reset()
+            {
+                _diveDirection = 0;
+                _dives = 0;
+                _lastSeen = DateTime.MinValue;
+            }
+
+            public void FeedAction(uint src)
+            {
+                if (_diveDirection != 0)
+                {
+                    return;
+                }
+                IGameObject go = _state.GetActorById(src);
+                if (go == null)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered action from {0} at x {1} y {2}", go.Name.ToString(), go.Position.X, go.Position.Z);
+                FeedAction(go.Position.X, go.Position.Z);
+            }
+
+            public void FeedAction(float x, float y)
+            {
+                if (_diveDirection != 0)
+                {
+                    return;
+                }
+                if (DateTime.Now < _lastSeen.AddSeconds(1))
+                {
+                    return;
+                }
+                _lastSeen = DateTime.Now;
+                Log(State.LogLevelEnum.Debug, null, "Registered action at x {0} y {1}", x, y);
+                if (_dives == 0)
+                {
+                    _startAngle = (float)Math.Atan2(y - 100.0f, x - 100.0f);
+                    Log(State.LogLevelEnum.Debug, null, "Start angle is {0}", _startAngle);
+                }
+                else
+                {
+                    _nextAngle = (float)Math.Atan2(y - 100.0f, x - 100.0f);
+                    Log(State.LogLevelEnum.Debug, null, "Next angle is {0}", _nextAngle);
+                    if (Math.Atan2(Math.Sin(_nextAngle - _startAngle), Math.Cos(_nextAngle - _startAngle)) < 0.0f)
+                    //if (_nextAngle > _startAngle)
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Going CW");
+                        _diveDirection = 1;
+                    }
+                    else
+                    {
+                        Log(State.LogLevelEnum.Debug, null, "Going CCW");
+                        _diveDirection = 2;
+                    }
+                    _startTime = DateTime.Now;
+                }
+                _dives++;
+            }
+
+            public void TestFunctionality()
+            {
+                if (_diveDirection != 0)
+                {
+                    Reset();
+                    return;
+                }
+                _state.InvokeZoneChange(1363);
+                Random r = new Random();
+                int i = r.Next(0, 8);
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
+                Vector2[] pts = new Vector2[8];
+                pts[0] = new Vector2(85.85786f, 114.1421f); // SW                
+                pts[1] = new Vector2(100.0f, 120.0f); // S
+                pts[2] = new Vector2(114.1421f, 114.1421f); // SE
+                pts[3] = new Vector2(120.0f, 100.0f); // E
+                pts[4] = new Vector2(114.1421f, 85.85787f); // NE
+                pts[5] = new Vector2(100.0f, 80.0f); // N
+                pts[6] = new Vector2(85.85786f, 85.85787f); // NW
+                pts[7] = new Vector2(80.0f, 100.0f); // W
+                int j = (i + (r.Next(0, 2) == 0 ? 1 : -1)) % 8;
+                if (j < 0)
+                {
+                    j += 8;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Testing with {0} -> {1}", i, j);
+                FeedAction(pts[i].X, pts[i].Y);
+                _lastSeen = DateTime.MinValue;
+                FeedAction(pts[j].X, pts[j].Y);
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_state.StartDrawing(out draw) == false)
+                {
+                    return false;
+                }
+                if (_diveDirection == 0)
+                {
+                    return false;
+                }
+                if (DateTime.Now > _startTime.AddSeconds(20))
+                {
+                    Reset();
+                    return false;
+                }
+                float a = _startAngle + (float)Math.PI;
+                a += (float)(Math.PI / (_diveDirection == 1 ? 8.0f : -8.0f));
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
+                float defSize = ImGui.GetFontSize();
+                float mul = 60.0f / defSize;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector3 t1 = new Vector3(100.0f + ((float)Math.Cos(a) * 20.0f), 0.0f, 100.0f + ((float)Math.Sin(a) * 20.0f));
+                    Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                    Vector2 v2d = new Vector2(v1.X, v1.Y);
+                    draw.AddCircle(v2d, 40.0f, ImGui.GetColorU32(MarkerColor), 16, 5.0f);
+                    string tag = (i + 1).ToString();
+                    Vector2 sz = ImGui.CalcTextSize(tag);
+                    sz.X *= mul;
+                    sz.Y *= mul;
+                    v2d.X -= sz.X / 2.0f;
+                    v2d.Y -= sz.Y / 2.0f;
+                    draw.AddText(
+                        ImGui.GetFont(),
+                        60.0f,
+                        v2d,
+                        ImGui.GetColorU32(MarkerColor),
+                        tag
+                    );
+                    a += (float)(Math.PI / (_diveDirection == 1 ? 4.0f : -4.0f));
+                }
+                return true;
+            }
+
+        }
+
+        #endregion
+
+        #region DrawKefkaSays
+
+        public class DrawKefkaSays : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            private bool _exdeathReal = true;
+            private bool _chaosReal = true;
+
+            private int _bombState = 0;
+            private int _stackState = 0;
+            private int _bdState = 0;
+            private int _waterState = 0;
+            private int _fireState = 0;
+            private int _shriekState = 0;
+            private DateTime _bombEnd;
+            private DateTime _stackEnd;
+            private DateTime _bdEnd;
+            private DateTime _waterEnd;
+            private DateTime _fireEnd;
+            private DateTime _shriekEnd;
+
+            private List<Tuple<IGameObject, DateTime>> _spreads = new List<Tuple<IGameObject, DateTime>>();
+            private List<Tuple<IGameObject, DateTime, bool>> _gazes = new List<Tuple<IGameObject, DateTime, bool>>();
+            private List<Tuple<bool, DateTime>> _fireWater = new List<Tuple<bool, DateTime>>();
+            private int _currentSet = 1;
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            public DrawKefkaSays(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+                AutomarkerSigns Signs = new AutomarkerSigns();
+                Signs.SetRole("Stack1", AutomarkerSigns.SignEnum.Attack1, false);
+                Signs.SetRole("Stack2", AutomarkerSigns.SignEnum.Attack2, false);
+                Signs.SetRole("Stack3", AutomarkerSigns.SignEnum.Attack3, false);
+                Signs.SetRole("Stack4", AutomarkerSigns.SignEnum.Attack4, false);
+                Signs.SetRole("Stack5", AutomarkerSigns.SignEnum.Attack5, false);
+                Signs.SetRole("Stack6", AutomarkerSigns.SignEnum.Attack6, false);
+                Signs.SetRole("Forked1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("Forked2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("LookAt1", AutomarkerSigns.SignEnum.Bind1, false);
+                Signs.SetRole("LookAt2", AutomarkerSigns.SignEnum.Bind2, false);
+                Signs.SetRole("LookAway1", AutomarkerSigns.SignEnum.Ignore1, false);
+                Signs.SetRole("LookAway2", AutomarkerSigns.SignEnum.Ignore2, false);
+                Signs.SetRole("Donut", AutomarkerSigns.SignEnum.Circle, false);
+                Signs.SetRole("Twister", AutomarkerSigns.SignEnum.Plus, false);
+            }
+
+            public override void Reset()
+            {
+                Log(State.LogLevelEnum.Debug, null, "Reset");
+                _bombState = 0;
+                _stackState = 0;
+                _bdState = 0;
+                _waterState = 0;
+                _fireState = 0;
+                _shriekState = 0;
+                _spreads.Clear();
+                _gazes.Clear();
+                _fireWater.Clear();
+                _currentSet = 1;
+            }
+
+            public void TestFunctionality()
+            {
+                _state.InvokeZoneChange(1363);
+                if (_stackState != 0 || _bombState != 0 || _bdState != 0 || _waterState != 0 || _fireState != 0 || _shriekState != 0)
+                {
+                    Reset();
+                }
+                else
+                {
+                    Random r = new Random();
+                    FeedRealFake((uint)(r.Next(2) == 0 ? StatusSpecialChaosFake : StatusSpecialChaosReal));
+                    FeedRealFake((uint)(r.Next(2) == 0 ? StatusSpecialExdeathFake : StatusSpecialExdeathReal));
+                    IGameObject me = _state.ot.LocalPlayer as IGameObject;
+                    FeedStatus((uint)me.GameObjectId, StatusCompressedWater, 10.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusForkedLightning, 10.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusDynamicFluid, 15.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusEntropy, 20.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusAccelerationBomb, 25.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusBeyondDeath, 30.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusAllaganField, 30.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusCursedShriek, 35.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusCursedShriek, 35.0f);
+                    FeedRealFake((uint)(r.Next(2) == 0 ? StatusSpecialExdeathFake : StatusSpecialExdeathReal));
+                    FeedStatus((uint)me.GameObjectId, StatusCursedShriek, 55.0f);
+                    FeedStatus((uint)me.GameObjectId, StatusCursedShriek, 55.0f);
+                }
+            }
+
+            internal void FeedRealFake(uint id)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                switch (id)
+                {
+                    case StatusSpecialChaosFake:
+                        Log(LogLevelEnum.Debug, null, "Chaos fake");
+                        _chaosReal = false;
+                        break;
+                    case StatusSpecialChaosReal:
+                        Log(LogLevelEnum.Debug, null, "Chaos real");
+                        _chaosReal = true;
+                        break;
+                    case StatusSpecialExdeathFake:
+                        Log(LogLevelEnum.Debug, null, "Exdeath fake");
+                        _exdeathReal = false;
+                        break;
+                    case StatusSpecialExdeathReal:
+                        Log(LogLevelEnum.Debug, null, "Exdeath real");
+                        _exdeathReal = true;
+                        break;
+                }
+            }
+
+            internal void FeedStatus(uint dest, uint statusId, float duration)
+            {
+                if (Active == false)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered status {0} on {1} for {2} s", statusId, dest, duration);
+                IGameObject me = _state.ot.LocalPlayer as IGameObject;
+                IGameObject de = _state.GetActorById(dest);
+                switch (statusId)
+                {
+                    case StatusForkedLightning: // exdeath
+                        if (_exdeathReal == true)
+                        {
+                            _spreads.Add(new Tuple<IGameObject, DateTime>(de, DateTime.Now.AddSeconds(duration)));
+                        }
+                        break;
+                    case StatusCompressedWater: // exdeath
+                        if (_exdeathReal == false)
+                        {
+                            _spreads.Add(new Tuple<IGameObject, DateTime>(de, DateTime.Now.AddSeconds(duration)));
+                        }
+                        break;
+                    case StatusDynamicFluid: // chaos
+                        _fireWater.Add(new Tuple<bool, DateTime>(_chaosReal, DateTime.Now.AddSeconds(duration)));
+                        break;
+                    case StatusEntropy: // chaos
+                        _fireWater.Add(new Tuple<bool, DateTime>(_chaosReal == false, DateTime.Now.AddSeconds(duration)));
+                        break;
+                    case StatusCursedShriek: // exdeath
+                        _gazes.Add(new Tuple<IGameObject, DateTime, bool>(de, DateTime.Now.AddSeconds(duration), _exdeathReal));
+                        break;
+                }
+                if (me.GameObjectId == dest)
+                {
+                    switch (statusId)
+                    {
+                        case StatusForkedLightning: // exdeath
+                            _stackState = _exdeathReal == true ? 2 : 1;
+                            _stackEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusCompressedWater: // exdeath
+                            _stackState = _exdeathReal == true ? 1 : 2;
+                            _stackEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusAccelerationBomb: // exdeath
+                            _bombState = _exdeathReal == true ? 1 : 2;
+                            _bombEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusBeyondDeath: // exdeath
+                            _bdState = _exdeathReal == true ? 1 : 2;
+                            _bdEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusAllaganField: // exdeath
+                            _bdState = _exdeathReal == true ? 2 : 1;
+                            _bdEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusDynamicFluid: // chaos
+                            _waterState = _chaosReal == true ? 1 : 2;
+                            _waterEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusEntropy: // chaos
+                            _fireState = _chaosReal == true ? 1 : 2;
+                            _fireEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusCursedShriek: // exdeath
+                            _shriekState = _exdeathReal == true ? 1 : 2;
+                            _shriekEnd = DateTime.Now.AddSeconds(duration);
+                            break;
+                        case StatusBlackWound: // exdeath
+                        case StatusWhiteWound: // exdeath
+                            break;
+                    }
+                }
+            }
+
+            private class item
+            {
+                public float t;
+                public string s;
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                ImDrawListPtr draw;
+                if (_stackState != 0 || _bombState != 0 || _bdState != 0 || _waterState != 0 || _fireState != 0 || _shriekState != 0)
+                {
+                    if (_state.StartDrawing(out draw) == true)
+                    {
+                        List<item> items = new List<item>();
+                        float x = 1300.0f;
+                        float y = 200.0f;
+                        float ts = 40.0f;
+                        uint col = ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                        uint col2 = ImGui.GetColorU32(new Vector4(1.0f, 1.0f, 0.0f, 1.0f));
+                        if (_bombState != 0)
+                        {
+                            float t = (float)(_bombEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _bombState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Bomb: {0} in {1:0.0}", (_bombState == 1 ? "stop" : "keep moving"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 0.0f)), t > 5.0 ? col : col2, String.Format("Bomb: {0} in {1:0.0}", (_bombState == 1 ? "stop" : "keep moving"), t));
+                            }
+                        }
+                        if (_stackState != 0)
+                        {
+                            float t = (float)(_stackEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _stackState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Fork: {0} in {1:0.0}", (_stackState == 1 ? "STACK" : "SPREAD"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 1.0f)), t > 5.0 ? col : col2, String.Format("Fork: {0} in {1:0.0}", (_stackState == 1 ? "STACK" : "SPREAD"), t));
+                            }
+                        }
+                        if (_waterState != 0)
+                        {
+                            float t = (float)(_waterEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _waterState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Water: {0} in {1:0.0}", (_waterState == 1 ? "donut" : "twister"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 2.0f)), t > 5.0 ? col : col2, String.Format("Water: {0} in {1:0.0}", (_waterState == 1 ? "donut" : "twister"), t));
+                            }
+                        }
+                        if (_fireState != 0)
+                        {
+                            float t = (float)(_fireEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _fireState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Fire: {0} in {1:0.0}", (_fireState == 2 ? "donut" : "twister"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 3.0f)), t > 5.0 ? col : col2, String.Format("Fire: {0} in {1:0.0}", (_fireState == 2 ? "donut" : "twister"), t));
+                            }
+                        }
+                        if (_bdState != 0)
+                        {
+                            float t = (float)(_bdEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _bdState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Death: {0} in {1:0.0}", (_bdState == 1 ? "die" : "live"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 4.0f)), t > 5.0 ? col : col2, String.Format("Death: {0} in {1:0.0}", (_bdState == 1 ? "die" : "live"), t));
+                            }
+                        }
+                        if (_shriekState != 0)
+                        {
+                            float t = (float)(_shriekEnd - DateTime.Now).TotalSeconds;
+                            if (t < 0.0f)
+                            {
+                                _shriekState = 0;
+                            }
+                            else
+                            {
+                                items.Add(new item() { t = t, s = String.Format("Shriek: {0} in {1:0.0}", (_shriekState == 1 ? "look away" : "look at"), t) });
+                                //draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 5.0f)), t > 5.0 ? col : col2, String.Format("Shriek: {0} in {1:0.0}", (_shriekState == 1 ? "look away" : "look at"), t));
+                            }
+                        }
+                        if (_gazes.Count == 4)
+                        {
+                            var gazes = (from ix in _gazes orderby ix.Item2 ascending select ix).Take(2).ToList();
+                            float t = (float)(gazes[0].Item2 - DateTime.Now).TotalSeconds;
+                            if (t > 0.0f)
+                            {
+                                draw.AddText(ImGui.GetFont(), ts, new Vector2(x + 500 + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 0.0f)), t > 5.0 ? col : col2, String.Format("1st GAZE: {0} in {1:0.0}", (gazes[0].Item3 == true ? "look away" : "look at"), t));
+                            }
+                            gazes = (from ix in _gazes orderby ix.Item2 descending select ix).Take(2).ToList();
+                            t = (float)(gazes[0].Item2 - DateTime.Now).TotalSeconds;
+                            if (t > 0.0f)
+                            {
+                                draw.AddText(ImGui.GetFont(), ts, new Vector2(x + 500 + (t < 5.0 ? (float)Math.Sin(t * 6.0f) * 6.0f : 0.0f), y + (ts * 1.0f)), t > 5.0 ? col : col2, String.Format("2nd GAZE: {0} in {1:0.0}", (gazes[0].Item3 == true ? "look away" : "look at"), t));
+                            }
+                        }
+                        int j = 0;
+                        items.Sort((a, b) => a.t.CompareTo(b.t));
+                        foreach (item i in items)
+                        {
+                            draw.AddText(ImGui.GetFont(), ts, new Vector2(x + (i.t < 7.0 ? (float)Math.Sin(i.t * 6.0f) * 6.0f : 0.0f), y + (ts * j)), i.t > 7.0 ? col : col2, i.s);
+                            j++;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            private void PerformMarking()
+            {
+                switch (_currentSet)
+                {
+                    case 1: // early spreads and stacks
+                        {
+                            var spreads = (from ix in _spreads orderby ix.Item2 ascending select ix.Item1).Take(2).ToList();
+                            Party pty = _state.GetPartyMembers();
+                            List<Party.PartyMember> stacks = new List<Party.PartyMember>(
+                                from ix in pty.Members where spreads.Contains(ix.GameObject) == false select ix
+                            );
+                        }
+                        break;
+                    case 2: // early gaze
+                        {
+                            var gazes = (from ix in _gazes orderby ix.Item2 ascending select ix).Take(2).ToList();
+                        }
+                        break;
+                    case 3: // early firewater
+                        {
+                            var donut = (from ix in _fireWater orderby ix.Item2 ascending select ix).Take(1).ToList();
+                        }
+                        break;
+                    case 4: // late spreads and stacks
+                        {
+                            var spreads = (from ix in _spreads orderby ix.Item2 descending select ix.Item1).Take(2).ToList();
+                            Party pty = _state.GetPartyMembers();
+                            List<Party.PartyMember> stacks = new List<Party.PartyMember>(
+                                from ix in pty.Members where spreads.Contains(ix.GameObject) == false select ix
+                            );
+                        }
+                        break;
+                    case 5: // late gaze
+                        {
+                            var gazes = (from ix in _gazes orderby ix.Item2 descending select ix).Take(2).ToList();
+                        }
+                        break;
+                    case 6: // late firewater
+                        {
+                            var donut = (from ix in _fireWater orderby ix.Item2 descending select ix).Take(1).ToList();
+                        }
+                        break;
+                }
+            }
+        }
+
+        #endregion
+
+        #region DrawStrayApocalypse
+
+        public class DrawStrayApocalypse : Core.ContentItem
+        {
+
+            public override FeaturesEnum Features => FeaturesEnum.Drawing;
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 WarningColor { get; set; } = new Vector4(1.0f, 1.0f, 0.0f, 0.2f);
+
+            [AttributeOrderNumber(1000)]
+            public Vector4 HighlightColor { get; set; } = new Vector4(1.0f, 0.0f, 0.0f, 0.2f);
+
+            [DebugOption]
+            [AttributeOrderNumber(2000)]
+            public System.Action Test { get; set; }
+
+            private List<Tuple<float, float, float, DateTime>> _exas = new List<Tuple<float, float, float, DateTime>>();
+
+            public DrawStrayApocalypse(State state) : base(state)
+            {
+                Enabled = false;
+                Test = new System.Action(() => TestFunctionality());
+            }
+
+            public void FeedAction(uint src, float rotation)
+            {
+                IGameObject go = _state.GetActorById(src);
+                if (go == null)
+                {
+                    return;
+                }
+                Log(State.LogLevelEnum.Debug, null, "Registered from {0} at x {1} y {2} rot {3}", go.Name.ToString(), go.Position.X, go.Position.Z, go.Rotation);
+                AddExa(go.Position.X, go.Position.Z, go.Rotation, DateTime.Now);
+            }
+
+            public void TestFunctionality()
+            {
+                _state.InvokeZoneChange(1363);
+                /*
+                AddExa(95.0f, 70.0f, 0.78536224f, DateTime.Now);
+                AddExa(80.0f, 85.0f, 0.78536224f, DateTime.Now);
+                AddExa(125.0f, 90.0f, -0.7854581f, DateTime.Now.AddSeconds(2.5));
+                AddExa(110.0f, 75.0f, -0.7854581f, DateTime.Now.AddSeconds(2.5));
+                AddExa(85.0f, 80.0f, 0.78536224f, DateTime.Now.AddSeconds(5.0));
+                AddExa(70.0f, 95.0f, 0.78536224f, DateTime.Now.AddSeconds(5.0));
+                AddExa(120.0f, 85.0f, -0.7854581f, DateTime.Now.AddSeconds(7.5));
+                AddExa(105.0f, 70.0f, -0.7854581f, DateTime.Now.AddSeconds(7.5));
+                AddExa(90.0f, 75.0f, 0.78536224f, DateTime.Now.AddSeconds(10.0));
+                AddExa(75.0f, 90.0f, 0.78536224f, DateTime.Now.AddSeconds(10.0));
+                AddExa(130.0f, 95.0f, -0.7854581f, DateTime.Now.AddSeconds(12.5));
+                AddExa(115.0f, 80.0f, -0.7854581f, DateTime.Now.AddSeconds(12.5));
+                */
+                AddExa(95.0f, 70.0f, 0.78536224f, DateTime.Now);
+                AddExa(80.0f, 85.0f, 0.78536224f, DateTime.Now);
+                AddExa(125.0f, 90.0f, -0.7854581f, DateTime.Now.AddSeconds(2.5));
+                AddExa(110.0f, 75.0f, -0.7854581f, DateTime.Now.AddSeconds(2.5));
+                AddExa(90.0f, 75.0f, 0.78536224f, DateTime.Now.AddSeconds(5.0));
+                AddExa(75.0f, 90.0f, 0.78536224f, DateTime.Now.AddSeconds(5.0));
+                AddExa(130.0f, 95.0f, -0.7854581f, DateTime.Now.AddSeconds(7.5));
+                AddExa(115.0f, 80.0f, -0.7854581f, DateTime.Now.AddSeconds(7.5));
+                AddExa(85.0f, 80.0f, 0.78536224f, DateTime.Now.AddSeconds(10.0));
+                AddExa(70.0f, 95.0f, 0.78536224f, DateTime.Now.AddSeconds(10.0));
+                AddExa(120.0f, 85.0f, -0.7854581f, DateTime.Now.AddSeconds(12.5));
+                AddExa(105.0f, 70.0f, -0.7854581f, DateTime.Now.AddSeconds(12.5));
+            }
+
+            public void AddExa(float x, float y, float r, DateTime dt)
+            {
+                _exas.Add(new Tuple<float, float, float, DateTime>(x, y, r - (float)(Math.PI / 2.0f), dt));
+            }
+
+            protected override bool ExecutionImplementation()
+            {
+                if (_exas.Count > 0)
+                {
+                    while (_exas.Count > 0 && DateTime.Now > _exas[0].Item4.AddSeconds(9.0))
+                    {
+                        _exas.RemoveAt(0);
+                    }
+                }
+                if (_exas.Count > 0)
+                {
+                    ImDrawListPtr draw;
+                    if (_state.StartDrawing(out draw) == true)
+                    {
+                        foreach (var tp in _exas)
+                        {
+                            if (DateTime.Now < tp.Item4)
+                            {
+                                continue;
+                            }
+                            float td = (float)(DateTime.Now - tp.Item4).TotalSeconds;
+                            float a = td > 4.0f ? 1.0f : td / 4.0f;
+                            float ax = 45.0f * a * a * a;
+                            float xd = (float)Math.Cos(tp.Item3 + (float)(Math.PI / 2.0f)) * 6.0f;
+                            float yd = (float)Math.Sin(tp.Item3 + (float)(Math.PI / 2.0f)) * 6.0f;
+                            Vector3 t1 = new Vector3(tp.Item1 + xd, 0.0f, tp.Item2 - yd);
+                            Vector3 t4 = new Vector3(tp.Item1 - xd, 0.0f, tp.Item2 + yd);
+                            Vector3 t2 = new Vector3(t1.X + (float)(Math.Cos(tp.Item3) * ax), t1.Y, t1.Z - (float)(Math.Sin(tp.Item3) * ax));
+                            Vector3 t3 = new Vector3(t4.X + (float)(Math.Cos(tp.Item3) * ax), t4.Y, t4.Z - (float)(Math.Sin(tp.Item3) * ax));
+                            Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                            Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                            Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                            Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                            Vector4 col = (td < 4.0) ? WarningColor : HighlightColor;
+                            draw.AddQuadFilled(
+                                new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), new Vector2(v4.X, v4.Y),
+                                ImGui.GetColorU32(new Vector4(col.X, col.Y, col.Z, col.W * a))
+                            );
+                        }
+                        /*
+                        for (int i = 0; i < _exas.c)
+                        float ang = (go != null ? go.Rotation : _rotChaos) - (float)(Math.PI / 2.0f);
+                        Vector3 t1 = new Vector3(_xChaos + (float)(Math.Cos(ang - (Math.PI / 2.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang - (Math.PI / 2.0f)) * 40.0f));
+                        Vector3 t2 = new Vector3(_xChaos + (float)(Math.Cos(ang - (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang - (Math.PI / 4.0f)) * 40.0f));
+                        Vector3 t3 = new Vector3(_xChaos + (float)(Math.Cos(ang + (Math.PI / 4.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang + (Math.PI / 4.0f)) * 40.0f));
+                        Vector3 t4 = new Vector3(_xChaos + (float)(Math.Cos(ang + (Math.PI / 2.0f)) * 40.0f), 0.0f, _yChaos - (float)(Math.Sin(ang + (Math.PI / 2.0f)) * 40.0f));
+                        Vector3 v1 = _state.plug._ui.TranslateToScreen(t1.X, t1.Y, t1.Z);
+                        Vector3 v2 = _state.plug._ui.TranslateToScreen(t2.X, t2.Y, t2.Z);
+                        Vector3 v3 = _state.plug._ui.TranslateToScreen(t3.X, t3.Y, t3.Z);
+                        Vector3 v4 = _state.plug._ui.TranslateToScreen(t4.X, t4.Y, t4.Z);
+                        draw.AddQuadFilled(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y), new Vector2(v3.X, v3.Y), new Vector2(v4.X, v4.Y), ImGui.GetColorU32(EdictColor));
+                        */
+                    }
+                }
+                return true;
+            }
+
+        }
+
+        #endregion
+
+#endif
+
         public UltDancingMad(State st) : base(st)
         {
             st.OnZoneChange += OnZoneChange;
@@ -1367,6 +2216,12 @@ namespace Lemegeton.Content
                     }
                     break;
                 case PhaseEnum.P3_ExChaos:
+#if !SANS_GOETIA
+                    if (actionId == AbilityUltimaBlaster)
+                    {
+                        _ultimaBlasterLc.FeedAction(src);
+                    }
+#endif
                     if (actionId == AbilityUltimaBlaster || actionId == AbilityUltimaBlaster2)
                     {
                         _ultimaBlasterAm.FeedAction(src, actionId);
@@ -1421,6 +2276,14 @@ namespace Lemegeton.Content
                 case AbilityDefinitionOfInsanity:
                     CurrentPhase = PhaseEnum.P3_ExChaos;
                     break;
+#if !SANS_GOETIA
+                case AbilityLookAndDespair:
+                case AbilityLongitudalImplosion:
+                case AbilityLatitudinalImplosion:
+                case AbilityDamningEdict:
+                    _drawCleaves.FeedAction(src, actionId);
+                    break;
+#endif
                 case AbilityMax:
                     CurrentPhase = PhaseEnum.P3_BlackHole;
                     break;
@@ -1445,6 +2308,11 @@ namespace Lemegeton.Content
                         CurrentPhase = PhaseEnum.P5_UltimaKefka;
                     }
                     break;
+#if !SANS_GOETIA
+                case AbilityStrayApocalypse:
+                    _strayApoc.FeedAction(src, rotation);
+                    break;
+#endif
             }
         }
 
@@ -1472,6 +2340,9 @@ namespace Lemegeton.Content
                     {
                         if (stacks == StatusSpecialExdeathFake || stacks == StatusSpecialExdeathReal || stacks == StatusSpecialChaosFake || stacks == StatusSpecialChaosReal)
                         {
+#if !SANS_GOETIA
+                            _kefkaSays.FeedRealFake((uint)stacks);
+#endif
                             _kefkaSaysAM.FeedRealFake((uint)stacks);
                         }
                     }
@@ -1487,6 +2358,9 @@ namespace Lemegeton.Content
                 case StatusThunderCharged:
                     if (CurrentPhase == PhaseEnum.P4_KefkaSays && gained == true)
                     {
+#if !SANS_GOETIA
+                        _kefkaSays.FeedStatus(dest, statusId, duration);
+#endif
                         _kefkaSaysAM.FeedStatus(dest, statusId, duration, gained);
                     }
                     break;
@@ -1494,6 +2368,12 @@ namespace Lemegeton.Content
                 case StatusCursedShriek:
                     if (CurrentPhase == PhaseEnum.P4_KefkaSays)
                     {
+#if !SANS_GOETIA
+                        if (gained == true)
+                        {
+                            _kefkaSays.FeedStatus(dest, statusId, duration);
+                        }
+#endif
                         _kefkaSaysAM.FeedStatus(dest, statusId, duration, gained);
                     }
                     break;
@@ -1545,6 +2425,12 @@ namespace Lemegeton.Content
                 _ultimaBlasterAm = (UltimaBlasterAM)Items["UltimaBlasterAM"];
                 _blackHoleAM = (BlackHoleAM)Items["BlackHoleAM"];
                 _kefkaSaysAM = (KefkaSaysAM)Items["KefkaSaysAM"];
+#if !SANS_GOETIA
+                _drawCleaves = (DrawCleaves)Items["DrawCleaves"];
+                _ultimaBlasterLc = (DrawUltimaBlasterLimitCut)Items["DrawUltimaBlasterLimitCut"];
+                _kefkaSays = (DrawKefkaSays)Items["DrawKefkaSays"];
+                _strayApoc = (DrawStrayApocalypse)Items["DrawStrayApocalypse"];
+#endif
                 _state.OnCombatChange += OnCombatChange;
                 LogItems();
             }

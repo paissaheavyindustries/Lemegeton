@@ -59,7 +59,7 @@ namespace Lemegeton
 #else
         public string Name => "Lemegeton";
 #endif
-        public string Version = "1.0.8.6";
+        public string Version = "1.0.8.7";
 
         internal class ActionTypeItem
         {
@@ -112,6 +112,7 @@ namespace Lemegeton
             new Tuple<Version, string>(new System.Version("1.0.8.4"), "Changelog/1.0.8.4"),
             new Tuple<Version, string>(new System.Version("1.0.8.5"), "Changelog/1.0.8.5"),
             new Tuple<Version, string>(new System.Version("1.0.8.6"), "Changelog/1.0.8.6"),
+            new Tuple<Version, string>(new System.Version("1.0.8.7"), "Changelog/1.0.8.7"),
         };
         internal List<Version> ChangeLogVersions = null;        
 
