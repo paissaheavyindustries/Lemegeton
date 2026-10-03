@@ -326,22 +326,17 @@ namespace Lemegeton.Content
                     foreach (var kp in _amLastPayload.assignments)
                     {
                         AutomarkerSigns.SignEnum expectedSign = kp.Key;
-                        foreach (GameObject expectedActor in kp.Value)
+                        foreach (uint expectedActorId in kp.Value)
                         {
                             bool ret;
                             AutomarkerSigns.SignEnum currentSign;
-                            if (expectedActor == null)
-                            {
-                                Log(LogLevelEnum.Warning, null, "Actor for {0} is null, are they in a different zone?", kp.Key);
-                                continue;
-                            }
                             if (_state.cfg.AutomarkerSoft == true)
                             {
                                 ret = true;
                                 currentSign = AutomarkerSigns.SignEnum.None;
                                 foreach (KeyValuePair<AutomarkerSigns.SignEnum, ulong> kp2 in _state.SoftMarkers)
                                 {                                    
-                                    if (kp2.Value == expectedActor.GameObjectId)
+                                    if (kp2.Value == expectedActorId)
                                     {
                                         currentSign = kp2.Key;
                                     }
@@ -349,11 +344,11 @@ namespace Lemegeton.Content
                             }
                             else
                             { 
-                                ret = _state.GetCurrentMarker(expectedActor.GameObjectId, out currentSign);
+                                ret = _state.GetCurrentMarker(expectedActorId, out currentSign);
                             }
                             if (ret == false)
                             {
-                                Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActor);
+                                Log(LogLevelEnum.Debug, null, "Couldn't figure out marker on {0}", expectedActorId);
                                 AmFails++;
                             }
                             else
@@ -400,11 +395,11 @@ namespace Lemegeton.Content
                                     (currentSign == expectedSign)
                                 )
                                 {
-                                    Log(LogLevelEnum.Debug, null, "{0} has {1} as expected ({2})", expectedActor, currentSign, expectedSign);
+                                    Log(LogLevelEnum.Debug, null, "{0} has {1} as expected ({2})", expectedActorId, currentSign, expectedSign);
                                 }
                                 else
                                 {
-                                    Log(LogLevelEnum.Error, null, "{0} has {1} instead of expected {2}", expectedActor, currentSign, expectedSign);
+                                    Log(LogLevelEnum.Error, null, "{0} has {1} instead of expected {2}", expectedActorId, currentSign, expectedSign);
                                     AmFails++;
                                 }
                             }
