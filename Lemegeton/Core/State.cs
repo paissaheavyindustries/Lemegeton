@@ -105,11 +105,11 @@ namespace Lemegeton.Core
         {
             
             public State State { get; set; }
-            public Delegate Function { get; set; } = null;
+            public Action Function { get; set; } = null;
             public string CommandText { get; set; }
-            public object[] Params { get; set; }
             public DateTime FireAt { get; set; } = DateTime.MinValue;
             public uint ActorId { get; set; } = 0;
+            public bool RequiresFrameworkThread { get; set; } = false;
 
             private unsafe void InvokeCommand()
             {
@@ -149,7 +149,7 @@ namespace Lemegeton.Core
                 {
                     if (Function != null)
                     {
-                        Function.DynamicInvoke(Params);                        
+                        Function();
                     }
                     else
                     {
@@ -1225,8 +1225,9 @@ namespace Lemegeton.Core
 
         internal void QueueInvocation(DeferredInvoke di)
         {
-            List<DeferredInvoke> queue = cfg.QueueFramework == true ? InvoqFramework : InvoqThread;
-            AutoResetEvent ev = cfg.QueueFramework == true ? null : InvoqThreadNew;
+            bool useFramework = di.RequiresFrameworkThread || cfg.QueueFramework;
+            List<DeferredInvoke> queue = useFramework == true ? InvoqFramework : InvoqThread;
+            AutoResetEvent ev = useFramework == true ? null : InvoqThreadNew;
             lock (queue)
             {
                 queue.Add(di);
@@ -1693,11 +1694,15 @@ namespace Lemegeton.Core
                 {                    
                     startTime = startTime.AddMilliseconds(delay);
                     Log(LogLevelEnum.Debug, null, "At {0}, mark actor {1:X} with {2} on instance {3}", startTime, go, kp.Key, _runInstance);
+                    ulong run = _runInstance;
+                    IGameObject actor = go;
+                    AutomarkerSigns.SignEnum sign = kp.Key;
+                    bool soft = ap.softMarker;
                     DeferredInvoke di = new DeferredInvoke()
                     {
                         State = this,
-                        Function = (MarkingMethodDelegate)PerformMarking,
-                        Params = new object[] { _runInstance, go, kp.Key, ap.softMarker },
+                        RequiresFrameworkThread = true,
+                        Function = () => PerformMarking(run, actor, sign, soft),
                         FireAt = startTime
                     };
                     QueueInvocation(di);
@@ -1907,11 +1912,14 @@ namespace Lemegeton.Core
                         Log(LogLevelEnum.Debug, null, "Using function pointer to remove mark on actor {0} by reassigning {1}", go, marker);
                         if (cfg.DebugOnlyLogAutomarkers == false)
                         {
+                            nint markingCtrl = _sigs["MarkingCtrl"];
+                            byte markerId = (byte)AutomarkerSigns.GetSignIndex(marker);
+                            uint actorId = (uint)go.GameObjectId;
                             DeferredInvoke di = new DeferredInvoke()
                             {
                                 State = this,
-                                Function = _markingFuncPtr,
-                                Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), (uint)go.GameObjectId }
+                                RequiresFrameworkThread = true,
+                                Function = () => _markingFuncPtr(markingCtrl, markerId, actorId)
                             };                            
                             QueueInvocation(di);
                         }
@@ -1946,6 +1954,7 @@ namespace Lemegeton.Core
                         DeferredInvoke di = new DeferredInvoke()
                         {
                             State = this,
+                            RequiresFrameworkThread = true,
                             CommandText = cmd
                         };                        
                         QueueInvocation(di);
@@ -2064,11 +2073,14 @@ namespace Lemegeton.Core
                     if (cfg.DebugOnlyLogAutomarkers == false)
                     {
                         _markersApplied = true;
+                        nint markingCtrl = _sigs["MarkingCtrl"];
+                        byte markerId = (byte)AutomarkerSigns.GetSignIndex(sign);
+                        uint actorId = (uint)go.GameObjectId;
                         DeferredInvoke di = new DeferredInvoke()
                         {
                             State = this,
-                            Function = _markingFuncPtr,
-                            Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(sign), (uint)go.GameObjectId },
+                            RequiresFrameworkThread = true,
+                            Function = () => _markingFuncPtr(markingCtrl, markerId, actorId),
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
                         QueueInvocation(di);
@@ -2117,6 +2129,7 @@ namespace Lemegeton.Core
                         DeferredInvoke di = new DeferredInvoke()
                         {
                             State = this,
+                            RequiresFrameworkThread = true,
                             CommandText = cmd,
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
