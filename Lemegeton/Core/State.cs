@@ -1685,22 +1685,22 @@ namespace Lemegeton.Core
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
             DateTime startTime = DateTime.Now;            
             int delay = at.SampleInitialTime();
-            foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<IGameObject>> kp in ap.assignments)
+            foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<uint>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
                 {
                     continue;
                 }                
-                foreach (IGameObject go in kp.Value)
+                foreach (uint actorId in kp.Value)
                 {                    
                     startTime = startTime.AddMilliseconds(delay);
-                    Log(LogLevelEnum.Debug, null, "At {0}, mark actor {1:X} with {2} on instance {3}", startTime, go, kp.Key, _runInstance);
+                    Log(LogLevelEnum.Debug, null, "At {0}, mark actor {1:X} with {2} on instance {3}", startTime, actorId, kp.Key, _runInstance);
                     DeferredInvoke di = new DeferredInvoke()
                     {
                         State = this,
                         RequiresFrameworkThread = true,
-                        Function = (MarkingMethodDelegate)PerformMarking,
-                        Params = new object[] { _runInstance, go, kp.Key, ap.softMarker },
+                        Function = (Action<ulong, uint, AutomarkerSigns.SignEnum, bool>)PerformMarking,
+                        Params = new object[] { _runInstance, actorId, kp.Key, ap.softMarker },
                         FireAt = startTime
                     };
                     QueueInvocation(di);
