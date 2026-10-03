@@ -1223,10 +1223,11 @@ namespace Lemegeton.Core
             }
         }
 
-        internal void QueueInvocation(DeferredInvoke di)
+        internal void QueueInvocation(DeferredInvoke di, bool requireFramework = false)
         {
-            List<DeferredInvoke> queue = cfg.QueueFramework == true ? InvoqFramework : InvoqThread;
-            AutoResetEvent ev = cfg.QueueFramework == true ? null : InvoqThreadNew;
+            bool useFramework = requireFramework || cfg.QueueFramework;
+            List<DeferredInvoke> queue = useFramework == true ? InvoqFramework : InvoqThread;
+            AutoResetEvent ev = useFramework == true ? null : InvoqThreadNew;
             lock (queue)
             {
                 queue.Add(di);
@@ -1700,7 +1701,7 @@ namespace Lemegeton.Core
                         Params = new object[] { _runInstance, go, kp.Key, ap.softMarker },
                         FireAt = startTime
                     };
-                    QueueInvocation(di);
+                    QueueInvocation(di, requireFramework: true);
                 }
                 delay = at.SampleSubsequentTime();
             }
@@ -1913,7 +1914,7 @@ namespace Lemegeton.Core
                                 Function = _markingFuncPtr,
                                 Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(marker), (uint)go.GameObjectId }
                             };                            
-                            QueueInvocation(di);
+                            QueueInvocation(di, requireFramework: true);
                         }
                     }
                     else
@@ -1948,7 +1949,7 @@ namespace Lemegeton.Core
                             State = this,
                             CommandText = cmd
                         };                        
-                        QueueInvocation(di);
+                        QueueInvocation(di, requireFramework: true);
                     }
                     return;
                 }
@@ -2071,7 +2072,7 @@ namespace Lemegeton.Core
                             Params = new object[] { _sigs["MarkingCtrl"], (byte)AutomarkerSigns.GetSignIndex(sign), (uint)go.GameObjectId },
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
-                        QueueInvocation(di);
+                        QueueInvocation(di, requireFramework: true);
                     }
                     return;
                 }
@@ -2120,7 +2121,7 @@ namespace Lemegeton.Core
                             CommandText = cmd,
                             FireAt = cleared == true ? DateTime.Now.AddMilliseconds(750) : DateTime.Now
                         };
-                        QueueInvocation(di);
+                        QueueInvocation(di, requireFramework: true);
                     }
                     return;
                 }
