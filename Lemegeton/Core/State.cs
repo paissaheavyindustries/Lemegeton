@@ -1225,16 +1225,10 @@ namespace Lemegeton.Core
 
         internal void QueueInvocation(DeferredInvoke di)
         {
-            List<DeferredInvoke> queue = cfg.QueueFramework == true ? InvoqFramework : InvoqThread;
-            AutoResetEvent ev = cfg.QueueFramework == true ? null : InvoqThreadNew;
-            lock (queue)
+            lock (InvoqFramework)
             {
-                queue.Add(di);
-                queue.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
-                if (ev != null)
-                {
-                    ev.Set();
-                }
+                InvoqFramework.Add(di);
+                InvoqFramework.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
             }
         }
 

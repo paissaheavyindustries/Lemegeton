@@ -1131,7 +1131,6 @@ namespace Lemegeton.Language
             AddEntry("MainMenu/Settings/Language", "Language");
             AddEntry("MainMenu/Settings/AdvancedOptions", "Always show advanced options on content items");
             AddEntry("MainMenu/Settings/DebugSettings", "Debug settings");
-            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "Queue tasks on framework thread");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "Event firing test range");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "Configuration debug");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "Reload configuration from disk");

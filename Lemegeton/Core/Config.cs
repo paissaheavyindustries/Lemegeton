@@ -33,7 +33,6 @@ namespace Lemegeton.Core
         public string OpcodeUrl { get; set; } = @"https://raw.githubusercontent.com/paissaheavyindustries/Resources/main/Blueprint/blueprint.xml";
         public string OpcodeRegion { get; set; } = "EN/DE/FR/JP";
         public bool LogUnhandledOpcodes { get; set; } = false;
-        public bool QueueFramework { get; set; } = true;
 
         public bool QuickToggleAutomarkers { get; set; } = true;
         public bool QuickToggleOverlays { get; set; } = false;

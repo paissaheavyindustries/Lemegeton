@@ -1023,7 +1023,6 @@ namespace Lemegeton.Language
             AddEntry("MainMenu/Settings/Language", "Sprog");
             AddEntry("MainMenu/Settings/AdvancedOptions", "Vis altid avancerede indstillinger på indholdselementer");
             AddEntry("MainMenu/Settings/DebugSettings", "Debug-indstillinger");
-            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "Kø-opgaver på framework-tråd");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "Testområde for hændelsesafvikling");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "Konfigurationsfejlfinding");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "Genindlæs konfiguration fra disk");

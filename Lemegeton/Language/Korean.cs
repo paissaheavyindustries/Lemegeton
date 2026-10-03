@@ -1023,7 +1023,6 @@ namespace Lemegeton.Language
             AddEntry("MainMenu/Settings/Language", "언어");
             AddEntry("MainMenu/Settings/AdvancedOptions", "모든 콘텐츠 항목에서 항상 고급 옵션 보기");
             AddEntry("MainMenu/Settings/DebugSettings", "디버그 설정");
-            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "프레임워크 스레드의 작업 대기열");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "이벤트 발생 테스트 범위");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "구성 디버그");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "구성을 디스크에서 다시 불러오기");
