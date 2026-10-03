@@ -1023,7 +1023,6 @@ namespace Lemegeton.Language
             AddEntry("MainMenu/Settings/Language", "言語");
             AddEntry("MainMenu/Settings/AdvancedOptions", "コンテンツアイテムに常に詳細オプションを表示する");
             AddEntry("MainMenu/Settings/DebugSettings", "デバッグ設定");
-            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "フレームワークスレッドにエンキューする");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "イベント発生試験場");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "デバッグ用設定");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "設定をロードする");

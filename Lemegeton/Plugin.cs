@@ -353,7 +353,6 @@ namespace Lemegeton
                 {
                     // 1.0.1.0 - change tasks to always queue on framework thread
                     Log(LogLevelEnum.Info, "Applying config fixes for version 1.0.1.0");
-                    _state.cfg.QueueFramework = true;
                 }
                 ChangeLogVersions = new List<Version>();
                 ChangeLogVersions.AddRange(from vx in ChangeLog where vx.Item1 > oldv && vx.Item1 <= thisv orderby vx.Item1 descending select vx.Item1);
@@ -4585,11 +4584,6 @@ namespace Lemegeton
             {
                 ImGui.PushID("DebugSettings");
                 ImGui.Indent(30.0f);
-                bool qFrame = _state.cfg.QueueFramework;
-                if (ImGui.Checkbox(I18n.Translate("MainMenu/Settings/DebugSettings/QueueFramework"), ref qFrame) == true)
-                {
-                    _state.cfg.QueueFramework = qFrame;
-                }
                 if (ImGui.CollapsingHeader(I18n.Translate("MainMenu/Settings/DebugSettings/Config")) == true)
                 {
                     ImGui.PushID("Config");

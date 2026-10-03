@@ -1023,7 +1023,6 @@ namespace Lemegeton.Language
             AddEntry("MainMenu/Settings/Language", "语言");
             AddEntry("MainMenu/Settings/AdvancedOptions", "始终显示内容栏的高级选项");
             AddEntry("MainMenu/Settings/DebugSettings", "调试设置");
-            AddEntry("MainMenu/Settings/DebugSettings/QueueFramework", "在线程框架上排队");
             AddEntry("MainMenu/Settings/DebugSettings/DelegateDebug", "事件触发测试范围");
             AddEntry("MainMenu/Settings/DebugSettings/Config", "调试配置");
             AddEntry("MainMenu/Settings/DebugSettings/LoadConfig", "从本地重新加载配置");
