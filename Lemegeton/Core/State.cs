@@ -1682,7 +1682,7 @@ namespace Lemegeton.Core
             }
             Log(LogLevelEnum.Debug, null, "Executing automarker payload for {0} roles, self mark: {1}, soft: {2}", ap.assignments.Count, ap.markSelfOnly, ap.softMarker);
             DateTime startTime = DateTime.Now;            
-            int delay = at.SampleInitialTime();
+            bool first = true;
             foreach (KeyValuePair<AutomarkerSigns.SignEnum, List<IGameObject>> kp in ap.assignments)
             {
                 if (kp.Key == AutomarkerSigns.SignEnum.None)
@@ -1691,6 +1691,8 @@ namespace Lemegeton.Core
                 }                
                 foreach (IGameObject go in kp.Value)
                 {                    
+                    int delay = first == true ? at.SampleInitialTime() : at.SampleSubsequentTime();
+                    first = false;
                     startTime = startTime.AddMilliseconds(delay);
                     Log(LogLevelEnum.Debug, null, "At {0}, mark actor {1:X} with {2} on instance {3}", startTime, go, kp.Key, _runInstance);
                     DeferredInvoke di = new DeferredInvoke()
@@ -1702,7 +1704,6 @@ namespace Lemegeton.Core
                     };
                     QueueInvocation(di);
                 }
-                delay = at.SampleSubsequentTime();
             }
         }
 
